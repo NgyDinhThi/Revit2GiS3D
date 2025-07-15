@@ -1,0 +1,34 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.14.36221.1
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RevitToGISsupport", "RevitToGISsupport\RevitToGISsupport.csproj", "{46053F11-F25E-4442-AFC2-FF40E1B63131}"
+	ProjectSection(ProjectDependencies) = postProject
+		{C0D5AB0B-8F13-4E88-A88E-CFDC6439680E} = {C0D5AB0B-8F13-4E88-A88E-CFDC6439680E}
+	EndProjectSection
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Launch", "Launch\Launch.csproj", "{C0D5AB0B-8F13-4E88-A88E-CFDC6439680E}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{46053F11-F25E-4442-AFC2-FF40E1B63131}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{46053F11-F25E-4442-AFC2-FF40E1B63131}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{46053F11-F25E-4442-AFC2-FF40E1B63131}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{46053F11-F25E-4442-AFC2-FF40E1B63131}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C0D5AB0B-8F13-4E88-A88E-CFDC6439680E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C0D5AB0B-8F13-4E88-A88E-CFDC6439680E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C0D5AB0B-8F13-4E88-A88E-CFDC6439680E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C0D5AB0B-8F13-4E88-A88E-CFDC6439680E}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {0A3D18CF-CAAA-48F9-8DBD-F9DF3A2681D7}
+	EndGlobalSection
+EndGlobal

@@ -1,0 +1,39 @@
+<Project Sdk="Microsoft.NET.Sdk.WindowsDesktop">
+
+  <PropertyGroup>
+    <OutputType>Library</OutputType>
+    <TargetFramework>net48</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <RootNamespace>RevitToGISsupport</RootNamespace>
+    <AssemblyName>RevitToGISsupport</AssemblyName>
+    <DisableImplicitSupportedOSPlatformAttribute>true</DisableImplicitSupportedOSPlatformAttribute>
+    <LangVersion>8.0</LangVersion>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Reference Include="RevitAPI">
+      <HintPath>D:\Autodesk\Revit\Revit\Revit 2024\RevitAPI.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="RevitAPIUI">
+      <HintPath>D:\Autodesk\Revit\Revit\Revit 2024\RevitAPIUI.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="System.Net.Http" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="RevitToGISConnector.addin">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+  </ItemGroup>
+  <Target Name="CopyAddin" AfterTargets="Build">
+    <Message Text="Copying .addin file to Revit Addins folder..." Importance="high" />
+    <Copy SourceFiles="RevitToGISConnector.addin" DestinationFolder="$(APPDATA)\Autodesk\Revit\Addins\2024" SkipUnchangedFiles="true" />
+  </Target>
+
+</Project>

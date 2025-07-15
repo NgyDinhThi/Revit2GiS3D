@@ -1,0 +1,204 @@
+{
+  "Version": 1,
+  "WorkspaceRootPath": "C:\\Users\\dinht\\source\\repos\\RevitToGISsupport\\",
+  "Documents": [
+    {
+      "AbsoluteMoniker": "D:0:0:{46053F11-F25E-4442-AFC2-FF40E1B63131}|RevitToGISsupport\\RevitToGISsupport.csproj|c:\\users\\dinht\\source\\repos\\revittogissupport\\revittogissupport\\exporttogis.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{46053F11-F25E-4442-AFC2-FF40E1B63131}|RevitToGISsupport\\RevitToGISsupport.csproj|solutionrelative:revittogissupport\\exporttogis.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{46053F11-F25E-4442-AFC2-FF40E1B63131}|RevitToGISsupport\\RevitToGISsupport.csproj|c:\\users\\dinht\\source\\repos\\revittogissupport\\revittogissupport\\servers\\gisuploader.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{46053F11-F25E-4442-AFC2-FF40E1B63131}|RevitToGISsupport\\RevitToGISsupport.csproj|solutionrelative:revittogissupport\\servers\\gisuploader.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{46053F11-F25E-4442-AFC2-FF40E1B63131}|RevitToGISsupport\\RevitToGISsupport.csproj|c:\\users\\dinht\\source\\repos\\revittogissupport\\revittogissupport\\models\\geometry.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{46053F11-F25E-4442-AFC2-FF40E1B63131}|RevitToGISsupport\\RevitToGISsupport.csproj|solutionrelative:revittogissupport\\models\\geometry.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{46053F11-F25E-4442-AFC2-FF40E1B63131}|RevitToGISsupport\\RevitToGISsupport.csproj|c:\\users\\dinht\\source\\repos\\revittogissupport\\revittogissupport\\models\\gisobject.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{46053F11-F25E-4442-AFC2-FF40E1B63131}|RevitToGISsupport\\RevitToGISsupport.csproj|solutionrelative:revittogissupport\\models\\gisobject.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{46053F11-F25E-4442-AFC2-FF40E1B63131}|RevitToGISsupport\\RevitToGISsupport.csproj|c:\\users\\dinht\\source\\repos\\revittogissupport\\revittogissupport\\models\\gisstream.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{46053F11-F25E-4442-AFC2-FF40E1B63131}|RevitToGISsupport\\RevitToGISsupport.csproj|solutionrelative:revittogissupport\\models\\gisstream.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{46053F11-F25E-4442-AFC2-FF40E1B63131}|RevitToGISsupport\\RevitToGISsupport.csproj|c:\\users\\dinht\\source\\repos\\revittogissupport\\revittogissupport\\openui.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{46053F11-F25E-4442-AFC2-FF40E1B63131}|RevitToGISsupport\\RevitToGISsupport.csproj|solutionrelative:revittogissupport\\openui.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{C0D5AB0B-8F13-4E88-A88E-CFDC6439680E}|Launch\\Launch.csproj|C:\\Users\\dinht\\source\\repos\\RevitToGISsupport\\launch\\properties\\assemblyinfo.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{C0D5AB0B-8F13-4E88-A88E-CFDC6439680E}|Launch\\Launch.csproj|solutionrelative:launch\\properties\\assemblyinfo.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{C0D5AB0B-8F13-4E88-A88E-CFDC6439680E}|Launch\\Launch.csproj|C:\\Users\\dinht\\source\\repos\\RevitToGISsupport\\launch\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{C0D5AB0B-8F13-4E88-A88E-CFDC6439680E}|Launch\\Launch.csproj|solutionrelative:launch\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{46053F11-F25E-4442-AFC2-FF40E1B63131}|RevitToGISsupport\\RevitToGISsupport.csproj|c:\\users\\dinht\\source\\repos\\revittogissupport\\revittogissupport\\revittogisconnector.addin||{FA3CD31E-987B-443A-9B81-186104E8DAC1}",
+      "RelativeMoniker": "D:0:0:{46053F11-F25E-4442-AFC2-FF40E1B63131}|RevitToGISsupport\\RevitToGISsupport.csproj|solutionrelative:revittogissupport\\revittogisconnector.addin||{FA3CD31E-987B-443A-9B81-186104E8DAC1}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{46053F11-F25E-4442-AFC2-FF40E1B63131}|RevitToGISsupport\\RevitToGISsupport.csproj|c:\\users\\dinht\\source\\repos\\revittogissupport\\revittogissupport\\ui\\mainwindow.xaml||{F11ACC28-31D1-4C80-A34B-F4E09D3D753C}",
+      "RelativeMoniker": "D:0:0:{46053F11-F25E-4442-AFC2-FF40E1B63131}|RevitToGISsupport\\RevitToGISsupport.csproj|solutionrelative:revittogissupport\\ui\\mainwindow.xaml||{F11ACC28-31D1-4C80-A34B-F4E09D3D753C}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{46053F11-F25E-4442-AFC2-FF40E1B63131}|RevitToGISsupport\\RevitToGISsupport.csproj|c:\\users\\dinht\\source\\repos\\revittogissupport\\revittogissupport\\ui\\mainwindow.xaml.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{46053F11-F25E-4442-AFC2-FF40E1B63131}|RevitToGISsupport\\RevitToGISsupport.csproj|solutionrelative:revittogissupport\\ui\\mainwindow.xaml.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    }
+  ],
+  "DocumentGroupContainers": [
+    {
+      "Orientation": 0,
+      "VerticalTabListWidth": 256,
+      "DocumentGroups": [
+        {
+          "DockedWidth": 200,
+          "SelectedChildIndex": 7,
+          "Children": [
+            {
+              "$type": "Bookmark",
+              "Name": "ST:0:0:{aa2115a1-9712-457b-9047-dbb71ca2cdd2}"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 10,
+              "Title": "MainWindow.xaml.cs",
+              "DocumentMoniker": "C:\\Users\\dinht\\source\\repos\\RevitToGISsupport\\RevitToGISsupport\\UI\\MainWindow.xaml.cs",
+              "RelativeDocumentMoniker": "RevitToGISsupport\\UI\\MainWindow.xaml.cs",
+              "ToolTip": "C:\\Users\\dinht\\source\\repos\\RevitToGISsupport\\RevitToGISsupport\\UI\\MainWindow.xaml.cs",
+              "RelativeToolTip": "RevitToGISsupport\\UI\\MainWindow.xaml.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-07-09T09:29:28.101Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 9,
+              "Title": "MainWindow.xaml",
+              "DocumentMoniker": "C:\\Users\\dinht\\source\\repos\\RevitToGISsupport\\RevitToGISsupport\\UI\\MainWindow.xaml",
+              "RelativeDocumentMoniker": "RevitToGISsupport\\UI\\MainWindow.xaml",
+              "ToolTip": "C:\\Users\\dinht\\source\\repos\\RevitToGISsupport\\RevitToGISsupport\\UI\\MainWindow.xaml",
+              "RelativeToolTip": "RevitToGISsupport\\UI\\MainWindow.xaml",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003549|",
+              "WhenOpened": "2025-07-09T09:29:08.847Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 8,
+              "Title": "RevitToGISConnector.addin",
+              "DocumentMoniker": "C:\\Users\\dinht\\source\\repos\\RevitToGISsupport\\RevitToGISsupport\\RevitToGISConnector.addin",
+              "RelativeDocumentMoniker": "RevitToGISsupport\\RevitToGISConnector.addin",
+              "ToolTip": "C:\\Users\\dinht\\source\\repos\\RevitToGISsupport\\RevitToGISsupport\\RevitToGISConnector.addin",
+              "RelativeToolTip": "RevitToGISsupport\\RevitToGISConnector.addin",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAA4AAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000072|",
+              "WhenOpened": "2025-07-09T09:21:45.025Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 7,
+              "Title": "Program.cs",
+              "DocumentMoniker": "C:\\Users\\dinht\\source\\repos\\RevitToGISsupport\\Launch\\Program.cs",
+              "RelativeDocumentMoniker": "Launch\\Program.cs",
+              "ToolTip": "C:\\Users\\dinht\\source\\repos\\RevitToGISsupport\\Launch\\Program.cs",
+              "RelativeToolTip": "Launch\\Program.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAACIAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-07-09T08:12:24.948Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 6,
+              "Title": "AssemblyInfo.cs",
+              "DocumentMoniker": "C:\\Users\\dinht\\source\\repos\\RevitToGISsupport\\Launch\\Properties\\AssemblyInfo.cs",
+              "RelativeDocumentMoniker": "Launch\\Properties\\AssemblyInfo.cs",
+              "ToolTip": "C:\\Users\\dinht\\source\\repos\\RevitToGISsupport\\Launch\\Properties\\AssemblyInfo.cs",
+              "RelativeToolTip": "Launch\\Properties\\AssemblyInfo.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAA0AAAAhAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-07-09T08:11:58.26Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 5,
+              "Title": "OpenUI.cs",
+              "DocumentMoniker": "C:\\Users\\dinht\\source\\repos\\RevitToGISsupport\\RevitToGISsupport\\OpenUI.cs",
+              "RelativeDocumentMoniker": "RevitToGISsupport\\OpenUI.cs",
+              "ToolTip": "C:\\Users\\dinht\\source\\repos\\RevitToGISsupport\\RevitToGISsupport\\OpenUI.cs",
+              "RelativeToolTip": "RevitToGISsupport\\OpenUI.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAsAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-07-09T07:41:01.621Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "ExportToGIS.cs",
+              "DocumentMoniker": "C:\\Users\\dinht\\source\\repos\\RevitToGISsupport\\RevitToGISsupport\\ExportToGIS.cs",
+              "RelativeDocumentMoniker": "RevitToGISsupport\\ExportToGIS.cs",
+              "ToolTip": "C:\\Users\\dinht\\source\\repos\\RevitToGISsupport\\RevitToGISsupport\\ExportToGIS.cs",
+              "RelativeToolTip": "RevitToGISsupport\\ExportToGIS.cs",
+              "ViewState": "AgIAAFIAAAAAAAAAAAAgwE0AAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-07-09T07:40:33.412Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 1,
+              "Title": "GISUploader.cs",
+              "DocumentMoniker": "C:\\Users\\dinht\\source\\repos\\RevitToGISsupport\\RevitToGISsupport\\Servers\\GISUploader.cs",
+              "RelativeDocumentMoniker": "RevitToGISsupport\\Servers\\GISUploader.cs",
+              "ToolTip": "C:\\Users\\dinht\\source\\repos\\RevitToGISsupport\\RevitToGISsupport\\Servers\\GISUploader.cs",
+              "RelativeToolTip": "RevitToGISsupport\\Servers\\GISUploader.cs",
+              "ViewState": "AgIAAAkAAAAAAAAAAAAAACMAAAAUAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-07-09T07:38:07.214Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 4,
+              "Title": "GISStream.cs",
+              "DocumentMoniker": "C:\\Users\\dinht\\source\\repos\\RevitToGISsupport\\RevitToGISsupport\\Models\\GISStream.cs",
+              "RelativeDocumentMoniker": "RevitToGISsupport\\Models\\GISStream.cs",
+              "ToolTip": "C:\\Users\\dinht\\source\\repos\\RevitToGISsupport\\RevitToGISsupport\\Models\\GISStream.cs",
+              "RelativeToolTip": "RevitToGISsupport\\Models\\GISStream.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAABgAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-07-09T07:37:20.96Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 2,
+              "Title": "Geometry.cs",
+              "DocumentMoniker": "C:\\Users\\dinht\\source\\repos\\RevitToGISsupport\\RevitToGISsupport\\Models\\Geometry.cs",
+              "RelativeDocumentMoniker": "RevitToGISsupport\\Models\\Geometry.cs",
+              "ToolTip": "C:\\Users\\dinht\\source\\repos\\RevitToGISsupport\\RevitToGISsupport\\Models\\Geometry.cs",
+              "RelativeToolTip": "RevitToGISsupport\\Models\\Geometry.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAA8AAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-07-09T07:36:56.815Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 3,
+              "Title": "GISObject.cs",
+              "DocumentMoniker": "C:\\Users\\dinht\\source\\repos\\RevitToGISsupport\\RevitToGISsupport\\Models\\GISObject.cs",
+              "RelativeDocumentMoniker": "RevitToGISsupport\\Models\\GISObject.cs",
+              "ToolTip": "C:\\Users\\dinht\\source\\repos\\RevitToGISsupport\\RevitToGISsupport\\Models\\GISObject.cs",
+              "RelativeToolTip": "RevitToGISsupport\\Models\\GISObject.cs",
+              "ViewState": "AgIAAAkAAAAAAAAAAAAowCUAAAAEAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-07-09T07:36:04.629Z",
+              "EditorCaption": ""
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

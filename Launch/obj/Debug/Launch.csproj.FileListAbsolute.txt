@@ -1,0 +1,7 @@
+C:\Users\dinht\source\repos\RevitToGISsupport\Launch\bin\Debug\Launch.exe.config
+C:\Users\dinht\source\repos\RevitToGISsupport\Launch\bin\Debug\Launch.exe
+C:\Users\dinht\source\repos\RevitToGISsupport\Launch\bin\Debug\Launch.pdb
+C:\Users\dinht\source\repos\RevitToGISsupport\Launch\obj\Debug\Launch.csproj.AssemblyReference.cache
+C:\Users\dinht\source\repos\RevitToGISsupport\Launch\obj\Debug\Launch.csproj.CoreCompileInputs.cache
+C:\Users\dinht\source\repos\RevitToGISsupport\Launch\obj\Debug\Launch.exe
+C:\Users\dinht\source\repos\RevitToGISsupport\Launch\obj\Debug\Launch.pdb
