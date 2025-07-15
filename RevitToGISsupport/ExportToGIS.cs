@@ -45,37 +45,52 @@ namespace RevitToGISsupport
                 {
                     if (element is Wall wall)
                     {
-                        if (wall.Location is LocationCurve location)
+                        // Lấy chiều cao tường
+                        double height = wall.get_Parameter(BuiltInParameter.WALL_USER_HEIGHT_PARAM)?.AsDouble() ?? 10;
+                        height = UnitUtils.ConvertFromInternalUnits(height, UnitTypeId.Meters);
+
+                        // Tạo tùy chọn đọc hình học
+                        Options opt = new Options
                         {
-                            var start = location.Curve.GetEndPoint(0);
-                            var end = location.Curve.GetEndPoint(1);
+                            ComputeReferences = true,
+                            IncludeNonVisibleObjects = false
+                        };
 
-                            // Lấy chiều cao tường
-                            double height = wall.get_Parameter(BuiltInParameter.WALL_USER_HEIGHT_PARAM)?.AsDouble() ?? 10;
-                            height = UnitUtils.ConvertFromInternalUnits(height, UnitTypeId.Meters);
+                        GeometryElement geomElement = wall.get_Geometry(opt);
 
-                            // Chuyển X/Y sang Lon/Lat
-                            double x1 = originLon + (start.X / metersPerDegLon);
-                            double y1 = originLat + (start.Y / metersPerDegLat);
-                            double x2 = originLon + (end.X / metersPerDegLon);
-                            double y2 = originLat + (end.Y / metersPerDegLat);
+                        foreach (GeometryObject geomObj in geomElement)
+                        {
+                            if (geomObj is Solid solid && solid.Faces.Size > 0)
+                            {
+                                foreach (Face face in solid.Faces)
+                                {
+                                    Mesh mesh = face.Triangulate();
+                                    List<List<double>> polygon = new List<List<double>>();
 
-                            // Offset nhỏ để tạo hình chữ nhật
-                            double offset = 0.00005;
+                                    foreach (XYZ pt in mesh.Vertices)
+                                    {
+                                        double lon = originLon + (pt.X / metersPerDegLon);
+                                        double lat = originLat + (pt.Y / metersPerDegLat);
+                                        polygon.Add(new List<double> { lon, lat });
+                                    }
 
-                            var gisObj = new GISObject
-                            (
-                                x1, y1,
-                                x2, y2,
-                                x2 + offset, y2 + offset,
-                                x1 + offset, y1 + offset,
-                                height
-                            );
+                                    // Đảm bảo polygon được đóng vòng
+                                    if (polygon.Count > 0 &&
+                                        (polygon[0][0] != polygon[polygon.Count - 1][0] || polygon[0][1] != polygon[polygon.Count - 1][1]))
+                                    {
+                                        polygon.Add(new List<double>(polygon[0]));
+                                    }
 
-                            stream.objects.Add(gisObj);
-                            count++;
+                                    var geoPolygon = new List<List<List<double>>> { polygon };
+                                    var props = new Dictionary<string, object> { { "height", height } };
+
+                                    var gisObj = new GISObject(geoPolygon, props);
+                                    stream.objects.Add(gisObj);
+                                    count++;
+                                    break; // Lấy 1 mặt là đủ
+                                }
+                            }
                         }
-
                     }
                 }
 

@@ -12,6 +12,7 @@ C:\Users\dinht\source\repos\RevitToGISsupport\RevitToGISsupport\obj\Debug\net48\
 C:\Users\dinht\source\repos\RevitToGISsupport\RevitToGISsupport\obj\Debug\net48\RevitToGISsupport.AssemblyInfoInputs.cache
 C:\Users\dinht\source\repos\RevitToGISsupport\RevitToGISsupport\obj\Debug\net48\RevitToGISsupport.AssemblyInfo.cs
 C:\Users\dinht\source\repos\RevitToGISsupport\RevitToGISsupport\obj\Debug\net48\RevitToGISsupport.csproj.CoreCompileInputs.cache
+C:\Users\dinht\source\repos\RevitToGISsupport\RevitToGISsupport\obj\Debug\net48\RevitToGISsupport.sourcelink.json
 C:\Users\dinht\source\repos\RevitToGISsupport\RevitToGISsupport\obj\Debug\net48\RevitToG.310C7C1F.Up2Date
 C:\Users\dinht\source\repos\RevitToGISsupport\RevitToGISsupport\obj\Debug\net48\RevitToGISsupport.dll
 C:\Users\dinht\source\repos\RevitToGISsupport\RevitToGISsupport\obj\Debug\net48\RevitToGISsupport.pdb

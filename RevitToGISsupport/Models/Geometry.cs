@@ -9,7 +9,7 @@ namespace RevitToGISsupport.Models
     public class Geometry
     {
         public string type { get; set; } = "Polygon";
-
-        public double[][][] coordinates { get; set; }
+        public List<List<List<double>>> coordinates { get; set; }
     }
+
 }
