@@ -1,8 +1,0 @@
-is_global = true
-build_property.RootNamespace = RevitToGISsupport
-build_property.ProjectDir = C:\Users\dinht\source\repos\RevitToGISsupport\RevitToGISsupport\
-build_property.EnableComHosting = 
-build_property.EnableGeneratedComInterfaceComImportInterop = 
-build_property.CsWinRTUseWindowsUIXamlProjections = false
-build_property.EffectiveAnalysisLevelStyle = 
-build_property.EnableCodeStyleSeverity = 

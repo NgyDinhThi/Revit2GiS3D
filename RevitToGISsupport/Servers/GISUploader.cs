@@ -33,7 +33,7 @@ namespace RevitToGISsupport.Services
                 }
                 catch (Exception ex)
                 {
-                    
+                    System.Diagnostics.Debug.WriteLine($"❌ Exception during upload: {ex.Message}");
                     return false;
                 }
             }

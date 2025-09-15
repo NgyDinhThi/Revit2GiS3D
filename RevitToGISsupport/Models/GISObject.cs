@@ -5,16 +5,21 @@ namespace RevitToGISsupport.Models
 {
     public class GISObject
     {
-        public string type { get; set; } = "Feature";
-        public Geometry geometry { get; set; } = new Geometry();
-        public Dictionary<string, object> properties { get; set; } = new Dictionary<string, object>();
+        public object geometry;
+        public Dictionary<string, object> properties;
 
-        public GISObject(List<List<List<double>>> coords, Dictionary<string, object> props)
+        public GISObject(List<List<List<double>>> polygon, Dictionary<string, object> props)
         {
-            geometry.type = "Polygon";
-            geometry.coordinates = coords;
-            properties = props;
+            this.geometry = polygon;
+            this.properties = props;
+        }
+
+        public GISObject(Dictionary<string, object> meshGeometry, Dictionary<string, object> props)
+        {
+            this.geometry = meshGeometry;
+            this.properties = props;
         }
     }
+
 
 }
