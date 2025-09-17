@@ -13,7 +13,7 @@ namespace RevitToGISsupport.Services
         {
             using (var client = new HttpClient())
             {
-                client.Timeout = TimeSpan.FromSeconds(5);
+                client.Timeout = TimeSpan.FromMinutes(5);
 
                 var json = JsonConvert.SerializeObject(stream.ToGeoJson());
                 var content = new StringContent(json, Encoding.UTF8, "application/json");

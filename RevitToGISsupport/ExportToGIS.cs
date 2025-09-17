@@ -4,6 +4,7 @@ using RevitToGISsupport.Models;
 using RevitToGISsupport.Services;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
@@ -32,19 +33,9 @@ namespace RevitToGISsupport
                     objects = new List<GISObject>()
                 };
 
-                var categories = new BuiltInCategory[]
-                {
-                    BuiltInCategory.OST_Walls,
-                    BuiltInCategory.OST_Floors,
-                    BuiltInCategory.OST_Roofs,
-                    BuiltInCategory.OST_StructuralFraming,
-                    BuiltInCategory.OST_StructuralColumns,
-                    BuiltInCategory.OST_StructuralFoundation
-                };
-
+                // lấy tất cả element trong model (trừ element type)
                 var collector = new FilteredElementCollector(doc)
-                    .WhereElementIsNotElementType()
-                    .WherePasses(new ElementMulticategoryFilter(categories));
+                    .WhereElementIsNotElementType();
 
                 int count = 0;
 
@@ -53,83 +44,30 @@ namespace RevitToGISsupport
                     var opt = new Options
                     {
                         ComputeReferences = true,
-                        IncludeNonVisibleObjects = false
+                        IncludeNonVisibleObjects = false,
+                        DetailLevel = ViewDetailLevel.Fine
                     };
 
                     GeometryElement geomElement = element.get_Geometry(opt);
                     if (geomElement == null) continue;
 
-                    var props = new Dictionary<string, object>();
-                    foreach (Parameter param in element.Parameters)
-                    {
-                        if (!param.HasValue || param.Definition == null) continue;
-
-                        string name = param.Definition.Name;
-                        string val = "";
-
-                        switch (param.StorageType)
-                        {
-                            case StorageType.Double:
-                                val = UnitUtils.ConvertFromInternalUnits(param.AsDouble(), UnitTypeId.Meters).ToString("F2");
-                                break;
-                            case StorageType.Integer:
-                                val = param.AsInteger().ToString();
-                                break;
-                            case StorageType.String:
-                                val = param.AsString();
-                                break;
-                            case StorageType.ElementId:
-                                var refElem = doc.GetElement(param.AsElementId());
-                                val = refElem != null ? refElem.Name : param.AsElementId().Value.ToString();
-                                break;
-                        }
-
-                        if (!string.IsNullOrEmpty(val))
-                            props[name] = val;
-                    }
+                    var props = ExtractProperties(element, doc);
 
                     foreach (GeometryObject geomObj in geomElement)
                     {
                         if (geomObj is Solid solid && solid.Faces.Size > 0)
                         {
-                            foreach (Face face in solid.Faces)
+                            ProcessSolid(solid, props, stream, ref count);
+                        }
+                        else if (geomObj is GeometryInstance instance)
+                        {
+                            GeometryElement instGeom = instance.GetInstanceGeometry();
+                            foreach (GeometryObject instObj in instGeom)
                             {
-                                try
+                                if (instObj is Solid instSolid && instSolid.Faces.Size > 0)
                                 {
-                                    var edgeLoops = face.GetEdgesAsCurveLoops();
-                                    foreach (var loop in edgeLoops)
-                                    {
-                                        List<List<double>> coords = new List<List<double>>();
-                                        foreach (Curve curve in loop)
-                                        {
-                                            XYZ pt = curve.GetEndPoint(0);
-                                            double lon = originLon + (pt.X / metersPerDegLon);
-                                            double lat = originLat + (pt.Y / metersPerDegLat);
-                                            double ele = pt.Z;
-
-                                            coords.Add(new List<double> { lon, lat, ele });
-                                        }
-
-                                        // Đóng polygon nếu chưa khép kín
-                                        int last = coords.Count - 1;
-                                        if (Math.Abs(coords[0][0] - coords[last][0]) > 1e-6 || Math.Abs(coords[0][1] - coords[last][1]) > 1e-6)
-
-                                        {
-                                            coords.Add(coords[0]);
-                                        }
-
-                                        var geometry = new Dictionary<string, object>
-                    {
-                        { "type", "Polygon" },
-                        { "coordinates", new List<object> { coords } }
-                    };
-
-                                        var gisObj = new GISObject(geometry, props);
-                                        stream.objects.Add(gisObj);
-                                        count++;
-                                    }
+                                    ProcessSolid(instSolid, props, stream, ref count);
                                 }
-                                catch { continue; } // tránh lỗi nếu mặt không có loop hợp lệ
                             }
                         }
                     }
@@ -156,6 +94,93 @@ namespace RevitToGISsupport
             {
                 MessageBox.Show("Lỗi khi gửi dữ liệu: " + ex.Message, "Lỗi", MessageBoxButton.OK, MessageBoxImage.Error);
                 return Result.Failed;
+            }
+        }
+
+        private Dictionary<string, object> ExtractProperties(Element element, Document doc)
+        {
+            var props = new Dictionary<string, object>();
+
+            foreach (Parameter param in element.Parameters)
+            {
+                if (!param.HasValue || param.Definition == null) continue;
+
+                string name = param.Definition.Name;
+                string val = "";
+
+                switch (param.StorageType)
+                {
+                    case StorageType.Double:
+                        val = UnitUtils.ConvertFromInternalUnits(param.AsDouble(), UnitTypeId.Meters).ToString("F2");
+                        break;
+                    case StorageType.Integer:
+                        val = param.AsInteger().ToString();
+                        break;
+                    case StorageType.String:
+                        val = param.AsString();
+                        break;
+                    case StorageType.ElementId:
+                        var refElem = doc.GetElement(param.AsElementId());
+                        val = refElem != null ? refElem.Name : param.AsElementId().Value.ToString();
+                        break;
+                }
+
+                if (!string.IsNullOrEmpty(val))
+                    props[name] = val;
+            }
+
+            return props;
+        }
+
+        private void ProcessSolid(Solid solid, Dictionary<string, object> props, GISStream stream, ref int count)
+        {
+            foreach (Face face in solid.Faces)
+            {
+                try
+                {
+                    var edgeLoops = face.GetEdgesAsCurveLoops();
+                    foreach (var loop in edgeLoops)
+                    {
+                        List<List<double>> coords = new List<List<double>>();
+
+                        foreach (Curve curve in loop)
+                        {
+                            var tessPoints = curve.Tessellate();
+                            foreach (XYZ pt in tessPoints)
+                            {
+                                double lon = originLon + (pt.X / metersPerDegLon);
+                                double lat = originLat + (pt.Y / metersPerDegLat);
+                                double ele = pt.Z;
+
+                                coords.Add(new List<double> { lon, lat, ele });
+                            }
+                        }
+
+                        if (coords.Count > 1)
+                        {
+                            int last = coords.Count - 1;
+                            if (Math.Abs(coords[0][0] - coords[last][0]) > 1e-6 ||
+                                Math.Abs(coords[0][1] - coords[last][1]) > 1e-6)
+                            {
+                                coords.Add(coords[0]);
+                            }
+                        }
+
+                        var geometry = new Dictionary<string, object>
+                        {
+                            { "type", "Polygon" },
+                            { "coordinates", new List<object> { coords } }
+                        };
+
+                        var gisObj = new GISObject(geometry, props);
+                        stream.objects.Add(gisObj);
+                        count++;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Debug.WriteLine($"❌ Face export error: {ex.Message}");
+                }
             }
         }
     }

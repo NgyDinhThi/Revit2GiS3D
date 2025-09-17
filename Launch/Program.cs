@@ -26,7 +26,7 @@ namespace Launch
                 Console.WriteLine("Debug end.");
             }
             catch (Exception ex)
-            {
+            {   
                 Console.WriteLine("Lỗi khi mở Revit: " + ex.Message);
             }
         }
