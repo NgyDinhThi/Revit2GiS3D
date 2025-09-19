@@ -1,11 +1,12 @@
 ﻿using Autodesk.Revit.DB;
 using Autodesk.Revit.UI;
+using Newtonsoft.Json;
 using RevitToGISsupport.Models;
 using RevitToGISsupport.Services;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
+using System.IO;
 using System.Threading.Tasks;
 using System.Windows;
 
@@ -14,16 +15,10 @@ namespace RevitToGISsupport
     [Autodesk.Revit.Attributes.Transaction(Autodesk.Revit.Attributes.TransactionMode.Manual)]
     public class ExportToGIS : IExternalCommand
     {
-        double originLon = 105.85;
-        double originLat = 21.03;
-        double metersPerDegLon = 111320.0;
-        double metersPerDegLat = 110540.0;
-
         public Result Execute(ExternalCommandData commandData, ref string message, ElementSet elements)
         {
             try
             {
-                OpenUI.CmdData = commandData;
                 UIDocument uidoc = commandData.Application.ActiveUIDocument;
                 Document doc = uidoc.Document;
 
@@ -33,7 +28,6 @@ namespace RevitToGISsupport
                     objects = new List<GISObject>()
                 };
 
-                // lấy tất cả element trong model (trừ element type)
                 var collector = new FilteredElementCollector(doc)
                     .WhereElementIsNotElementType();
 
@@ -41,58 +35,60 @@ namespace RevitToGISsupport
 
                 foreach (Element element in collector)
                 {
+                    var props = ExtractProperties(element, doc);
+
                     var opt = new Options
                     {
                         ComputeReferences = true,
-                        IncludeNonVisibleObjects = false,
+                        IncludeNonVisibleObjects = true,
                         DetailLevel = ViewDetailLevel.Fine
                     };
 
                     GeometryElement geomElement = element.get_Geometry(opt);
-                    if (geomElement == null) continue;
 
-                    var props = ExtractProperties(element, doc);
-
-                    foreach (GeometryObject geomObj in geomElement)
+                    if (geomElement != null)
                     {
-                        if (geomObj is Solid solid && solid.Faces.Size > 0)
+                        ProcessGeometry(geomElement, props, stream, ref count);
+                    }
+                    else if (element.Location is LocationPoint lp)
+                    {
+                        var geometry = new Dictionary<string, object>
                         {
-                            ProcessSolid(solid, props, stream, ref count);
-                        }
-                        else if (geomObj is GeometryInstance instance)
-                        {
-                            GeometryElement instGeom = instance.GetInstanceGeometry();
-                            foreach (GeometryObject instObj in instGeom)
-                            {
-                                if (instObj is Solid instSolid && instSolid.Faces.Size > 0)
-                                {
-                                    ProcessSolid(instSolid, props, stream, ref count);
-                                }
-                            }
-                        }
+                            { "type", "Point" },
+                            { "coordinates", new List<double> {
+                                UnitUtils.ConvertFromInternalUnits(lp.Point.X, UnitTypeId.Meters),
+                                UnitUtils.ConvertFromInternalUnits(lp.Point.Y, UnitTypeId.Meters),
+                                UnitUtils.ConvertFromInternalUnits(lp.Point.Z, UnitTypeId.Meters)
+                            }}
+                        };
+                        stream.objects.Add(new GISObject(geometry, props));
+                        count++;
                     }
                 }
 
-                TaskDialog.Show("Export result", $"Tổng số đối tượng: {count}");
+                // ✅ Xuất JSON ra Desktop
+                string desktop = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
+                string jsonPath = Path.Combine(desktop, "revit_model.json");
+                File.WriteAllText(jsonPath, JsonConvert.SerializeObject(stream.ToGeoJson(), Formatting.Indented));
 
-                var uploader = new GISUploader();
-                bool success = Task.Run(() => uploader.Send(stream)).Result;
-
-                string user = Environment.UserName;
-                string status = success ? "Thành công" : "Thất bại";
-                OpenUI.SaveSendHistory(user, status);
-
-                if (!success)
+                // ✅ Xuất GLB ra Desktop
+                string glbPath = Path.Combine(desktop, "revit_model.glb");
+                try
                 {
-                    MessageBox.Show("Gửi dữ liệu thất bại hoặc mất kết nối.", "Thất bại", MessageBoxButton.OK, MessageBoxImage.Error);
+                    GLBExporter.ExportToGLB(stream, glbPath);
+                }
+                catch (Exception ex)
+                {
+                    Debug.WriteLine("❌ GLB export error: " + ex.Message);
                 }
 
-                OpenUI.ShowMainUI();
+                TaskDialog.Show("Export result", $"✅ Đã export {count} đối tượng\n{jsonPath}\n{glbPath}");
                 return Result.Succeeded;
             }
             catch (Exception ex)
             {
-                MessageBox.Show("Lỗi khi gửi dữ liệu: " + ex.Message, "Lỗi", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show("❌ Lỗi khi export: " + ex.Message,
+                    "ExportToGIS", MessageBoxButton.OK, MessageBoxImage.Error);
                 return Result.Failed;
             }
         }
@@ -100,6 +96,8 @@ namespace RevitToGISsupport
         private Dictionary<string, object> ExtractProperties(Element element, Document doc)
         {
             var props = new Dictionary<string, object>();
+            props["Category"] = element.Category?.Name ?? "Unknown";
+            props["ElementId"] = element.Id.ToString();
 
             foreach (Parameter param in element.Parameters)
             {
@@ -132,7 +130,25 @@ namespace RevitToGISsupport
             return props;
         }
 
-        private void ProcessSolid(Solid solid, Dictionary<string, object> props, GISStream stream, ref int count)
+        private void ProcessGeometry(GeometryElement geomElement, Dictionary<string, object> props,
+                                     GISStream stream, ref int count)
+        {
+            foreach (GeometryObject geomObj in geomElement)
+            {
+                if (geomObj is Solid solid && solid.Faces.Size > 0)
+                {
+                    ProcessSolid(solid, props, stream, ref count);
+                }
+                else if (geomObj is GeometryInstance instance)
+                {
+                    GeometryElement instGeom = instance.GetInstanceGeometry();
+                    if (instGeom != null) ProcessGeometry(instGeom, props, stream, ref count);
+                }
+            }
+        }
+
+        private void ProcessSolid(Solid solid, Dictionary<string, object> props,
+                                  GISStream stream, ref int count)
         {
             foreach (Face face in solid.Faces)
             {
@@ -142,17 +158,15 @@ namespace RevitToGISsupport
                     foreach (var loop in edgeLoops)
                     {
                         List<List<double>> coords = new List<List<double>>();
-
                         foreach (Curve curve in loop)
                         {
-                            var tessPoints = curve.Tessellate();
-                            foreach (XYZ pt in tessPoints)
+                            foreach (XYZ pt in curve.Tessellate())
                             {
-                                double lon = originLon + (pt.X / metersPerDegLon);
-                                double lat = originLat + (pt.Y / metersPerDegLat);
-                                double ele = pt.Z;
-
-                                coords.Add(new List<double> { lon, lat, ele });
+                                coords.Add(new List<double> {
+                                    UnitUtils.ConvertFromInternalUnits(pt.X, UnitTypeId.Meters),
+                                    UnitUtils.ConvertFromInternalUnits(pt.Y, UnitTypeId.Meters),
+                                    UnitUtils.ConvertFromInternalUnits(pt.Z, UnitTypeId.Meters)
+                                });
                             }
                         }
 
@@ -171,9 +185,7 @@ namespace RevitToGISsupport
                             { "type", "Polygon" },
                             { "coordinates", new List<object> { coords } }
                         };
-
-                        var gisObj = new GISObject(geometry, props);
-                        stream.objects.Add(gisObj);
+                        stream.objects.Add(new GISObject(geometry, props));
                         count++;
                     }
                 }
@@ -182,19 +194,6 @@ namespace RevitToGISsupport
                     Debug.WriteLine($"❌ Face export error: {ex.Message}");
                 }
             }
-        }
-    }
-
-    public class XYZComparer : IEqualityComparer<XYZ>
-    {
-        public bool Equals(XYZ a, XYZ b)
-        {
-            return a.IsAlmostEqualTo(b);
-        }
-
-        public int GetHashCode(XYZ obj)
-        {
-            return obj.GetHashCode();
         }
     }
 }

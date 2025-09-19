@@ -3,7 +3,7 @@
   <AddIn Type="Command">
     <Name>RevitToGIS</Name>
     <Assembly>C:\Users\dinht\source\repos\RevitToGISsupport\RevitToGISsupport\bin\Debug\net48\RevitToGISsupport.dll</Assembly>
-    <AddInId>12345678-ABCD-1234-ABCD-1234567890AB</AddInId>
+    <AddInId>{338AD6D6-0B26-453F-A3BC-685D2E653F5B}</AddInId>
 	  <FullClassName>RevitToGISsupport.ExportToGIS</FullClassName>
 	  <VendorId>REV</VendorId>
     <VendorDescription>Revit to GIS Exporter</VendorDescription>
