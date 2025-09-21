@@ -9,6 +9,8 @@
     <DisableImplicitSupportedOSPlatformAttribute>true</DisableImplicitSupportedOSPlatformAttribute>
     <LangVersion>9.0</LangVersion>
     <PlatformTarget>x64</PlatformTarget>
+    <!-- ✅ ép OutputPath đúng thư mục build -->
+    <OutputPath>bin\x64\Debug\net48\</OutputPath>
   </PropertyGroup>
 
   <ItemGroup>
@@ -24,8 +26,9 @@
   </ItemGroup>
 
   <ItemGroup>
+    <!-- Đảm bảo .addin luôn tồn tại trong output -->
     <None Include="RevitToGISsupport.addin">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
   </ItemGroup>
 
@@ -34,23 +37,23 @@
     <PackageReference Include="Speckle.Core" Version="2.23.2" />
   </ItemGroup>
 
-  <!-- Copy .dll và .addin vào %AppData%\Autodesk\Revit\Addins\2024 -->
+  <!-- ✅ Copy DLL + ADDIN sang thư mục Addins của Revit -->
   <Target Name="DeployToRevitAddins" AfterTargets="Build">
     <PropertyGroup>
       <RevitAddinDir>$(AppData)\Autodesk\Revit\Addins\2024</RevitAddinDir>
     </PropertyGroup>
 
-    <Message Text="Copying build output to $(RevitAddinDir)..." Importance="High" />
+    <Message Text=">>> Copying to $(RevitAddinDir)..." Importance="high" />
 
     <Copy 
       SourceFiles="$(OutputPath)$(AssemblyName).dll"
       DestinationFolder="$(RevitAddinDir)"
-      SkipUnchangedFiles="true" />
+      SkipUnchangedFiles="false" />
 
     <Copy 
-      SourceFiles="RevitToGISsupport.addin"
+      SourceFiles="$(OutputPath)RevitToGISsupport.addin"
       DestinationFolder="$(RevitAddinDir)"
-      SkipUnchangedFiles="true" />
+      SkipUnchangedFiles="false" />
   </Target>
 
 </Project>
