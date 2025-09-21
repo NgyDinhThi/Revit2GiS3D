@@ -6,12 +6,39 @@
         xmlns:local="clr-namespace:RevitToGISsupport.UI"
         mc:Ignorable="d"
         Title="MainWindow" Height="450" Width="800">
-    <Grid Background="#f2f2f2">
-        <TextBlock Text="✅ Export hoàn tất!"
-                   HorizontalAlignment="Center"
-                   VerticalAlignment="Center"
-                   FontSize="20"
+    <Grid Margin="20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <!-- Title -->
+        <TextBlock Text="Chọn phương thức Export"
+                   FontSize="18"
                    FontWeight="Bold"
-                   Foreground="DarkGreen"/>
+                   Foreground="Black"
+                   HorizontalAlignment="Center"
+                   Margin="0,10,0,20"/>
+
+        <!-- Buttons -->
+        <StackPanel Grid.Row="1" VerticalAlignment="Center" HorizontalAlignment="Center">
+            <Button x:Name="btnExportGLB"
+            Content=" Xuất file .GLB"
+            Width="200" Height="40"
+            Margin="0,0,0,10"
+            Background="#4CAF50"
+            Foreground="White"
+            FontWeight="Bold"
+            Click="btnExportGLB_Click"/>
+
+            <Button x:Name="btnSendSpeckle"
+            Content="Đẩy dữ liệu lên Speckle"
+            Width="200" Height="40"
+            Background="#2196F3"
+            Foreground="White"
+            FontWeight="Bold"
+            Click="btnSendSpeckle_Click"/>
+        </StackPanel>
+
     </Grid>
 </Window>

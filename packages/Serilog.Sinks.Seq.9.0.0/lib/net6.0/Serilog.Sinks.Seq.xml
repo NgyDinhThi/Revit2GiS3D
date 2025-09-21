@@ -1,0 +1,242 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>Serilog.Sinks.Seq</name>
+    </assembly>
+    <members>
+        <member name="T:Serilog.SeqLoggerConfigurationExtensions">
+            <summary>
+            Extends Serilog configuration to write events to Seq.
+            </summary>
+        </member>
+        <member name="M:Serilog.SeqLoggerConfigurationExtensions.Seq(Serilog.Configuration.LoggerSinkConfiguration,System.String,Serilog.Events.LogEventLevel,System.Int32,System.Nullable{System.TimeSpan},System.String,System.String,System.Nullable{System.Int64},System.Nullable{System.Int64},Serilog.Core.LoggingLevelSwitch,System.Net.Http.HttpMessageHandler,System.Nullable{System.Int64},System.Int32,Serilog.Formatting.ITextFormatter,System.IFormatProvider)">
+            <summary>
+            Write log events to a <a href="https://datalust.co/seq">Seq</a> server.
+            </summary>
+            <param name="loggerSinkConfiguration">The logger configuration.</param>
+            <param name="serverUrl">The base URL of the Seq server that log events will be written to.</param>
+            <param name="restrictedToMinimumLevel">The minimum log event level required 
+            in order to write an event to the sink.</param>
+            <param name="batchPostingLimit">The maximum number of events to post in a single batch.</param>
+            <param name="period">The time to wait between checking for event batches.</param>
+            <param name="bufferBaseFilename">Path for a set of files that will be used to buffer events until they
+            can be successfully transmitted across the network. Individual files will be created using the
+            pattern <paramref name="bufferBaseFilename"/>*.json, which should not clash with any other filenames
+            in the same directory.</param>
+            <param name="apiKey">A Seq <i>API key</i> that authenticates the client to the Seq server.</param>
+            <param name="bufferSizeLimitBytes">The maximum amount of data, in bytes, to which the buffer
+            log file for a specific date will be allowed to grow. By default no limit will be applied.</param>
+            <param name="eventBodyLimitBytes">The maximum size, in bytes, that the JSON representation of
+            an event may take before it is dropped rather than being sent to the Seq server. Specify null for no limit.
+            The default is 265 KB.</param>
+            <param name="controlLevelSwitch">If provided, the switch will be updated based on the Seq server's level setting
+            for the corresponding API key. Passing the same key to MinimumLevel.ControlledBy() will make the whole pipeline
+            dynamically controlled. Do not specify <paramref name="restrictedToMinimumLevel"/> with this setting.</param>
+            <param name="messageHandler">Used to construct the HttpClient that will send the log messages to Seq.</param>
+            <param name="retainedInvalidPayloadsLimitBytes">A soft limit for the number of bytes to use for storing failed requests.  
+            The limit is soft in that it can be exceeded by any single error payload, but in that case only that single error
+            payload will be retained.</param>
+            <param name="queueSizeLimit">The maximum number of events that will be held in-memory while waiting to ship them to
+            Seq. Beyond this limit, events will be dropped. The default is 100,000. Has no effect on
+            durable log shipping.</param>
+            <param name="payloadFormatter">An <see cref="T:Serilog.Formatting.ITextFormatter"/> that will be used to format (newline-delimited CLEF/JSON)
+            payloads. Experimental.</param>
+            <param name="formatProvider">An <see cref="T:System.IFormatProvider"/> that will be used to render log event tokens. Does not apply if <paramref name="payloadFormatter"/> is provided.
+            If <paramref name="formatProvider"/> is provided then event messages will be rendered and included in the payload.</param>
+            <returns>Logger configuration, allowing configuration to continue.</returns>
+            <exception cref="T:System.ArgumentNullException">A required parameter is null.</exception>
+        </member>
+        <member name="M:Serilog.SeqLoggerConfigurationExtensions.Seq(Serilog.Configuration.LoggerAuditSinkConfiguration,System.String,Serilog.Events.LogEventLevel,System.String,System.Net.Http.HttpMessageHandler,Serilog.Formatting.ITextFormatter,System.IFormatProvider)">
+            <summary>
+            Write audit log events to a <a href="https://datalust.co/seq">Seq</a> server. Auditing writes are
+            synchronous and non-batched; any failures will propagate to the caller immediately as exceptions.
+            </summary>
+            <param name="loggerAuditSinkConfiguration">The logger configuration.</param>
+            <param name="serverUrl">The base URL of the Seq server that log events will be written to.</param>
+            <param name="restrictedToMinimumLevel">The minimum log event level required 
+            in order to write an event to the sink.</param>
+            <param name="apiKey">A Seq <i>API key</i> that authenticates the client to the Seq server.</param>
+            <param name="messageHandler">Used to construct the HttpClient that will send the log messages to Seq.</param>
+            <param name="payloadFormatter">An <see cref="T:Serilog.Formatting.ITextFormatter"/> that will be used to format (newline-delimited CLEF/JSON)
+            payloads. Experimental.</param>
+            <param name="formatProvider">An <see cref="T:System.IFormatProvider"/> that will be used to render log event tokens.</param>
+            <returns>Logger configuration, allowing configuration to continue.</returns>
+            <exception cref="T:System.ArgumentNullException">A required parameter is null.</exception>
+        </member>
+        <member name="T:Serilog.Sinks.Seq.Audit.SeqAuditSink">
+            <summary>
+            An <see cref="T:Serilog.Core.ILogEventSink"/> that synchronously propagates all <see cref="M:Serilog.Sinks.Seq.Audit.SeqAuditSink.Emit(Serilog.Events.LogEvent)"/> failures as exceptions.
+            </summary>
+        </member>
+        <member name="T:Serilog.Sinks.Seq.Batched.BatchedSeqSink">
+            <summary>
+            The default Seq sink.
+            </summary>
+        </member>
+        <member name="T:Serilog.Sinks.Seq.ConstrainedBufferedFormatter">
+            <summary>
+            Wraps an <see cref="T:Serilog.Formatting.ITextFormatter" /> to suppress formatting errors and apply the event body size
+            limit, if any. Placeholder events are logged when an event is unable to be written itself.
+            </summary>
+        </member>
+        <member name="T:Serilog.Sinks.Seq.ControlledLevelSwitch">
+            <summary>
+            Instances of this type are single-threaded, generally only updated on a background
+            timer thread. An exception is <see cref="M:Serilog.Sinks.Seq.ControlledLevelSwitch.IsIncluded(Serilog.Events.LogEvent)"/>, which may be called
+            concurrently but performs no synchronization.
+            </summary>
+        </member>
+        <member name="T:Serilog.Sinks.Seq.Conventions.PreserveDottedPropertyNames">
+            <summary>
+            Maintains verbatim processing of property names. A property named <c>"a.b"</c> will be transmitted to Seq as a
+            scalar value with name <c>"a.b"</c>.
+            </summary>
+        </member>
+        <member name="M:Serilog.Sinks.Seq.Conventions.PreserveDottedPropertyNames.ProcessDottedPropertyNames(System.Collections.Generic.IReadOnlyDictionary{System.String,Serilog.Events.LogEventPropertyValue})">
+            <inheritdoc />
+        </member>
+        <member name="T:Serilog.Sinks.Seq.Conventions.UnflattenDottedPropertyNames">
+            <summary>
+            Nest (un-flatten) properties with dotted names. A property with name <c>"a.b"</c> will be transmitted to Seq as
+            a structure with name <c>"a"</c>, and one member <c>"b"</c>.
+            </summary>
+            <remarks>This behavior is enabled when the <c>Serilog.Parsing.MessageTemplateParser.AcceptDottedPropertyNames</c>
+            <see cref="T:System.AppContext"/> switch is set to value <c langword="true"/>.</remarks>
+        </member>
+        <member name="M:Serilog.Sinks.Seq.Conventions.UnflattenDottedPropertyNames.ProcessDottedPropertyNames(System.Collections.Generic.IReadOnlyDictionary{System.String,Serilog.Events.LogEventPropertyValue})">
+            <inheritdoc />
+        </member>
+        <member name="T:Serilog.Sinks.Seq.Durable.ExponentialBackoffConnectionSchedule">
+            <summary>
+            Based on the <c>BatchedConnectionStatus</c> class from <c>Serilog.Sinks.PeriodicBatching</c>.
+            </summary>
+        </member>
+        <member name="M:Serilog.Sinks.Seq.Durable.HttpLogShipper.Dispose">
+            <inheritdoc/>
+        </member>
+        <member name="T:Serilog.Sinks.Seq.Http.IngestionResult">
+            <summary>
+            The result of a POST to the ingestion API.
+            </summary>
+        </member>
+        <member name="P:Serilog.Sinks.Seq.Http.IngestionResult.Succeeded">
+            <summary>
+            True if the payload was ingested successfully; otherwise, false.
+            </summary>
+        </member>
+        <member name="P:Serilog.Sinks.Seq.Http.IngestionResult.StatusCode">
+            <summary>
+            The status code returned from the ingestion endpoint.
+            </summary>
+        </member>
+        <member name="P:Serilog.Sinks.Seq.Http.IngestionResult.MinimumAcceptedLevel">
+            <summary>
+            The minimum level accepted by the API. This will be null when the ingestion attempt failed, and
+            when the server is accepting all events.
+            </summary>
+        </member>
+        <member name="M:Serilog.Sinks.Seq.Http.IngestionResult.#ctor(System.Boolean,System.Net.HttpStatusCode,System.Nullable{Serilog.Events.LogEventLevel})">
+            <summary>
+            Construct an <see cref="T:Serilog.Sinks.Seq.Http.IngestionResult"/>.
+            </summary>
+            <param name="succeeded">True if the payload was ingested successfully; otherwise, false.</param>
+            <param name="statusCode">The status code returned from the ingestion endpoint.</param>
+            <param name="minimumAcceptedLevel">The minimum level accepted by the API. This will be null when the ingestion attempt failed, and
+            when the server is accepting all events.</param>
+        </member>
+        <member name="T:Serilog.Sinks.Seq.Http.SeqIngestionApi">
+            <summary>
+            A substitutable interface type for the Seq HTTP ingestion API.
+            </summary>
+            <remarks>A class rather than an interface for convenience reasons (and because disposable interfaces are awful).</remarks>
+        </member>
+        <member name="F:Serilog.Sinks.Seq.Http.SeqIngestionApi.RawEventFormatMediaType">
+            <summary>
+            The media type describing the original JSON-based payload format. Use is now discouraged. Remains here only
+            so that durable buffer files written by earlier versions of the sink can still be read and ingested.
+            </summary>
+        </member>
+        <member name="F:Serilog.Sinks.Seq.Http.SeqIngestionApi.CompactLogEventFormatMediaType">
+            <summary>
+            Media type for the modern CLEF payload format.
+            </summary>
+        </member>
+        <member name="F:Serilog.Sinks.Seq.Http.SeqIngestionApi.EmptyClefPayload">
+            <summary>
+            A valid but empty payload in the <see cref="F:Serilog.Sinks.Seq.Http.SeqIngestionApi.CompactLogEventFormatMediaType"/> format.
+            </summary>
+        </member>
+        <member name="M:Serilog.Sinks.Seq.Http.SeqIngestionApi.IngestAsync(System.String)">
+            <summary>
+            Ingest <paramref name="clefPayload" />.
+            </summary>
+            <param name="clefPayload">Log events in CLEF format.</param>
+            <returns>The minimum level accepted by the Seq server (if any is specified).</returns>
+            <exception cref="T:Serilog.Debugging.LoggingFailedException">The events could not be ingested.</exception>
+            <exception cref="T:System.Net.Http.HttpRequestException">The ingestion request could not be sent.</exception>
+        </member>
+        <member name="M:Serilog.Sinks.Seq.Http.SeqIngestionApi.TryIngestAsync(System.String,System.String)">
+            <summary>
+            Attempt to ingest <paramref name="payload"/>.
+            </summary>
+            <param name="payload">The text-formatted payload to ingest.</param>
+            <param name="mediaType">The media type describing the payload.</param>
+            <returns>An <see cref="T:Serilog.Sinks.Seq.Http.IngestionResult"/> with the response from the ingestion API.</returns>
+            <exception cref="T:System.Net.Http.HttpRequestException">The ingestion request could not be sent.</exception>
+        </member>
+        <member name="M:Serilog.Sinks.Seq.Http.SeqIngestionApi.Dispose">
+            <inheritdoc/>
+        </member>
+        <member name="T:Serilog.Sinks.Seq.Http.SeqIngestionApiClient">
+            <summary>
+            Implements <see cref="T:Serilog.Sinks.Seq.Http.SeqIngestionApi"/> over <see cref="T:System.Net.Http.HttpClient" />; this is the runtime implementation of
+            the ingestion API.
+            </summary>
+        </member>
+        <member name="T:Serilog.Sinks.Seq.IDottedPropertyNameConvention">
+            <summary>
+            Enables switching between the experimental "unflattening" behavior applied to dotted property names, and the
+            regular verbatim property name handling.
+            </summary>
+        </member>
+        <member name="M:Serilog.Sinks.Seq.IDottedPropertyNameConvention.ProcessDottedPropertyNames(System.Collections.Generic.IReadOnlyDictionary{System.String,Serilog.Events.LogEventPropertyValue})">
+            <summary>
+            Convert the properties in <paramref name="maybeDotted"/> into the form specified by the current property
+            name processing convention.
+            </summary>
+            <param name="maybeDotted">The properties associated with a log event.</param>
+            <returns>The processed properties.</returns>
+        </member>
+        <member name="T:Serilog.Sinks.Seq.SeqCompactJsonFormatter">
+            <summary>
+            An <see cref="T:Serilog.Formatting.ITextFormatter"/> that writes events in a compact JSON format.
+            </summary>
+            <remarks>Modified from <c>Serilog.Formatting.Compact.CompactJsonFormatter</c> to add
+            implicit SerilogTracing span support.</remarks>
+        </member>
+        <member name="M:Serilog.Sinks.Seq.SeqCompactJsonFormatter.#ctor(System.IFormatProvider,Serilog.Formatting.Json.JsonValueFormatter,System.Boolean)">
+            <summary>
+            Construct a <see cref="T:Serilog.Sinks.Seq.SeqCompactJsonFormatter"/>.
+            </summary>
+            <param name="valueFormatter">A value formatter for <see cref="T:Serilog.Events.LogEventPropertyValue"/>s on the event.</param>
+            <param name="formatProvider">An <see cref="T:System.IFormatProvider"/> that will be used to render log event tokens.</param>
+            <param name="preserveDottedPropertyNames">If <c langword="true"/>, log event property names that
+            contain <c>.</c> will be sent to Seq as-is. Otherwise, properties with dotted names will be converted
+            into nested objects.</param>
+        </member>
+        <member name="M:Serilog.Sinks.Seq.SeqCompactJsonFormatter.Format(Serilog.Events.LogEvent,System.IO.TextWriter)">
+            <summary>
+            Format the log event into the output. Successive events will be newline-delimited.
+            </summary>
+            <param name="logEvent">The event to format.</param>
+            <param name="output">The output.</param>
+        </member>
+        <member name="M:Serilog.Sinks.Seq.SeqCompactJsonFormatter.FormatEvent(Serilog.Events.LogEvent,System.IO.TextWriter)">
+            <summary>
+            Format the log event into the output, without newline delimiters.
+            </summary>
+            <param name="logEvent">The event to format.</param>
+            <param name="output">The output.</param>
+        </member>
+    </members>
+</doc>

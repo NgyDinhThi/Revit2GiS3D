@@ -7,7 +7,8 @@
     <RootNamespace>RevitToGISsupport</RootNamespace>
     <AssemblyName>RevitToGISsupport</AssemblyName>
     <DisableImplicitSupportedOSPlatformAttribute>true</DisableImplicitSupportedOSPlatformAttribute>
-    <LangVersion>8.0</LangVersion>
+    <LangVersion>9.0</LangVersion>
+    <PlatformTarget>x64</PlatformTarget>
   </PropertyGroup>
 
   <ItemGroup>
@@ -23,17 +24,33 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Include="RevitToGISConnector.addin">
+    <None Include="RevitToGISsupport.addin">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+    <PackageReference Include="Speckle.Core" Version="2.23.2" />
   </ItemGroup>
-  <Target Name="CopyAddin" AfterTargets="Build">
-    <Message Text="Copying .addin file to Revit Addins folder..." Importance="high" />
-    <Copy SourceFiles="RevitToGISConnector.addin" DestinationFolder="$(APPDATA)\Autodesk\Revit\Addins\2024" SkipUnchangedFiles="true" />
+
+  <!-- Copy .dll và .addin vào %AppData%\Autodesk\Revit\Addins\2024 -->
+  <Target Name="DeployToRevitAddins" AfterTargets="Build">
+    <PropertyGroup>
+      <RevitAddinDir>$(AppData)\Autodesk\Revit\Addins\2024</RevitAddinDir>
+    </PropertyGroup>
+
+    <Message Text="Copying build output to $(RevitAddinDir)..." Importance="High" />
+
+    <Copy 
+      SourceFiles="$(OutputPath)$(AssemblyName).dll"
+      DestinationFolder="$(RevitAddinDir)"
+      SkipUnchangedFiles="true" />
+
+    <Copy 
+      SourceFiles="RevitToGISsupport.addin"
+      DestinationFolder="$(RevitAddinDir)"
+      SkipUnchangedFiles="true" />
   </Target>
 
 </Project>

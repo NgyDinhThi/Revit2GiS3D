@@ -1,0 +1,306 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>SerilogTimings</name>
+    </assembly>
+    <members>
+        <member name="T:SerilogTimings.Configuration.LevelledOperation">
+            <summary>
+            Launches <see cref="T:SerilogTimings.Operation"/>s with non-default completion and abandonment levels.
+            </summary>
+            <seealso cref="M:SerilogTimings.Operation.At(Serilog.Events.LogEventLevel,System.Nullable{Serilog.Events.LogEventLevel})"/>
+        </member>
+        <member name="M:SerilogTimings.Configuration.LevelledOperation.Begin(System.String,System.Object[])">
+            <summary>
+            Begin a new timed operation. The return value must be completed using <see cref="M:SerilogTimings.Operation.Complete"/>,
+            or disposed to record abandonment.
+            </summary>
+            <param name="messageTemplate">A log message describing the operation, in message template format.</param>
+            <param name="args">Arguments to the log message. These will be stored and captured only when the
+            operation completes, so do not pass arguments that are mutated during the operation.</param>
+            <returns>An <see cref="T:SerilogTimings.Operation"/> object.</returns>
+        </member>
+        <member name="M:SerilogTimings.Configuration.LevelledOperation.Time(System.String,System.Object[])">
+            <summary>
+            Begin a new timed operation. The return value must be disposed to complete the operation.
+            </summary>
+            <param name="messageTemplate">A log message describing the operation, in message template format.</param>
+            <param name="args">Arguments to the log message. These will be stored and captured only when the
+            operation completes, so do not pass arguments that are mutated during the operation.</param>
+            <returns>An <see cref="T:SerilogTimings.Operation"/> object.</returns>
+        </member>
+        <member name="T:SerilogTimings.Extensions.LoggerOperationExtensions">
+            <summary>
+            Extends <see cref="T:Serilog.ILogger"/> with timed operations.
+            </summary>
+        </member>
+        <member name="M:SerilogTimings.Extensions.LoggerOperationExtensions.TimeOperation(Serilog.ILogger,System.String,System.Object[])">
+            <summary>
+            Begin a new timed operation. The return value must be disposed to complete the operation.
+            </summary>
+            <param name="logger">The logger through which the timing will be recorded.</param>
+            <param name="messageTemplate">A log message describing the operation, in message template format.</param>
+            <param name="args">Arguments to the log message. These will be stored and captured only when the
+            operation completes, so do not pass arguments that are mutated during the operation.</param>
+            <returns>An <see cref="T:SerilogTimings.Operation"/> object.</returns>
+        </member>
+        <member name="M:SerilogTimings.Extensions.LoggerOperationExtensions.BeginOperation(Serilog.ILogger,System.String,System.Object[])">
+            <summary>
+            Begin a new timed operation. The return value must be completed using <see cref="M:SerilogTimings.Operation.Complete"/>,
+            or disposed to record abandonment.
+            </summary>
+            <param name="logger">The logger through which the timing will be recorded.</param>
+            <param name="messageTemplate">A log message describing the operation, in message template format.</param>
+            <param name="args">Arguments to the log message. These will be stored and captured only when the
+            operation completes, so do not pass arguments that are mutated during the operation.</param>
+            <returns>An <see cref="T:SerilogTimings.Operation"/> object.</returns>
+        </member>
+        <member name="M:SerilogTimings.Extensions.LoggerOperationExtensions.OperationAt(Serilog.ILogger,Serilog.Events.LogEventLevel,System.Nullable{Serilog.Events.LogEventLevel},System.Nullable{System.TimeSpan})">
+            <summary>
+            Configure the logging levels used for completion and abandonment events.
+            </summary>
+            <param name="logger">The logger through which the timing will be recorded.</param>
+            <param name="completion">The level of the event to write on operation completion.</param>
+            <param name="abandonment">The level of the event to write on operation abandonment; if not
+            specified, the <paramref name="completion"/> level will be used.</param>
+            <param name="warningThreshold">The threshold which determines whether the timing will be recorded as warning</param>
+            <returns>An object from which timings with the configured levels can be made.</returns>
+            <remarks>If neither <paramref name="completion"/> nor <paramref name="abandonment"/> is enabled
+            on the logger at the time of the call, a no-op result is returned.</remarks>
+        </member>
+        <member name="T:SerilogTimings.Operation">
+            <summary>
+            Records operation timings to the Serilog log.
+            </summary>
+            <remarks>
+            Static members on this class are thread-safe. Instances
+            of <see cref="T:SerilogTimings.Operation"/> are designed for use on a single thread only.
+            </remarks>
+        </member>
+        <member name="T:SerilogTimings.Operation.Properties">
+            <summary>
+            Property names attached to events by <see cref="T:SerilogTimings.Operation"/>s.
+            </summary>
+        </member>
+        <member name="F:SerilogTimings.Operation.Properties.Elapsed">
+            <summary>
+            The timing, in milliseconds.
+            </summary>
+        </member>
+        <member name="F:SerilogTimings.Operation.Properties.Outcome">
+            <summary>
+            Completion status, either <em>completed</em> or <em>discarded</em>.
+            </summary>
+        </member>
+        <member name="F:SerilogTimings.Operation.Properties.OperationId">
+            <summary>
+            A unique identifier added to the log context during
+            the operation.
+            </summary>
+        </member>
+        <member name="M:SerilogTimings.Operation.Begin(System.String,System.Object[])">
+            <summary>
+            Begin a new timed operation. The return value must be completed using <see cref="M:SerilogTimings.Operation.Complete"/>,
+            or disposed to record abandonment.
+            </summary>
+            <param name="messageTemplate">A log message describing the operation, in message template format.</param>
+            <param name="args">Arguments to the log message. These will be stored and captured only when the
+            operation completes, so do not pass arguments that are mutated during the operation.</param>
+            <returns>An <see cref="T:SerilogTimings.Operation"/> object.</returns>
+        </member>
+        <member name="M:SerilogTimings.Operation.Time(System.String,System.Object[])">
+            <summary>
+            Begin a new timed operation. The return value must be disposed to complete the operation.
+            </summary>
+            <param name="messageTemplate">A log message describing the operation, in message template format.</param>
+            <param name="args">Arguments to the log message. These will be stored and captured only when the
+            operation completes, so do not pass arguments that are mutated during the operation.</param>
+            <returns>An <see cref="T:SerilogTimings.Operation"/> object.</returns>
+        </member>
+        <member name="M:SerilogTimings.Operation.At(Serilog.Events.LogEventLevel,System.Nullable{Serilog.Events.LogEventLevel})">
+            <summary>
+            Configure the logging levels used for completion and abandonment events.
+            </summary>
+            <param name="completion">The level of the event to write on operation completion.</param>
+            <param name="abandonment">The level of the event to write on operation abandonment; if not
+            specified, the <paramref name="completion"/> level will be used.</param>
+            <returns>An object from which timings with the configured levels can be made.</returns>
+            <remarks>If neither <paramref name="completion"/> nor <paramref name="abandonment"/> is enabled
+            on the logger at the time of the call, a no-op result is returned.</remarks>
+        </member>
+        <member name="P:SerilogTimings.Operation.Elapsed">
+            <summary>
+            Returns the elapsed time of the operation. This will update during the operation, and be frozen once the
+            operation is completed or canceled.
+            </summary>
+        </member>
+        <member name="M:SerilogTimings.Operation.Complete">
+            <summary>
+            Complete the timed operation. This will write the event and elapsed time to the log.
+            </summary>
+        </member>
+        <member name="M:SerilogTimings.Operation.Complete(Serilog.Events.LogEventLevel)">
+            <summary>
+            Complete the timed operation with the given Log Event level. This will write the event and elapsed time to the log.
+            </summary>
+            <param name="level">The log event level with which the complete operation will be logged</param>
+        </member>
+        <member name="M:SerilogTimings.Operation.Complete(System.String,System.Object,System.Boolean)">
+            <summary>
+            Complete the timed operation with an included result value.
+            </summary>
+            <param name="resultPropertyName">The name for the property to attach to the event.</param>
+            <param name="result">The result value.</param>
+            <param name="destructureObjects">If true, the property value will be destructured (serialized).</param>
+        </member>
+        <member name="M:SerilogTimings.Operation.Complete(System.String,System.Object,Serilog.Events.LogEventLevel,System.Boolean)">
+            <summary>
+            Complete the timed operation with an included result value and log event level.
+            </summary>
+            <param name="level">The log event level with which the complete operation will be logged</param>
+            <param name="resultPropertyName">The name for the property to attach to the event.</param>
+            <param name="result">The result value.</param>
+            <param name="destructureObjects">If true, the property value will be destructured (serialized).</param>
+        </member>
+        <member name="M:SerilogTimings.Operation.Abandon">
+            <summary>
+            Abandon the timed operation. This will write the event and elapsed time to the log.
+            </summary>
+        </member>
+        <member name="M:SerilogTimings.Operation.Cancel">
+            <summary>
+            Cancel the timed operation. After calling, no event will be recorded either through
+            completion or disposal.
+            </summary>
+        </member>
+        <member name="M:SerilogTimings.Operation.Dispose">
+            <summary>
+            Dispose the operation. If not already completed or canceled, an event will be written
+            with timing information. Operations started with <see cref="M:SerilogTimings.Operation.Time(System.String,System.Object[])"/> will be completed through
+            disposal. Operations started with <see cref="M:SerilogTimings.Operation.Begin(System.String,System.Object[])"/> will be recorded as abandoned.
+            </summary>
+        </member>
+        <member name="M:SerilogTimings.Operation.EnrichWith(Serilog.Core.ILogEventEnricher)">
+            <summary>
+            Enriches resulting log event via the provided enricher.
+            </summary>
+            <param name="enricher">Enricher that applies in the context.</param>
+            <returns>Same <see cref="T:SerilogTimings.Operation"/>.</returns>
+            <seealso cref="M:Serilog.ILogger.ForContext(Serilog.Core.ILogEventEnricher)"/>
+        </member>
+        <member name="M:SerilogTimings.Operation.EnrichWith(System.Collections.Generic.IEnumerable{Serilog.Core.ILogEventEnricher})">
+            <summary>
+            Enriches resulting log event via the provided enrichers.
+            </summary>
+            <param name="enrichers">Enrichers that apply in the context.</param>
+            <returns>A logger that will enrich log events as specified.</returns>
+            <returns>Same <see cref="T:SerilogTimings.Operation"/>.</returns>
+            <seealso cref="M:Serilog.ILogger.ForContext(System.Collections.Generic.IEnumerable{Serilog.Core.ILogEventEnricher})"/>
+        </member>
+        <member name="M:SerilogTimings.Operation.EnrichWith(System.String,System.Object,System.Boolean)">
+            <summary>
+            Enriches resulting log event with the specified property.
+            </summary>
+            <param name="propertyName">The name of the property. Must be non-empty.</param>
+            <param name="value">The property value.</param>
+            <param name="destructureObjects">If true, the value will be serialized as a structured
+            object if possible; if false, the object will be recorded as a scalar or simple array.</param>
+            <returns>Same <see cref="T:SerilogTimings.Operation"/>.</returns>
+            <seealso cref="M:Serilog.ILogger.ForContext(System.String,System.Object,System.Boolean)"/>
+        </member>
+        <member name="M:SerilogTimings.Operation.SetException(System.Exception)">
+            <summary>
+            Enriches resulting log event with the given exception.
+            </summary>
+            <param name="exception">Exception related to the event.</param>
+            <returns>Same <see cref="T:SerilogTimings.Operation"/>.</returns>
+            <seealso cref="P:Serilog.Events.LogEvent.Exception"/>
+        </member>
+        <member name="T:SerilogTimings.OperationExtensions">
+            <summary>
+            Exception-handling related helpers for <see cref="T:SerilogTimings.Operation"/>.
+            </summary>
+        </member>
+        <member name="M:SerilogTimings.OperationExtensions.SetExceptionAndRethrow(SerilogTimings.Operation,System.Exception)">
+            <summary>
+            Enriches resulting log event with the given exception and skips exception-handling block.
+            </summary>
+            <param name="operation">Operation to enrich with exception.</param>
+            <param name="exception">Exception related to the event.</param>
+            <returns><c>false</c></returns>
+            <seealso cref="M:SerilogTimings.Operation.SetException(System.Exception)"/>
+            <example>
+            <code>
+            using (var op = Operation.Begin(...)
+            {
+                try
+                {
+                    //Do something
+                    op.Complete();
+                }
+                catch (Exception e) when (op.SetExceptionAndRethrow(e))
+                {
+                    //this will never be called
+                }
+            }
+            </code>
+            </example>
+        </member>
+        <member name="M:SerilogTimings.OperationExtensions.Complete(SerilogTimings.Operation,Serilog.Core.ILogEventEnricher)">
+            <summary>
+            Complete the timed operation enriching it with provided enricher.
+            </summary>
+            <param name="operation">Operation to enrich and complete.</param>
+            <param name="enricher">Enricher that applies in the context.</param>
+            <seealso cref="M:SerilogTimings.Operation.Complete"/>
+            <seealso cref="M:SerilogTimings.Operation.EnrichWith(Serilog.Core.ILogEventEnricher)"/>
+        </member>
+        <member name="M:SerilogTimings.OperationExtensions.Complete(SerilogTimings.Operation,System.Collections.Generic.IEnumerable{Serilog.Core.ILogEventEnricher})">
+            <summary>
+            Complete the timed operation enriching it with provided enrichers.
+            </summary>
+            <param name="operation">Operation to enrich and complete.</param>
+            <param name="enrichers">Enrichers that apply in the context.</param>
+            <seealso cref="M:SerilogTimings.Operation.Complete"/>
+            <seealso cref="M:SerilogTimings.Operation.EnrichWith(System.Collections.Generic.IEnumerable{Serilog.Core.ILogEventEnricher})"/>
+        </member>
+        <member name="M:SerilogTimings.OperationExtensions.Abandon(SerilogTimings.Operation,System.String,System.Object,System.Boolean)">
+            <summary>
+            Abandon the timed operation with an included result value.
+            </summary>
+            <param name="operation">Operation to enrich and abandon.</param>
+            <param name="resultPropertyName">The name for the property to attach to the event.</param>
+            <param name="result">The result value.</param>
+            <param name="destructureObjects">If true, the property value will be destructured (serialized).</param>
+            <seealso cref="M:SerilogTimings.Operation.Abandon"/>
+            <seealso cref="M:SerilogTimings.Operation.EnrichWith(System.String,System.Object,System.Boolean)"/>
+        </member>
+        <member name="M:SerilogTimings.OperationExtensions.Abandon(SerilogTimings.Operation,Serilog.Core.ILogEventEnricher)">
+            <summary>
+            Abandon the timed operation enriching it with provided enricher.
+            </summary>
+            <param name="operation">Operation to enrich and abandon.</param>
+            <param name="enricher">Enricher that applies in the context.</param>
+            <seealso cref="M:SerilogTimings.Operation.Abandon"/>
+            <seealso cref="M:SerilogTimings.Operation.EnrichWith(Serilog.Core.ILogEventEnricher)"/>
+        </member>
+        <member name="M:SerilogTimings.OperationExtensions.Abandon(SerilogTimings.Operation,System.Collections.Generic.IEnumerable{Serilog.Core.ILogEventEnricher})">
+            <summary>
+            Abandon the timed operation enriching it with provided enrichers.
+            </summary>
+            <param name="operation">Operation to enrich and abandon.</param>
+            <param name="enrichers">Enrichers that apply in the context.</param>
+            <seealso cref="M:SerilogTimings.Operation.Abandon"/>
+            <seealso cref="M:SerilogTimings.Operation.EnrichWith(System.Collections.Generic.IEnumerable{Serilog.Core.ILogEventEnricher})"/>
+        </member>
+        <member name="M:SerilogTimings.OperationExtensions.Abandon(SerilogTimings.Operation,System.Exception)">
+            <summary>
+            Abandon the timed operation with an included exception.
+            </summary>
+            <param name="operation">Operation to enrich and abandon.</param>
+            <param name="exception">Enricher related to the event.</param>
+            <seealso cref="M:SerilogTimings.Operation.Abandon"/>
+            <seealso cref="M:SerilogTimings.Operation.SetException(System.Exception)"/>
+        </member>
+    </members>
+</doc>

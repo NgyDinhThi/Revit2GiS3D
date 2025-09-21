@@ -1,14 +1,11 @@
 ﻿<?xml version="1.0" encoding="utf-8" standalone="no"?>
 <RevitAddIns>
-  <AddIn Type="Command">
-    <Name>RevitToGIS</Name>
-    <Assembly>C:\Users\dinht\source\repos\RevitToGISsupport\RevitToGISsupport\bin\Debug\net48\RevitToGISsupport.dll</Assembly>
-    <AddInId>{338AD6D6-0B26-453F-A3BC-685D2E653F5B}</AddInId>
-	  <FullClassName>RevitToGISsupport.ExportToGIS</FullClassName>
-	  <VendorId>REV</VendorId>
-    <VendorDescription>Revit to GIS Exporter</VendorDescription>
-  </AddIn>
+	<AddIn Type="Command">
+		<Name>RevitToGIS</Name>
+		<Assembly>RevitToGISsupport.dll</Assembly>
+		<AddInId>{338AD6D6-0B26-453F-A3BC-685D2E653F5B}</AddInId>
+		<FullClassName>RevitToGISsupport.ExportToGIS</FullClassName>
+		<VendorId>REV</VendorId>
+		<VendorDescription>Revit to GIS Exporter</VendorDescription>
+	</AddIn>
 </RevitAddIns>
-
-
-
