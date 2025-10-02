@@ -8,9 +8,41 @@
     <AssemblyName>RevitToGISsupport</AssemblyName>
     <DisableImplicitSupportedOSPlatformAttribute>true</DisableImplicitSupportedOSPlatformAttribute>
     <LangVersion>9.0</LangVersion>
+
+    <!-- liệt kê platforms để VS nhận diện project có x64 -->
+    <Platforms>Any CPU;x64</Platforms>
+
+    <!-- mặc định / fallback -->
     <PlatformTarget>x64</PlatformTarget>
-    <!-- ✅ ép OutputPath đúng thư mục build -->
+    <Prefer32Bit>false</Prefer32Bit>
+    <Platform>x64</Platform>
+
+    <!-- output theo platform + config -->
+    <OutputPath>bin\x64\$(Configuration)\net48\</OutputPath>
+  </PropertyGroup>
+
+  <!-- config-specific (VS sẽ tìm dựa vào chuỗi 'Configuration|Platform') -->
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <PlatformTarget>x64</PlatformTarget>
+    <Prefer32Bit>false</Prefer32Bit>
     <OutputPath>bin\x64\Debug\net48\</OutputPath>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <PlatformTarget>x64</PlatformTarget>
+    <Prefer32Bit>false</Prefer32Bit>
+    <OutputPath>bin\x64\Release\net48\</OutputPath>
+  </PropertyGroup>
+
+  <!-- giữ sẵn Any CPU nếu VS chọn nó -->
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Any CPU'">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <OutputPath>bin\AnyCPU\Debug\net48\</OutputPath>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Any CPU'">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <OutputPath>bin\AnyCPU\Release\net48\</OutputPath>
   </PropertyGroup>
 
   <ItemGroup>
@@ -25,35 +57,41 @@
     <Reference Include="System.Net.Http" />
   </ItemGroup>
 
+  <!-- Chú ý: đổi tên file addin thực tế ở đây -->
   <ItemGroup>
-    <!-- Đảm bảo .addin luôn tồn tại trong output -->
-    <None Include="RevitToGISsupport.addin">
+    <None Include="RevitToGISConnector.addin">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
+    <PackageReference Include="SourceGear.sqlite3" Version="3.50.4.2" />
     <PackageReference Include="Speckle.Core" Version="2.23.2" />
   </ItemGroup>
 
-  <!-- ✅ Copy DLL + ADDIN sang thư mục Addins của Revit -->
+  <!-- Deploy target: prefer copy từ OutputPath, fallback sang project root, else warning -->
   <Target Name="DeployToRevitAddins" AfterTargets="Build">
     <PropertyGroup>
       <RevitAddinDir>$(AppData)\Autodesk\Revit\Addins\2024</RevitAddinDir>
+      <AddinFileName>RevitToGISConnector.addin</AddinFileName>
+      <AddinFromOutput>$(OutputPath)$(AddinFileName)</AddinFromOutput>
+      <AddinFromProject>$(MSBuildProjectDirectory)\$(AddinFileName)</AddinFromProject>
     </PropertyGroup>
 
-    <Message Text=">>> Copying to $(RevitAddinDir)..." Importance="high" />
+    <PropertyGroup>
+      <AddinSource Condition="Exists('$(AddinFromOutput)')">$(AddinFromOutput)</AddinSource>
+      <AddinSource Condition="!Exists('$(AddinFromOutput)') and Exists('$(AddinFromProject)')">$(AddinFromProject)</AddinSource>
+    </PropertyGroup>
 
-    <Copy 
-      SourceFiles="$(OutputPath)$(AssemblyName).dll"
-      DestinationFolder="$(RevitAddinDir)"
-      SkipUnchangedFiles="false" />
+    <Message Text=">>> Deploy: copying addin from $(AddinSource) to $(RevitAddinDir)..." Importance="high" Condition="Exists('$(AddinSource)')" />
+    <Warning Text=">>> Deploy: Revit addin not found. Looked in: $(AddinFromOutput) and $(AddinFromProject). Skipping deploy." Condition="!Exists('$(AddinSource)')" />
 
-    <Copy 
-      SourceFiles="$(OutputPath)RevitToGISsupport.addin"
+    <Copy
+      SourceFiles="$(AddinSource)"
       DestinationFolder="$(RevitAddinDir)"
-      SkipUnchangedFiles="false" />
+      SkipUnchangedFiles="false"
+      Condition="Exists('$(AddinSource)')" />
   </Target>
 
 </Project>

@@ -2,6 +2,7 @@
 using System;
 using System.IO;
 using System.Windows;
+using RevitToGISsupport.Models;
 
 namespace RevitToGISsupport
 {
@@ -9,6 +10,9 @@ namespace RevitToGISsupport
     {
         // Lưu lại ExternalCommandData để UI có thể truy cập nếu cần
         public static ExternalCommandData CmdData { get; set; }
+
+        // Lưu lại stream được thu thập gần nhất (nếu ExportToGIS đã thu thập)
+        public static GISStream LastStream { get; set; }
 
         // Mở cửa sổ UI chính (MainWindows nằm trong thư mục UI)
         public static void ShowMainUI()
@@ -47,6 +51,5 @@ namespace RevitToGISsupport
                 MessageBox.Show("Không thể ghi log: " + logEx.Message, "Lỗi log", MessageBoxButton.OK, MessageBoxImage.Warning);
             }
         }
-
     }
 }

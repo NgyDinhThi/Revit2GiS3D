@@ -1739,8 +1739,11 @@
             <returns>The instance of <see cref="T:System.Threading.Tasks.ValueTask"/> that represents the asynchronous execution.</returns>
             <exception cref="T:System.ArgumentNullException">Thrown when <paramref name="callback"/> or <paramref name="context"/> is <see langword="null"/>.</exception>
             <remarks>
-            This method is for advanced and high performance scenarios. The caller must make sure that the <paramref name="callback"/>
-            does not throw any exceptions. Instead, it converts them to <see cref="T:Polly.Outcome`1"/>.
+            <para><strong>Important:</strong> This API targets advanced, low-allocation scenarios. The user callback
+            must not throw an exception. Wrap your code and return <see cref="T:Polly.Outcome`1"/>:
+            use <see cref="M:Polly.Outcome.FromResult``1(``0)"/> on success, or <see cref="M:Polly.Outcome.FromException``1(System.Exception)"/> on failure.
+            Do not rely on strategies to catch your exceptions; any such behavior is an implementation detail and is not
+            guaranteed across strategies or future versions.</para>
             </remarks>
         </member>
         <member name="M:Polly.ResiliencePipeline.ExecuteAsync``2(System.Func{Polly.ResilienceContext,``1,System.Threading.Tasks.ValueTask{``0}},Polly.ResilienceContext,``1)">
@@ -2185,8 +2188,11 @@
             <returns>The instance of <see cref="T:System.Threading.Tasks.ValueTask"/> that represents the asynchronous execution.</returns>
             <exception cref="T:System.ArgumentNullException">Thrown when <paramref name="callback"/> or <paramref name="context"/> is <see langword="null"/>.</exception>
             <remarks>
-            This method is for advanced and high performance scenarios. The caller must make sure that the <paramref name="callback"/>
-            does not throw any exceptions. Instead, it converts them to <see cref="T:Polly.Outcome`1"/>.
+            <para><strong>Important:</strong> This method targets advanced, low-allocation scenarios. The user callback
+            must not throw an exception. Wrap your code and return <see cref="T:Polly.Outcome`1"/>:
+            use <see cref="M:Polly.Outcome.FromResult``1(``0)"/> on success, or <see cref="M:Polly.Outcome.FromException``1(System.Exception)"/> on failure.
+            Do not rely on strategies to catch your exceptions; any such behavior is an implementation detail and
+            is not guaranteed across strategies or future versions.</para>
             </remarks>
         </member>
         <member name="F:Polly.ResiliencePipeline`1.Empty">

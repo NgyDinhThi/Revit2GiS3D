@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Newtonsoft.Json;
 
 namespace RevitToGISsupport.Models
@@ -17,7 +15,7 @@ namespace RevitToGISsupport.Models
             return new
             {
                 type = "FeatureCollection",
-                features = this.objects
+                features = this.objects.Select(o => o.ToFeature()).ToArray()
             };
         }
     }

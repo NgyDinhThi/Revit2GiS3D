@@ -1,5 +1,4 @@
-﻿
-Microsoft Visual Studio Solution File, Format Version 12.00
+﻿Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.14.36221.1
 MinimumVisualStudioVersion = 10.0.40219.1
@@ -9,6 +8,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RevitToGISsupport", "RevitT
 	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Launch", "Launch\Launch.csproj", "{C0D5AB0B-8F13-4E88-A88E-CFDC6439680E}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AutocadToGISsupport", "AutocadToGISsupport\AutocadToGISsupport.csproj", "{13B03ADE-1D03-4799-8A91-83BAA319E629}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -34,6 +35,14 @@ Global
 		{C0D5AB0B-8F13-4E88-A88E-CFDC6439680E}.Release|Any CPU.Build.0 = Release|Any CPU
 		{C0D5AB0B-8F13-4E88-A88E-CFDC6439680E}.Release|x64.ActiveCfg = Release|x64
 		{C0D5AB0B-8F13-4E88-A88E-CFDC6439680E}.Release|x64.Build.0 = Release|x64
+		{13B03ADE-1D03-4799-8A91-83BAA319E629}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{13B03ADE-1D03-4799-8A91-83BAA319E629}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{13B03ADE-1D03-4799-8A91-83BAA319E629}.Debug|x64.ActiveCfg = Debug|x64
+		{13B03ADE-1D03-4799-8A91-83BAA319E629}.Debug|x64.Build.0 = Debug|x64
+		{13B03ADE-1D03-4799-8A91-83BAA319E629}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{13B03ADE-1D03-4799-8A91-83BAA319E629}.Release|Any CPU.Build.0 = Release|Any CPU
+		{13B03ADE-1D03-4799-8A91-83BAA319E629}.Release|x64.ActiveCfg = Release|x64
+		{13B03ADE-1D03-4799-8A91-83BAA319E629}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

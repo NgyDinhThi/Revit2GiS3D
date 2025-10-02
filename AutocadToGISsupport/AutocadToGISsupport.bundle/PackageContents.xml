@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ApplicationPackage 
+  SchemaVersion="1.0" 
+  AppVersion="1.0.0" 
+  ProductCode="{GUID-REPLACE-HERE}" 
+  Name="AutocadToGISsupport" 
+  Description="Plugin xuất dữ liệu AutoCAD sang GIS/GLB"
+  AppNameSpace="AutocadToGISsupport">
+
+  <CompanyDetails 
+    Name="YourCompany" 
+    Url="https://your-company.com" />
+
+  <Components>
+    <!-- Target AutoCAD 2024 -->
+    <ComponentEntry 
+      AppName="AutocadToGISsupport"
+      Version="1.0"
+      ModuleName="./Contents/$(Configuration)/$(Platform)/RevitToGISsupport.dll"
+      AppDescription="AutoCAD to GIS Export Support"
+      LoadOnAutoCADStartup="true">
+      
+      <!-- Cho tất cả AutoCAD-based products -->
+      <HostProduct
+        HostId="AutoCAD"
+        Platform="Win64"
+        SeriesMin="R24.3"
+        SeriesMax="R24.3" />
+
+    </ComponentEntry>
+  </Components>
+</ApplicationPackage>

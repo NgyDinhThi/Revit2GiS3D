@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Import Project="..\packages\SourceGear.sqlite3.3.50.4.2\build\net471\SourceGear.sqlite3.props" Condition="Exists('..\packages\SourceGear.sqlite3.3.50.4.2\build\net471\SourceGear.sqlite3.props')" />
+  <!-- IMPORT SourceGear props/targets removed to avoid missing native copy -->
   <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
@@ -78,13 +78,13 @@
       <HintPath>..\packages\Microsoft.Data.Sqlite.Core.9.0.9\lib\netstandard2.0\Microsoft.Data.Sqlite.dll</HintPath>
     </Reference>
     <Reference Include="Polly, Version=8.0.0.0, Culture=neutral, PublicKeyToken=c8a3ffc3f8f825cc, processorArchitecture=MSIL">
-      <HintPath>..\packages\Polly.8.6.3\lib\net472\Polly.dll</HintPath>
+      <HintPath>..\packages\Polly.8.6.4\lib\net472\Polly.dll</HintPath>
     </Reference>
     <Reference Include="Polly.Contrib.WaitAndRetry, Version=1.0.0.0, Culture=neutral, PublicKeyToken=17ed651729209acc, processorArchitecture=MSIL">
       <HintPath>..\packages\Polly.Contrib.WaitAndRetry.1.1.1\lib\net472\Polly.Contrib.WaitAndRetry.dll</HintPath>
     </Reference>
     <Reference Include="Polly.Core, Version=8.0.0.0, Culture=neutral, PublicKeyToken=c8a3ffc3f8f825cc, processorArchitecture=MSIL">
-      <HintPath>..\packages\Polly.Core.8.6.3\lib\net472\Polly.Core.dll</HintPath>
+      <HintPath>..\packages\Polly.Core.8.6.4\lib\net472\Polly.Core.dll</HintPath>
     </Reference>
     <Reference Include="Polly.Extensions.Http, Version=3.0.0.0, Culture=neutral, PublicKeyToken=c8a3ffc3f8f825cc, processorArchitecture=MSIL">
       <HintPath>..\packages\Polly.Extensions.Http.3.0.0\lib\netstandard2.0\Polly.Extensions.Http.dll</HintPath>
@@ -199,12 +199,10 @@
       <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
     </PropertyGroup>
     <Error Condition="!Exists('..\packages\NETStandard.Library.2.0.3\build\netstandard2.0\NETStandard.Library.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\NETStandard.Library.2.0.3\build\netstandard2.0\NETStandard.Library.targets'))" />
-    <Error Condition="!Exists('..\packages\SourceGear.sqlite3.3.50.4.2\build\net471\SourceGear.sqlite3.props')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\SourceGear.sqlite3.3.50.4.2\build\net471\SourceGear.sqlite3.props'))" />
-    <Error Condition="!Exists('..\packages\SourceGear.sqlite3.3.50.4.2\build\net471\SourceGear.sqlite3.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\SourceGear.sqlite3.3.50.4.2\build\net471\SourceGear.sqlite3.targets'))" />
     <Error Condition="!Exists('..\packages\Serilog.4.3.0\build\Serilog.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Serilog.4.3.0\build\Serilog.targets'))" />
     <Error Condition="!Exists('..\packages\System.ValueTuple.4.6.1\build\net471\System.ValueTuple.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\System.ValueTuple.4.6.1\build\net471\System.ValueTuple.targets'))" />
   </Target>
-  <Import Project="..\packages\SourceGear.sqlite3.3.50.4.2\build\net471\SourceGear.sqlite3.targets" Condition="Exists('..\packages\SourceGear.sqlite3.3.50.4.2\build\net471\SourceGear.sqlite3.targets')" />
+  <!-- Import for SourceGear removed to prevent missing native copy -->
   <Import Project="..\packages\Serilog.4.3.0\build\Serilog.targets" Condition="Exists('..\packages\Serilog.4.3.0\build\Serilog.targets')" />
   <Import Project="..\packages\System.ValueTuple.4.6.1\build\net471\System.ValueTuple.targets" Condition="Exists('..\packages\System.ValueTuple.4.6.1\build\net471\System.ValueTuple.targets')" />
 </Project>
