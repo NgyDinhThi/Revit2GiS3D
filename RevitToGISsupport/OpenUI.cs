@@ -1,55 +1,79 @@
 ﻿using Autodesk.Revit.UI;
-using System;
-using System.IO;
-using System.Windows;
 using RevitToGISsupport.Models;
+using RevitToGISsupport.Services;
+using System;
+using System.Threading.Tasks;
 
 namespace RevitToGISsupport
 {
+    /// <summary>
+    /// OpenUI: tạo ExternalEvent để collect dữ liệu trên Revit thread,
+    /// expose Progress reporter, lưu LastStream và mở MainWindow modeless.
+    /// </summary>
     public static class OpenUI
     {
-        // Lưu lại ExternalCommandData để UI có thể truy cập nếu cần
-        public static ExternalCommandData CmdData { get; set; }
+        // ExternalEvent + handler instance (handler là private inner class)
+        public static ExternalEvent CollectEvent { get; private set; }
+        public static IExternalEventHandler HandlerInstance { get; private set; }
 
-        // Lưu lại stream được thu thập gần nhất (nếu ExportToGIS đã thu thập)
+        // UI sets this before raising event so handler can report progress
+        public static IProgress<int> ProgressReporter { get; set; }
+
+        // UI awaits this to know collect finished
+        public static TaskCompletionSource<bool> CollectTcs;
+
+        // result (filled by handler running on Revit thread)
         public static GISStream LastStream { get; set; }
 
-        // Mở cửa sổ UI chính (MainWindows nằm trong thư mục UI)
+        // call once from ExternalCommand.Execute
+        public static void Initialize()
+        {
+            if (HandlerInstance == null)
+            {
+                HandlerInstance = new CollectHandler();
+                CollectEvent = ExternalEvent.Create(HandlerInstance);
+            }
+        }
+
+        // Show the WPF window modeless so UI can raise ExternalEvent
         public static void ShowMainUI()
         {
             try
             {
                 var window = new UI.MainWindows();
-                window.ShowDialog();
+                window.Show(); // modeless
             }
             catch (Exception ex)
             {
-                MessageBox.Show("Không thể mở giao diện: " + ex.Message, "Lỗi UI", MessageBoxButton.OK, MessageBoxImage.Error);
+                TaskDialog.Show("OpenUI", "Cannot open UI: " + ex.Message);
             }
         }
 
-        // Lưu log gửi dữ liệu
-        public static void SaveSendHistory(string user, string status, Exception ex = null)
+        // single inner class handler (ONLY ONE definition here)
+        private class CollectHandler : IExternalEventHandler
         {
-            try
+            public void Execute(UIApplication app)
             {
-                string logPath = Path.Combine(
-                    Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments),
-                    "history_log.txt"
-                );
-
-                string line = $"{DateTime.Now:yyyy-MM-dd HH:mm:ss} | {user} | {status}";
-                File.AppendAllLines(logPath, new[] { line });
-
-                if (ex != null)
+                try
                 {
-                    File.AppendAllLines(logPath, new[] { $"Chi tiết lỗi: {ex}" });
+                    var doc = app?.ActiveUIDocument?.Document;
+                    if (doc != null)
+                    {
+                        // ExportService.CollectData should accept IProgress<int> (or ignore it)
+                        LastStream = ExportService.CollectData(doc, ProgressReporter);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine("CollectHandler error: " + ex.ToString());
+                }
+                finally
+                {
+                    CollectTcs?.TrySetResult(true);
                 }
             }
-            catch (Exception logEx)
-            {
-                MessageBox.Show("Không thể ghi log: " + logEx.Message, "Lỗi log", MessageBoxButton.OK, MessageBoxImage.Warning);
-            }
+
+            public string GetName() => "CollectDataHandler";
         }
     }
 }

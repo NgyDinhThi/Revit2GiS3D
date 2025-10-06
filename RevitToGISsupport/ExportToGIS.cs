@@ -1,9 +1,8 @@
 ﻿using Autodesk.Revit.DB;
 using Autodesk.Revit.UI;
-using RevitToGISsupport.Services;
+using RevitToGISsupport;
 using System;
-using System.IO;
-using TaskDialog = Autodesk.Revit.UI.TaskDialog;
+using System.Windows;
 
 namespace RevitToGISsupport
 {
@@ -14,30 +13,21 @@ namespace RevitToGISsupport
         {
             try
             {
-                // Lưu commandData nếu UI cần (không bắt buộc)
-                OpenUI.CmdData = commandData;
+                // Khởi tạo ExternalEvent
+                OpenUI.Initialize();
 
-                Document doc = commandData.Application.ActiveUIDocument.Document;
-
-                // 1. Thu thập dữ liệu từ model (không hỏi folder ở đây)
-                var stream = ExportService.CollectData(doc);
-
-                // 2. Lưu stream để UI dùng (UI sẽ làm phần chọn folder & xuất file)
-                OpenUI.LastStream = stream;
-
-                // 3. Mở UI để người dùng tương tác (UI sẽ hỏi folder khi họ bấm nút Export)
+                // (option) lưu UIApplication nếu cần: OpenUI.AppData = commandData; // nếu anh muốn
+                // Mở UI (modeless or dialog). Nếu dùng ShowDialog() và UI có owner mismatch, thay bằng window.Show();
                 OpenUI.ShowMainUI();
 
                 return Result.Succeeded;
             }
             catch (Exception ex)
             {
-                // Hiện lỗi cho user (kèm stacktrace lúc debug)
-                TaskDialog.Show("Export to GIS - Error", "❌ Lỗi khi thu thập dữ liệu: " + ex.Message + "\n\nXem Output/Debug để chi tiết.");
-                System.Diagnostics.Debug.WriteLine(ex.ToString());
-                message = ex.Message;
+                TaskDialog.Show("Error", ex.Message);
                 return Result.Failed;
             }
         }
+
     }
 }

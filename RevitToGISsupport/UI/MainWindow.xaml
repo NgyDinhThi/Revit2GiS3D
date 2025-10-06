@@ -6,33 +6,49 @@
         xmlns:local="clr-namespace:RevitToGISsupport.UI"
         mc:Ignorable="d"
         Title="MainWindow" Height="450" Width="800">
-    <Grid Margin="20">
+    <Grid Margin="16">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
         <!-- Title -->
-        <TextBlock Text="Chọn phương thức Export"
-                   FontSize="18"
+        <TextBlock Text="Export Revit → JSON / GLB"
+                   FontSize="16"
                    FontWeight="Bold"
-                   Foreground="Black"
                    HorizontalAlignment="Center"
-                   Margin="0,10,0,20"/>
+                   Margin="0,4,0,12"/>
 
-        <!-- Buttons -->
-        <StackPanel Grid.Row="1" VerticalAlignment="Center" HorizontalAlignment="Center">
+        <!-- Buttons group -->
+        <StackPanel Grid.Row="1" Orientation="Vertical" HorizontalAlignment="Center" VerticalAlignment="Center" Width="320" >
+            <Button x:Name="btnCollect"
+                    Content="Collect từ Revit"
+                    Height="40"
+                    Margin="0,0,0,10"
+                    FontWeight="SemiBold"
+                    Click="btnCollect_Click"/>
+
             <Button x:Name="btnExportGLB"
-            Content=" Xuất file .GLB"
-            Width="200" Height="40"
-            Margin="0,0,0,10"
-            Background="#4CAF50"
-            Foreground="White"
-            FontWeight="Bold"
-            Click="btnExportGLB_Click"/>
+                    Content="Xuất file .GLB (.json cùng thư mục)"
+                    Height="40"
+                    Margin="0,0,0,10"
+                    FontWeight="SemiBold"
+                    Click="btnExportGLB_Click"/>
 
-            
+            <Button x:Name="btnSendSpeckle"
+                    Content="Gửi lên Speckle (tuỳ chọn)"
+                    Height="36"
+                    Margin="0,0,0,6"
+                    FontWeight="Normal"
+                    Click="btnSendSpeckle_Click"/>
         </StackPanel>
 
+        <!-- Status bar -->
+        <DockPanel Grid.Row="2" LastChildFill="True" Margin="0,12,0,0">
+            <TextBlock Text="Status:" VerticalAlignment="Center" Margin="4,0"/>
+            <TextBlock x:Name="lblStatus" Text="ready" VerticalAlignment="Center" Margin="6,0" FontWeight="SemiBold"/>
+            <ProgressBar x:Name="progressBar" Width="140" Height="14" Margin="12,0,0,0" VerticalAlignment="Center" Visibility="Collapsed"/>
+        </DockPanel>
     </Grid>
 </Window>
