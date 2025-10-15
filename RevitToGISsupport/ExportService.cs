@@ -5,13 +5,12 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.Linq;
 
 namespace RevitToGISsupport.Services
 {
     public static class ExportService
     {
-        public static GISStream CollectData(Document doc, IProgress<int> progress = null)
+        public static GISStream CollectData(Document doc)
         {
             var stream = new GISStream
             {
@@ -19,73 +18,46 @@ namespace RevitToGISsupport.Services
                 objects = new List<GISObject>()
             };
 
-            // Build list of elements first so we know total count
-            var collector = new FilteredElementCollector(doc).WhereElementIsNotElementType();
-            var elements = new List<Element>();
-            foreach (Element e in collector)
-                elements.Add(e);
-
-            int total = Math.Max(1, elements.Count); // tránh chia cho 0
-            int processed = 0;
-            int reportedEvery = Math.Max(1, total / 200); // report ~200 lần max -> điều chỉnh nhẹ
+            // lấy tất cả element trong model
+            var collector = new FilteredElementCollector(doc)
+                .WhereElementIsNotElementType();
 
             int count = 0;
-            foreach (Element element in elements)
+
+            foreach (Element element in collector)
             {
-                try
+                var props = ExtractProperties(element, doc);
+
+                var opt = new Options
                 {
-                    var props = ExtractProperties(element, doc);
-
-                    var opt = new Options
-                    {
-                        ComputeReferences = true,
-                        IncludeNonVisibleObjects = true,
-                        DetailLevel = ViewDetailLevel.Fine
-                    };
-
-                    GeometryElement geomElement = element.get_Geometry(opt);
-
-                    if (geomElement != null)
-                    {
-                        // gọi ProcessGeometry với transform = null (nếu signature khác, điều chỉnh lại)
-                        ProcessGeometry(geomElement, null, props, stream, ref count);
-                    }
-                    else if (element.Location is LocationPoint lp)
-                    {
-                        var geometry = new Dictionary<string, object>
-                {
-                    { "type", "Point" },
-                    { "coordinates", new List<double> {
-                        UnitUtils.ConvertFromInternalUnits(lp.Point.X, UnitTypeId.Meters),
-                        UnitUtils.ConvertFromInternalUnits(lp.Point.Y, UnitTypeId.Meters),
-                        UnitUtils.ConvertFromInternalUnits(lp.Point.Z, UnitTypeId.Meters)
-                    }}
+                    ComputeReferences = true,
+                    IncludeNonVisibleObjects = true,
+                    DetailLevel = ViewDetailLevel.Fine
                 };
-                        stream.objects.Add(new GISObject(geometry, props));
-                        count++;
-                    }
-                }
-                catch (Exception ex)
-                {
-                    // không throw tiếp, chỉ log để avoid crash Revit thread
-                    System.Diagnostics.Debug.WriteLine($"CollectData: element error: {ex.Message}");
-                }
 
-                // progress
-                processed++;
-                if (progress != null && (processed % reportedEvery == 0 || processed == total))
+                GeometryElement geomElement = element.get_Geometry(opt);
+
+                if (geomElement != null)
                 {
-                    int pct = (int)((processed / (double)total) * 100.0);
-                    if (pct < 0) pct = 0;
-                    if (pct > 100) pct = 100;
-                    progress.Report(pct);
+                    ProcessGeometry(geomElement, props, stream, ref count);
+                }
+                else if (element.Location is LocationPoint lp)
+                {
+                    var geometry = new Dictionary<string, object>
+                    {
+                        { "type", "Point" },
+                        { "coordinates", new List<double> {
+                            UnitUtils.ConvertFromInternalUnits(lp.Point.X, UnitTypeId.Meters),
+                            UnitUtils.ConvertFromInternalUnits(lp.Point.Y, UnitTypeId.Meters),
+                            UnitUtils.ConvertFromInternalUnits(lp.Point.Z, UnitTypeId.Meters)
+                        }}
+                    };
+                    stream.objects.Add(new GISObject(geometry, props));
+                    count++;
                 }
             }
 
-            // đảm bảo báo 100% nếu có progress reporter
-            progress?.Report(100);
-
-            System.Diagnostics.Debug.WriteLine($"Đã gom {count} đối tượng từ Revit");
+            Debug.WriteLine($"✅ Đã gom {count} đối tượng từ Revit");
             return stream;
         }
 
@@ -107,7 +79,6 @@ namespace RevitToGISsupport.Services
             var props = new Dictionary<string, object>();
             props["Category"] = element.Category?.Name ?? "Unknown";
             props["ElementId"] = element.Id.ToString();
-            props["Name"] = element.Name;
 
             foreach (Parameter param in element.Parameters)
             {
@@ -140,36 +111,25 @@ namespace RevitToGISsupport.Services
             return props;
         }
 
-        // ProcessGeometry: now accepts a Transform parameter and passes it down
-        private static void ProcessGeometry(GeometryElement geomElement, Transform transform, Dictionary<string, object> props, GISStream stream, ref int count)
+        private static void ProcessGeometry(GeometryElement geomElement, Dictionary<string, object> props,
+                                            GISStream stream, ref int count)
         {
             foreach (GeometryObject geomObj in geomElement)
             {
                 if (geomObj is Solid solid && solid.Faces.Size > 0)
                 {
-                    ProcessSolid(solid, transform, props, stream, ref count);
+                    ProcessSolid(solid, props, stream, ref count);
                 }
                 else if (geomObj is GeometryInstance instance)
                 {
                     GeometryElement instGeom = instance.GetInstanceGeometry();
-                    if (instGeom != null)
-                    {
-                        // truyền transform của instance xuống (kết hợp nếu cần)
-                        Transform instTrans = instance.Transform;
-                        // combine transforms if parent transform is not identity
-                        Transform combined = transform != null ? transform.Multiply(instTrans) : instTrans;
-                        ProcessGeometry(instGeom, combined, props, stream, ref count);
-                    }
-                }
-                else if (geomObj is Mesh mesh)
-                {
-                    ProcessMesh(mesh, transform, props, stream, ref count);
+                    if (instGeom != null) ProcessGeometry(instGeom, props, stream, ref count);
                 }
             }
         }
 
-
-        private static void ProcessSolid(Solid solid, Transform transform, Dictionary<string, object> props, GISStream stream, ref int count)
+        private static void ProcessSolid(Solid solid, Dictionary<string, object> props,
+                                         GISStream stream, ref int count)
         {
             foreach (Face face in solid.Faces)
             {
@@ -183,31 +143,28 @@ namespace RevitToGISsupport.Services
                         {
                             foreach (XYZ pt in curve.Tessellate())
                             {
-                                XYZ p = (transform != null) ? transform.OfPoint(pt) : pt; // apply transform
                                 coords.Add(new List<double> {
-                                    UnitUtils.ConvertFromInternalUnits(p.X, UnitTypeId.Meters),
-                                    UnitUtils.ConvertFromInternalUnits(p.Y, UnitTypeId.Meters),
-                                    UnitUtils.ConvertFromInternalUnits(p.Z, UnitTypeId.Meters)
+                                    UnitUtils.ConvertFromInternalUnits(pt.X, UnitTypeId.Meters),
+                                    UnitUtils.ConvertFromInternalUnits(pt.Y, UnitTypeId.Meters),
+                                    UnitUtils.ConvertFromInternalUnits(pt.Z, UnitTypeId.Meters)
                                 });
                             }
                         }
 
-                        // đảm bảo closed ring
                         if (coords.Count > 1)
                         {
                             int last = coords.Count - 1;
                             if (Math.Abs(coords[0][0] - coords[last][0]) > 1e-6 ||
                                 Math.Abs(coords[0][1] - coords[last][1]) > 1e-6)
                             {
-                                coords.Add(new List<double>(coords[0]));
+                                coords.Add(coords[0]);
                             }
                         }
 
-                        // NOTE: coords là 1 ring; có thể thêm logic để xử lý nhiều ring (holes)
                         var geometry = new Dictionary<string, object>
                         {
                             { "type", "Polygon" },
-                            { "coordinates", new List<object> { coords } } // outer ring only
+                            { "coordinates", new List<object> { coords } }
                         };
                         stream.objects.Add(new GISObject(geometry, props));
                         count++;
@@ -219,42 +176,5 @@ namespace RevitToGISsupport.Services
                 }
             }
         }
-
-        private static void ProcessMesh(Mesh mesh, Transform transform, Dictionary<string, object> props, GISStream stream, ref int count)
-        {
-            // xuất từng triangle của mesh
-            int numTri = (int)mesh.NumTriangles; // cast safe (mesh sizes won't exceed int here)
-            for (int t = 0; t < numTri; t++)
-            {
-                MeshTriangle tri = mesh.get_Triangle(t);
-                var coords = new List<List<double>>();
-
-                // MeshTriangle.get_Index(...) trả uint — cast sang int
-                int i0 = (int)tri.get_Index(0);
-                int i1 = (int)tri.get_Index(1);
-                int i2 = (int)tri.get_Index(2);
-
-                foreach (var idx in new[] { i0, i1, i2 })
-                {
-                    XYZ p = mesh.Vertices[idx];
-                    if (transform != null) p = transform.OfPoint(p);
-                    coords.Add(new List<double> {
-                UnitUtils.ConvertFromInternalUnits(p.X, UnitTypeId.Meters),
-                UnitUtils.ConvertFromInternalUnits(p.Y, UnitTypeId.Meters),
-                UnitUtils.ConvertFromInternalUnits(p.Z, UnitTypeId.Meters)
-            });
-                }
-
-                // triangulated triangle -> output as polygon with 3 vertices
-                var geometry = new Dictionary<string, object>
-        {
-            { "type", "Polygon" },
-            { "coordinates", new List<object> { coords } }
-        };
-                stream.objects.Add(new GISObject(geometry, props));
-                count++;
-            }
-        }
-
     }
 }

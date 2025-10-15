@@ -69,7 +69,7 @@
     <PackageReference Include="SourceGear.sqlite3" Version="3.50.4.2" />
     <PackageReference Include="Speckle.Core" Version="2.23.2" />
   </ItemGroup>
-
+  
   <!-- Deploy target: prefer copy từ OutputPath, fallback sang project root, else warning -->
   <Target Name="DeployToRevitAddins" AfterTargets="Build">
     <PropertyGroup>
@@ -84,14 +84,10 @@
       <AddinSource Condition="!Exists('$(AddinFromOutput)') and Exists('$(AddinFromProject)')">$(AddinFromProject)</AddinSource>
     </PropertyGroup>
 
-    <Message Text=">>> Deploy: copying addin from $(AddinSource) to $(RevitAddinDir)..." Importance="high" Condition="Exists('$(AddinSource)')" />
-    <Warning Text=">>> Deploy: Revit addin not found. Looked in: $(AddinFromOutput) and $(AddinFromProject). Skipping deploy." Condition="!Exists('$(AddinSource)')" />
+    <Message Text="&gt;&gt;&gt; Deploy: copying addin from $(AddinSource) to $(RevitAddinDir)..." Importance="high" Condition="Exists('$(AddinSource)')" />
+    <Warning Text="&gt;&gt;&gt; Deploy: Revit addin not found. Looked in: $(AddinFromOutput) and $(AddinFromProject). Skipping deploy." Condition="!Exists('$(AddinSource)')" />
 
-    <Copy
-      SourceFiles="$(AddinSource)"
-      DestinationFolder="$(RevitAddinDir)"
-      SkipUnchangedFiles="false"
-      Condition="Exists('$(AddinSource)')" />
+    <Copy SourceFiles="$(AddinSource)" DestinationFolder="$(RevitAddinDir)" SkipUnchangedFiles="false" Condition="Exists('$(AddinSource)')" />
   </Target>
 
 </Project>
