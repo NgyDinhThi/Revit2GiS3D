@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8" />
+  <title>Revit 3D GeoJSON Viewer</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <style>
+    html, body { height: 100%; margin: 0; background:#131313; }
+    #hud {
+      position: fixed; top: 8px; left: 8px; z-index: 10;
+      color:#fff; background:rgba(0,0,0,.45); padding:6px 10px; border-radius:8px;
+      font: 12px/1.4 system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+      user-select: none;
+    }
+    a, a:visited { color:#8bd0ff; }
+    canvas { display:block; }
+  </style>
+
+  <!-- Three.js (ES Modules) -->
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://cdn.jsdelivr.net/npm/three@0.158.0/build/three.module.js",
+      "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.158.0/examples/jsm/"
+    }
+  }
+  </script>
+</head>
+<body>
+  <div id="hud">
+    <b>Revit 3D GeoJSON Viewer</b> — kéo chuột để xoay, cuộn để zoom<br/>
+    Phím: <b>F</b> fit khung hình · <b>W</b> bật/tắt wireframe · <b>G</b> bật/tắt grid
+  </div>
+
+  <script type="module">
+    import * as THREE from 'three';
+    import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+    import { GridHelper } from 'three';
+
+    // ====== Lấy tên file từ query ======
+    const params = new URLSearchParams(location.search);
+    const file = params.get('file');
+    if (!file) {
+      alert('Không tìm thấy tham số ?file=.*json'); throw new Error('Missing file param');
+    }
+
+    // ====== Scene / Renderer / Camera ======
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x131313);
+
+    const renderer = new THREE.WebGLRenderer({ antialias:true });
+    renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.outputColorSpace = THREE.SRGBColorSpace; // thay cho outputEncoding
+    document.body.appendChild(renderer.domElement);
+
+    const camera = new THREE.PerspectiveCamera(60, window.innerWidth/window.innerHeight, 0.1, 100000);
+    camera.position.set(10, 10, 14);
+
+    const controls = new OrbitControls(camera, renderer.domElement);
+    controls.enableDamping = true;
+    controls.dampingFactor = 0.05;
+
+    // Ánh sáng
+    scene.add(new THREE.AmbientLight(0xffffff, 0.7));
+    const dir = new THREE.DirectionalLight(0xffffff, 1.1);
+    dir.position.set(150, 200, 250);
+    scene.add(dir);
+
+    // Lưới / trục
+    const grid = new GridHelper(100, 100);
+    grid.material.opacity = 0.15; grid.material.transparent = true;
+    grid.rotateX(Math.PI/2); // nằm theo mặt phẳng XY (Z-up)
+    scene.add(grid);
+
+    // Vật liệu
+    const matMesh = new THREE.MeshStandardMaterial({
+      color: 0xdddddd, metalness: 0.05, roughness: 0.95, side: THREE.DoubleSide
+    });
+    const matWire = new THREE.LineBasicMaterial({ color: 0x00a2ff, transparent:true, opacity:0.35 });
+    let wireframeObjects = [];
+
+    // ====== Loader JSON từ Flask ======
+    const url = `/data/${encodeURIComponent(file)}`;
+    fetch(url)
+      .then(r => {
+        if (!r.ok) throw new Error(`HTTP ${r.status} khi tải ${url}`);
+        return r.json();
+      })
+      .then(drawFromGeoJSON)
+      .catch(err => {
+        console.error('❌ Lỗi tải JSON:', err);
+        alert('Không thể tải hoặc parse file JSON. Xem Console để biết chi tiết.');
+      });
+
+    // ====== Vẽ từ GeoJSON (FeatureCollection) ======
+    function drawFromGeoJSON(data) {
+      const allPts = [];
+
+      // Hỗ trợ: Mesh | Polygon (đã tam giác hoá) | MultiPolygon | LineString | MultiLineString
+      const ensureArray = (x) => Array.isArray(x) ? x : [x];
+
+      const addTriangle = (a, b, c, group) => {
+        group.vertices.push(a[0], a[1], a[2] ?? 0);
+        group.vertices.push(b[0], b[1], b[2] ?? 0);
+        group.vertices.push(c[0], c[1], c[2] ?? 0);
+        allPts.push(new THREE.Vector3(a[0], a[1], a[2] ?? 0));
+        allPts.push(new THREE.Vector3(b[0], b[1], b[2] ?? 0));
+        allPts.push(new THREE.Vector3(c[0], c[1], c[2] ?? 0));
+      };
+
+      // gom theo element để tạo 1 mesh/element
+      const groups = [];
+
+      const pushMesh = (verts, idx) => {
+        const geo = new THREE.BufferGeometry();
+        geo.setAttribute('position', new THREE.Float32BufferAttribute(verts, 3));
+        if (idx && idx.length) geo.setIndex(idx);
+        geo.computeVertexNormals();
+        const mesh = new THREE.Mesh(geo, matMesh.clone());
+        scene.add(mesh);
+
+        // wireframe
+        const wire = new THREE.LineSegments(new THREE.WireframeGeometry(geo), matWire.clone());
+        wireframeObjects.push(wire);
+        scene.add(wire);
+      };
+
+      const handleFeature = (feature) => {
+        const geom = feature?.geometry;
+        if (!geom) return;
+
+        // 1) Mesh (vertices: number[], faces: number[])
+        if (geom.type === 'Mesh' && Array.isArray(geom.vertices) && Array.isArray(geom.faces)) {
+          const verts = Float32Array.from(geom.vertices).length ? geom.vertices : [];
+          const faces = Array.isArray(geom.faces) ? geom.faces : [];
+          faces.forEach((i, k) => { /* chỉ để force array type */ });
+
+          // thu thập điểm để fit camera
+          for (let i = 0; i < verts.length; i += 3) {
+            allPts.push(new THREE.Vector3(verts[i], verts[i+1], verts[i+2]));
+          }
+
+          pushMesh(verts, faces);
+          return;
+        }
+
+        // 2) Polygon / MultiPolygon (đã tam giác hoá: ring có 3 điểm + điểm đóng)
+        if (geom.type === 'Polygon' || geom.type === 'MultiPolygon') {
+          const polys = geom.type === 'Polygon' ? [geom.coordinates] : geom.coordinates;
+          const group = { vertices: [] };
+
+          polys.forEach(poly => {
+            // poly: [ ring0, ring1 (holes) ... ] — ta dùng ring0, giả định đã là tam giác closed [p1,p2,p3,p1]
+            const ring = ensureArray(poly)[0];
+            // Nếu không phải tam giác, bỏ qua (tránh vẽ bậy)
+            if (!Array.isArray(ring) || ring.length < 3) return;
+
+            // Nếu là tam giác khép kín: [A,B,C,A]
+            if (ring.length >= 3) {
+              for (let i = 0; i + 2 < ring.length; i += 3) {
+                const a = ring[i], b = ring[i + 1], c = ring[i + 2];
+                if (!a || !b || !c) break;
+                addTriangle(a, b, c, group);
+              }
+            }
+          });
+
+          if (group.vertices.length) pushMesh(group.vertices);
+          return;
+        }
+
+        // 3) LineString / MultiLineString → vẽ line segments
+        if (geom.type === 'LineString' || geom.type === 'MultiLineString') {
+          const lines = geom.type === 'LineString' ? [geom.coordinates] : geom.coordinates;
+          const lv = [];
+          lines.forEach(line => {
+            for (let i = 0; i < line.length - 1; i++) {
+              const p1 = line[i], p2 = line[i+1];
+              if (!p1 || !p2) continue;
+              lv.push(p1[0], p1[1], p1[2] ?? 0, p2[0], p2[1], p2[2] ?? 0);
+              allPts.push(new THREE.Vector3(p1[0], p1[1], p1[2] ?? 0));
+              allPts.push(new THREE.Vector3(p2[0], p2[1], p2[2] ?? 0));
+            }
+          });
+          if (lv.length) {
+            const geo = new THREE.BufferGeometry();
+            geo.setAttribute('position', new THREE.Float32BufferAttribute(lv, 3));
+            const lineseg = new THREE.LineSegments(geo, new THREE.LineBasicMaterial({ color: 0xffcc00 }));
+            scene.add(lineseg);
+          }
+          return;
+        }
+      };
+
+      // FeatureCollection / Feature
+      if (data?.type === 'FeatureCollection' && Array.isArray(data.features)) {
+        data.features.forEach(handleFeature);
+      } else if (data?.type === 'Feature' && data.geometry) {
+        handleFeature(data);
+      } else if (data?.type && data.coordinates) {
+        // raw geometry
+        handleFeature({ geometry: data });
+      } else {
+        console.warn('Dữ liệu không đúng GeoJSON mong đợi', data);
+      }
+
+      // Fit camera
+      if (allPts.length) {
+        const box = new THREE.Box3().setFromPoints(allPts);
+        const center = box.getCenter(new THREE.Vector3());
+        const size = box.getSize(new THREE.Vector3());
+        const radius = size.length() * 0.5 || 1;
+
+        controls.target.copy(center);
+        camera.position.copy(center);
+        camera.position.add(new THREE.Vector3(radius, radius * 0.6, radius));
+        camera.near = Math.max(radius / 1000, 0.1);
+        camera.far = radius * 1000;
+        camera.updateProjectionMatrix();
+        controls.update();
+      } else {
+        console.warn('Không tạo được điểm nào để fit camera.');
+      }
+    }
+
+    // ====== Interaction ======
+    function animate() {
+      requestAnimationFrame(animate);
+      controls.update();
+      renderer.render(scene, camera);
+    }
+    animate();
+
+    window.addEventListener('resize', () => {
+      camera.aspect = innerWidth / innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(innerWidth, innerHeight);
+    });
+
+    window.addEventListener('keydown', (e) => {
+      if (e.key === 'f' || e.key === 'F') {
+        // refit: đơn giản là kích hoạt lại resize để re-render
+        renderer.setSize(innerWidth, innerHeight);
+      }
+      if (e.key === 'g' || e.key === 'G') {
+        grid.visible = !grid.visible;
+      }
+      if (e.key === 'w' || e.key === 'W') {
+        // toggle wireframe objects
+        wireframeObjects.forEach(w => w.visible = !w.visible);
+      }
+    });
+  </script>
+</body>
+</html>

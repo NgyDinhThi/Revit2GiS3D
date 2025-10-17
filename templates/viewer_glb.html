@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <title>Revit 3D Viewer (.glb)</title>
+  <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.4.0/model-viewer.min.js"></script>
+  <style>
+    html, body { margin: 0; height: 100%; background-color: #222; }
+    model-viewer { width: 100%; height: 100%; }
+  </style>
+</head>
+<body>
+  <model-viewer id="viewer" camera-controls auto-rotate ar shadow-intensity="1"></model-viewer>
+  <script>
+    const urlParams = new URLSearchParams(window.location.search);
+    const modelFile = urlParams.get('file');
+    if (modelFile) {
+      document.getElementById('viewer').src = `/data/${encodeURIComponent(modelFile)}`;
+    } else {
+      alert("Không tìm thấy file GLB trong URL!");
+    }
+  </script>
+</body>
+</html>
