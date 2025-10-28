@@ -55,6 +55,7 @@
   <ItemGroup>
     <PackageReference Include="netDxf" Version="2023.11.10" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
+    <PackageReference Include="SharpGLTF.Toolkit" Version="1.0.5" />
     <PackageReference Include="Speckle.Core" Version="2.23.2" />
     <PackageReference Include="SQLitePCLRaw.bundle_e_sqlite3" Version="3.0.2" />
   </ItemGroup>
