@@ -6,23 +6,43 @@ using System.Text;
 using System.Diagnostics;
 using Newtonsoft.Json;
 using System.Linq;
+using System.Security.Cryptography;
+using System.Text.RegularExpressions;
 
 namespace RevitToGISsupport.Services
 {
     public static class GLBExporter
     {
-        /// <summary>
-        /// Xuất GLB: POSITION + COLOR_0 (màu theo Category), kèm POINTS nếu có.
-        /// </summary>
+        // cấu hình nhanh
+        private const bool USE_LINES = true;
+        private const bool FIX_WINDING = true;
+
+        // bảng màu cố định cho một số category phổ biến
+        private static readonly Dictionary<string, (float r, float g, float b)> FixedPalette =
+            new(StringComparer.OrdinalIgnoreCase)
+            {
+                ["Walls"] = (0.85f, 0.40f, 0.95f),
+                ["Floors"] = (1.00f, 0.50f, 0.65f),
+                ["Roofs"] = (0.98f, 0.98f, 0.25f),
+                ["Columns"] = (1.00f, 0.65f, 0.40f),
+                ["Doors"] = (0.95f, 0.55f, 0.35f),
+                ["Windows"] = (0.45f, 0.75f, 0.95f),
+            };
+
+        /// <summary>Xuất GLB gồm TRIANGLES (POSITION+NORMAL+COLOR_0), LINES (viền, tùy chọn) và POINTS (nếu có).</summary>
         public static void ExportToGLB(GISStream stream, string outputPath)
         {
             if (stream == null || stream.objects == null || stream.objects.Count == 0)
                 throw new ArgumentException("Stream is empty.");
 
             var triVerts = new List<float>();
-            var triColors = new List<float>();   // song hành với triVerts
+            var triNormals = new List<float>();
+            var triColors = new List<float>();
             var triIndices = new List<int>();
+
+            var lineIndices = new List<int>();
             var pointVerts = new List<float>();
+
             int triVertexOffset = 0;
 
             foreach (var obj in stream.objects)
@@ -48,10 +68,16 @@ namespace RevitToGISsupport.Services
                                     ring.RemoveAt(ring.Count - 1);
                             }
 
+                            var nTest = ComputeFaceNormal(ring);
+                            if (FIX_WINDING && nTest[2] < 0) ring.Reverse();
+
                             var props = obj.properties ?? new Dictionary<string, object>();
                             var col = GetColorForCategory(props);
+                            var nFlat = ComputeFaceNormal(ring);
 
+                            int baseOffset = triVertexOffset;
                             int added = 0;
+
                             foreach (var c in ring)
                             {
                                 if (c.Count >= 3)
@@ -59,6 +85,10 @@ namespace RevitToGISsupport.Services
                                     triVerts.Add((float)c[0]);
                                     triVerts.Add((float)c[1]);
                                     triVerts.Add((float)c[2]);
+
+                                    triNormals.Add((float)nFlat[0]);
+                                    triNormals.Add((float)nFlat[1]);
+                                    triNormals.Add((float)nFlat[2]);
 
                                     triColors.Add(col.r);
                                     triColors.Add(col.g);
@@ -76,8 +106,20 @@ namespace RevitToGISsupport.Services
                                     triIndices.Add(triVertexOffset + i);
                                     triIndices.Add(triVertexOffset + i + 1);
                                 }
-                                triVertexOffset += added;
                             }
+
+                            if (USE_LINES && added >= 2)
+                            {
+                                for (int i = 0; i < added - 1; i++)
+                                {
+                                    lineIndices.Add(baseOffset + i);
+                                    lineIndices.Add(baseOffset + i + 1);
+                                }
+                                lineIndices.Add(baseOffset + (added - 1));
+                                lineIndices.Add(baseOffset + 0);
+                            }
+
+                            triVertexOffset += added;
                         }
                     }
                     else if (type == "Point")
@@ -105,29 +147,49 @@ namespace RevitToGISsupport.Services
                 throw new Exception("No geometry to export.");
 
             var triVertexBytes = FloatListToBytes(triVerts);
+            var triNormalBytes = FloatListToBytes(triNormals);
             var triColorBytes = FloatListToBytes(triColors);
             var pointVertexBytes = FloatListToBytes(pointVerts);
 
-            byte[] indexBytes = Array.Empty<byte>();
-            int indexComponentType = 0;
+            byte[] triIndexBytes = Array.Empty<byte>();
+            int triIndexComponentType = 0;
             if (triIndices.Count > 0)
             {
                 int maxIndex = triIndices.Max();
                 if (maxIndex <= 0xFFFF)
                 {
-                    indexComponentType = 5123; // USHORT
-                    ushort[] us = new ushort[triIndices.Count];
-                    for (int i = 0; i < triIndices.Count; i++) us[i] = (ushort)triIndices[i];
-                    indexBytes = new byte[us.Length * sizeof(ushort)];
-                    Buffer.BlockCopy(us, 0, indexBytes, 0, indexBytes.Length);
+                    triIndexComponentType = 5123;
+                    var us = triIndices.Select(i => (ushort)i).ToArray();
+                    triIndexBytes = new byte[us.Length * sizeof(ushort)];
+                    Buffer.BlockCopy(us, 0, triIndexBytes, 0, triIndexBytes.Length);
                 }
                 else
                 {
-                    indexComponentType = 5125; // UINT
-                    uint[] ui = new uint[triIndices.Count];
-                    for (int i = 0; i < triIndices.Count; i++) ui[i] = (uint)triIndices[i];
-                    indexBytes = new byte[ui.Length * sizeof(uint)];
-                    Buffer.BlockCopy(ui, 0, indexBytes, 0, indexBytes.Length);
+                    triIndexComponentType = 5125;
+                    var ui = triIndices.Select(i => (uint)i).ToArray();
+                    triIndexBytes = new byte[ui.Length * sizeof(uint)];
+                    Buffer.BlockCopy(ui, 0, triIndexBytes, 0, triIndexBytes.Length);
+                }
+            }
+
+            byte[] lineIndexBytes = Array.Empty<byte>();
+            int lineIndexComponentType = 0;
+            if (USE_LINES && lineIndices.Count > 0)
+            {
+                int maxIndex = lineIndices.Max();
+                if (maxIndex <= 0xFFFF)
+                {
+                    lineIndexComponentType = 5123;
+                    var us = lineIndices.Select(i => (ushort)i).ToArray();
+                    lineIndexBytes = new byte[us.Length * sizeof(ushort)];
+                    Buffer.BlockCopy(us, 0, lineIndexBytes, 0, lineIndexBytes.Length);
+                }
+                else
+                {
+                    lineIndexComponentType = 5125;
+                    var ui = lineIndices.Select(i => (uint)i).ToArray();
+                    lineIndexBytes = new byte[ui.Length * sizeof(uint)];
+                    Buffer.BlockCopy(ui, 0, lineIndexBytes, 0, lineIndexBytes.Length);
                 }
             }
 
@@ -135,6 +197,13 @@ namespace RevitToGISsupport.Services
 
             int triVertexOffsetBytes = AlignTo4(offset);
             offset = triVertexOffsetBytes + triVertexBytes.Length;
+
+            int triNormalOffsetBytes = -1;
+            if (triNormalBytes.Length > 0)
+            {
+                triNormalOffsetBytes = AlignTo4(offset);
+                offset = triNormalOffsetBytes + triNormalBytes.Length;
+            }
 
             int triColorOffsetBytes = -1;
             if (triColorBytes.Length > 0)
@@ -150,35 +219,39 @@ namespace RevitToGISsupport.Services
                 offset = pointVertexOffsetBytes + pointVertexBytes.Length;
             }
 
-            int indexOffsetBytes = -1;
-            if (indexBytes.Length > 0)
+            int triIndexOffsetBytes = -1;
+            if (triIndexBytes.Length > 0)
             {
-                indexOffsetBytes = AlignTo4(offset);
-                offset = indexOffsetBytes + indexBytes.Length;
+                triIndexOffsetBytes = AlignTo4(offset);
+                offset = triIndexOffsetBytes + triIndexBytes.Length;
+            }
+
+            int lineIndexOffsetBytes = -1;
+            if (lineIndexBytes.Length > 0)
+            {
+                lineIndexOffsetBytes = AlignTo4(offset);
+                offset = lineIndexOffsetBytes + lineIndexBytes.Length;
             }
 
             int totalBinLength = AlignTo4(offset);
 
             byte[] binChunk = new byte[totalBinLength];
             if (triVertexBytes.Length > 0) Buffer.BlockCopy(triVertexBytes, 0, binChunk, triVertexOffsetBytes, triVertexBytes.Length);
+            if (triNormalBytes.Length > 0) Buffer.BlockCopy(triNormalBytes, 0, binChunk, triNormalOffsetBytes, triNormalBytes.Length);
             if (triColorBytes.Length > 0) Buffer.BlockCopy(triColorBytes, 0, binChunk, triColorOffsetBytes, triColorBytes.Length);
             if (pointVertexBytes.Length > 0) Buffer.BlockCopy(pointVertexBytes, 0, binChunk, pointVertexOffsetBytes, pointVertexBytes.Length);
-            if (indexBytes.Length > 0) Buffer.BlockCopy(indexBytes, 0, binChunk, indexOffsetBytes, indexBytes.Length);
+            if (triIndexBytes.Length > 0) Buffer.BlockCopy(triIndexBytes, 0, binChunk, triIndexOffsetBytes, triIndexBytes.Length);
+            if (lineIndexBytes.Length > 0) Buffer.BlockCopy(lineIndexBytes, 0, binChunk, lineIndexOffsetBytes, lineIndexBytes.Length);
 
             var bufferViews = new List<object>();
             var accessors = new List<object>();
 
-            int triAccessorIndex = -1, triColorAccessorIndex = -1, pointAccessorIndex = -1, indexAccessorIndex = -1;
+            int triPosAccessor = -1, triNorAccessor = -1, triColAccessor = -1;
+            int pointPosAccessor = -1, triIdxAccessor = -1, lineIdxAccessor = -1;
 
             if (triVertexBytes.Length > 0)
             {
-                bufferViews.Add(new
-                {
-                    buffer = 0,
-                    byteOffset = triVertexOffsetBytes,
-                    byteLength = triVertexBytes.Length,
-                    target = 34962
-                });
+                bufferViews.Add(new { buffer = 0, byteOffset = triVertexOffsetBytes, byteLength = triVertexBytes.Length, target = 34962 });
                 var (minT, maxT) = ComputeMinMax(triVerts);
                 accessors.Add(new
                 {
@@ -190,38 +263,40 @@ namespace RevitToGISsupport.Services
                     min = new[] { minT[0], minT[1], minT[2] },
                     max = new[] { maxT[0], maxT[1], maxT[2] }
                 });
-                triAccessorIndex = accessors.Count - 1;
+                triPosAccessor = accessors.Count - 1;
             }
 
-            if (triColorBytes.Length > 0)
+            if (triNormalBytes.Length > 0)
             {
-                bufferViews.Add(new
-                {
-                    buffer = 0,
-                    byteOffset = triColorOffsetBytes,
-                    byteLength = triColorBytes.Length,
-                    target = 34962
-                });
+                bufferViews.Add(new { buffer = 0, byteOffset = triNormalOffsetBytes, byteLength = triNormalBytes.Length, target = 34962 });
                 accessors.Add(new
                 {
                     bufferView = bufferViews.Count - 1,
                     byteOffset = 0,
-                    componentType = 5126, // FLOAT
+                    componentType = 5126,
+                    count = triNormals.Count / 3,
+                    type = "VEC3"
+                });
+                triNorAccessor = accessors.Count - 1;
+            }
+
+            if (triColorBytes.Length > 0)
+            {
+                bufferViews.Add(new { buffer = 0, byteOffset = triColorOffsetBytes, byteLength = triColorBytes.Length, target = 34962 });
+                accessors.Add(new
+                {
+                    bufferView = bufferViews.Count - 1,
+                    byteOffset = 0,
+                    componentType = 5126,
                     count = triColors.Count / 3,
                     type = "VEC3"
                 });
-                triColorAccessorIndex = accessors.Count - 1;
+                triColAccessor = accessors.Count - 1;
             }
 
             if (pointVertexBytes.Length > 0)
             {
-                bufferViews.Add(new
-                {
-                    buffer = 0,
-                    byteOffset = pointVertexOffsetBytes,
-                    byteLength = pointVertexBytes.Length,
-                    target = 34962
-                });
+                bufferViews.Add(new { buffer = 0, byteOffset = pointVertexOffsetBytes, byteLength = pointVertexBytes.Length, target = 34962 });
                 var (minP, maxP) = ComputeMinMax(pointVerts);
                 accessors.Add(new
                 {
@@ -233,47 +308,71 @@ namespace RevitToGISsupport.Services
                     min = new[] { minP[0], minP[1], minP[2] },
                     max = new[] { maxP[0], maxP[1], maxP[2] }
                 });
-                pointAccessorIndex = accessors.Count - 1;
+                pointPosAccessor = accessors.Count - 1;
             }
 
-            if (indexBytes.Length > 0)
+            if (triIndexBytes.Length > 0)
             {
-                bufferViews.Add(new
-                {
-                    buffer = 0,
-                    byteOffset = indexOffsetBytes,
-                    byteLength = indexBytes.Length,
-                    target = 34963
-                });
+                bufferViews.Add(new { buffer = 0, byteOffset = triIndexOffsetBytes, byteLength = triIndexBytes.Length, target = 34963 });
                 accessors.Add(new
                 {
                     bufferView = bufferViews.Count - 1,
                     byteOffset = 0,
-                    componentType = indexComponentType,
+                    componentType = triIndexComponentType,
                     count = triIndices.Count,
                     type = "SCALAR"
                 });
-                indexAccessorIndex = accessors.Count - 1;
+                triIdxAccessor = accessors.Count - 1;
+            }
+
+            if (lineIndexBytes.Length > 0)
+            {
+                bufferViews.Add(new { buffer = 0, byteOffset = lineIndexOffsetBytes, byteLength = lineIndexBytes.Length, target = 34963 });
+                accessors.Add(new
+                {
+                    bufferView = bufferViews.Count - 1,
+                    byteOffset = 0,
+                    componentType = lineIndexComponentType,
+                    count = lineIndices.Count,
+                    type = "SCALAR"
+                });
+                lineIdxAccessor = accessors.Count - 1;
             }
 
             var primitives = new List<object>();
-            if (triAccessorIndex >= 0)
+
+            if (triPosAccessor >= 0)
             {
-                var prim = new Dictionary<string, object>();
-                var attrs = new Dictionary<string, int> { ["POSITION"] = triAccessorIndex };
-                if (triColorAccessorIndex >= 0) attrs["COLOR_0"] = triColorAccessorIndex;
-                prim["attributes"] = attrs;
-                if (indexAccessorIndex >= 0) prim["indices"] = indexAccessorIndex;
-                prim["mode"] = 4; // TRIANGLES
+                var attrs = new Dictionary<string, int> { ["POSITION"] = triPosAccessor };
+                if (triNorAccessor >= 0) attrs["NORMAL"] = triNorAccessor;
+                if (triColAccessor >= 0) attrs["COLOR_0"] = triColAccessor;
+
+                var prim = new Dictionary<string, object> { ["attributes"] = attrs, ["mode"] = 4 };
+                if (triIdxAccessor >= 0) prim["indices"] = triIdxAccessor;
                 primitives.Add(prim);
             }
 
-            if (pointAccessorIndex >= 0)
+            if (USE_LINES && lineIdxAccessor >= 0 && triPosAccessor >= 0)
             {
-                var primP = new Dictionary<string, object>();
-                primP["attributes"] = new Dictionary<string, int> { ["POSITION"] = pointAccessorIndex };
-                primP["mode"] = 0; // POINTS
-                primitives.Add(primP);
+                var attrsLine = new Dictionary<string, int> { ["POSITION"] = triPosAccessor };
+                if (triColAccessor >= 0) attrsLine["COLOR_0"] = triColAccessor;
+
+                var primLines = new Dictionary<string, object>
+                {
+                    ["attributes"] = attrsLine,
+                    ["mode"] = 1,
+                    ["indices"] = lineIdxAccessor
+                };
+                primitives.Add(primLines);
+            }
+
+            if (pointPosAccessor >= 0)
+            {
+                primitives.Add(new Dictionary<string, object>
+                {
+                    ["attributes"] = new Dictionary<string, int> { ["POSITION"] = pointPosAccessor },
+                    ["mode"] = 0
+                });
             }
 
             if (primitives.Count == 0) throw new Exception("No primitives to export.");
@@ -290,40 +389,36 @@ namespace RevitToGISsupport.Services
                 ["scene"] = 0
             };
 
-            string json = JsonConvert.SerializeObject(gltf, Formatting.None);
-            byte[] jsonBytes = Encoding.UTF8.GetBytes(json);
-            int jsonPad = (4 - (jsonBytes.Length % 4)) % 4;
-            if (jsonPad > 0)
-            {
-                var padded = new byte[jsonBytes.Length + jsonPad];
-                Buffer.BlockCopy(jsonBytes, 0, padded, 0, jsonBytes.Length);
-                for (int i = jsonBytes.Length; i < padded.Length; i++) padded[i] = 0x20;
-                jsonBytes = padded;
-            }
+            var jsonBytes = PadJson(JsonConvert.SerializeObject(gltf, Formatting.None));
 
-            using (var fs = new FileStream(outputPath, FileMode.Create, FileAccess.Write))
-            using (var bw = new BinaryWriter(fs))
-            {
-                bw.Write(0x46546C67); // "glTF"
-                bw.Write((uint)2);
-                uint totalLength = (uint)(12 + 8 + jsonBytes.Length + 8 + binChunk.Length);
-                bw.Write(totalLength);
+            using var fs = new FileStream(outputPath, FileMode.Create, FileAccess.Write);
+            using var bw = new BinaryWriter(fs);
+            bw.Write(0x46546C67);
+            bw.Write((uint)2);
+            bw.Write((uint)(12 + 8 + jsonBytes.Length + 8 + binChunk.Length));
+            bw.Write((uint)jsonBytes.Length);
+            bw.Write(Encoding.ASCII.GetBytes("JSON"));
+            bw.Write(jsonBytes);
+            bw.Write((uint)binChunk.Length);
+            bw.Write(Encoding.ASCII.GetBytes("BIN\0"));
+            bw.Write(binChunk);
 
-                bw.Write((uint)jsonBytes.Length);
-                bw.Write(Encoding.ASCII.GetBytes("JSON"));
-                bw.Write(jsonBytes);
-
-                bw.Write((uint)binChunk.Length);
-                bw.Write(Encoding.ASCII.GetBytes("BIN\0"));
-                bw.Write(binChunk);
-            }
-
-            Debug.WriteLine("GLB exported: " + outputPath);
+            Debug.WriteLine("GLB exported (stable colors + fixed winding + lines): " + outputPath);
         }
 
-        /// <summary>
-        /// Parse một ring toạ độ thành List<List<double>> (x,y,z).
-        /// </summary>
+        /// <summary>Chuyển JSON string sang bytes và pad 4.</summary>
+        private static byte[] PadJson(string json)
+        {
+            var bytes = Encoding.UTF8.GetBytes(json);
+            int pad = (4 - (bytes.Length % 4)) % 4;
+            if (pad == 0) return bytes;
+            var padded = new byte[bytes.Length + pad];
+            Buffer.BlockCopy(bytes, 0, padded, 0, bytes.Length);
+            for (int i = bytes.Length; i < padded.Length; i++) padded[i] = 0x20;
+            return padded;
+        }
+
+        /// <summary>Parse ring (x,y,z).</summary>
         private static List<List<double>> ParseRing(object ringObj)
         {
             try
@@ -338,10 +433,7 @@ namespace RevitToGISsupport.Services
                         {
                             var dd = new List<double>();
                             for (int k = 0; k < 3; k++)
-                            {
-                                if (double.TryParse(pObj[k].ToString(), out double v)) dd.Add(v);
-                                else dd.Add(0.0);
-                            }
+                                dd.Add(double.TryParse(pObj[k]?.ToString(), out double v) ? v : 0.0);
                             outList.Add(dd);
                         }
                         else if (p is List<double> pd && pd.Count >= 3)
@@ -356,9 +448,7 @@ namespace RevitToGISsupport.Services
             return null;
         }
 
-        /// <summary>
-        /// Lấy (x,y,z) từ list object.
-        /// </summary>
+        /// <summary>Ép toạ độ 3D từ list object.</summary>
         private static bool TryGet3D(List<object> coords, out double x, out double y, out double z)
         {
             x = y = z = 0;
@@ -369,9 +459,7 @@ namespace RevitToGISsupport.Services
             return true;
         }
 
-        /// <summary>
-        /// Chuyển list float sang mảng byte.
-        /// </summary>
+        /// <summary>Đổi list float sang byte[].</summary>
         private static byte[] FloatListToBytes(List<float> floats)
         {
             if (floats == null || floats.Count == 0) return Array.Empty<byte>();
@@ -380,14 +468,10 @@ namespace RevitToGISsupport.Services
             return b;
         }
 
-        /// <summary>
-        /// Căn 4 byte.
-        /// </summary>
+        /// <summary>Căn 4 byte.</summary>
         private static int AlignTo4(int x) => (x + 3) & ~3;
 
-        /// <summary>
-        /// Tính min/max theo trục cho POSITION.
-        /// </summary>
+        /// <summary>Tính min/max cho POSITION.</summary>
         private static (double[] min, double[] max) ComputeMinMax(List<float> floats)
         {
             double minX = double.MaxValue, minY = double.MaxValue, minZ = double.MaxValue;
@@ -407,28 +491,62 @@ namespace RevitToGISsupport.Services
             return (new[] { minX, minY, minZ }, new[] { maxX, maxY, maxZ });
         }
 
-        /// <summary>
-        /// Map Category -> màu RGB ổn định.
-        /// </summary>
+        /// <summary>Tính normal phẳng cho polygon.</summary>
+        private static double[] ComputeFaceNormal(List<List<double>> ring)
+        {
+            for (int i = 0; i < ring.Count - 2; i++)
+            {
+                var a = ring[i]; var b = ring[i + 1]; var c = ring[i + 2];
+                var ux = b[0] - a[0]; var uy = b[1] - a[1]; var uz = b[2] - a[2];
+                var vx = c[0] - a[0]; var vy = c[1] - a[1]; var vz = c[2] - a[2];
+                var nx = uy * vz - uz * vy;
+                var ny = uz * vx - ux * vz;
+                var nz = ux * vy - uy * vx;
+                var len = Math.Sqrt(nx * nx + ny * ny + nz * nz);
+                if (len > 1e-10) return new[] { nx / len, ny / len, nz / len };
+            }
+            return new[] { 0.0, 0.0, 1.0 };
+        }
+
+        /// <summary>Lấy key màu chuẩn từ props.</summary>
+        private static string GetColorKey(Dictionary<string, object> props)
+        {
+            string Read(string k) =>
+                (props != null && props.TryGetValue(k, out var v) && v != null) ? v.ToString().Trim() : null;
+
+            var cat = Read("Category");
+            var fam = Read("FamilyName");
+            var type = Read("TypeName");
+            var name = Read("Name");
+
+            var key = !string.IsNullOrWhiteSpace(cat) ? cat :
+                      !string.IsNullOrWhiteSpace(fam) ? $"Family:{fam}" :
+                      !string.IsNullOrWhiteSpace(type) ? $"Type:{type}" :
+                      !string.IsNullOrWhiteSpace(name) ? $"Name:{name}" : "Unknown";
+
+            return Regex.Replace(key, @"\s+", " ").Trim();
+        }
+
+        /// <summary>Map key -> màu RGB ổn định.</summary>
         private static (float r, float g, float b) GetColorForCategory(Dictionary<string, object> props)
         {
-            string cat = (props != null && props.TryGetValue("Category", out var v) && v != null)
-                            ? v.ToString()
-                            : "Unknown";
-            int hash = cat.GetHashCode();
-            double hue = ((hash & 0x7fffffff) % 360) / 360.0;
+            var key = GetColorKey(props);
+            if (FixedPalette.TryGetValue(key, out var fixedRgb))
+                return fixedRgb;
+
+            using var sha1 = SHA1.Create();
+            var bytes = Encoding.UTF8.GetBytes(key);
+            var hash = sha1.ComputeHash(bytes);
+            int hv = (hash[0] << 16) | (hash[1] << 8) | hash[2];
+            double hue = (hv % 360) / 360.0;
             var (r, g, b) = HslToRgb(hue, 0.60, 0.55);
             return ((float)r, (float)g, (float)b);
         }
 
-        /// <summary>
-        /// HSL(0..1) -> RGB(0..1).
-        /// </summary>
+        /// <summary>Đổi HSL(0..1) sang RGB(0..1).</summary>
         private static (double r, double g, double b) HslToRgb(double h, double s, double l)
         {
-            if (s <= 0.0)
-                return (l, l, l);
-
+            if (s <= 0.0) return (l, l, l);
             double q = l < 0.5 ? l * (1 + s) : l + s - l * s;
             double p = 2 * l - q;
 
