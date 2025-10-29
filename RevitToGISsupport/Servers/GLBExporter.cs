@@ -13,11 +13,15 @@ namespace RevitToGISsupport.Services
 {
     public static class GLBExporter
     {
-        // cấu hình nhanh
-        private const bool USE_LINES = true;
-        private const bool FIX_WINDING = true;
+        // ==== Cấu hình nhanh ===================================================
+        private const bool USE_LINES = true;      // bật/tắt viền line
+        private const bool FIX_WINDING = true;    // đảo vòng nếu normal âm
 
-        // bảng màu cố định cho một số category phổ biến
+        // Z-up (Revit/GIS) -> Y-up (glTF) + scale đơn vị
+        // feet -> meters: 0.3048f ; mm -> meters: 0.001f ; meters: 1f
+        private const float UNIT = 0.3048f;
+
+        // Bảng màu cố định (ưu tiên) cho một số category
         private static readonly Dictionary<string, (float r, float g, float b)> FixedPalette =
             new(StringComparer.OrdinalIgnoreCase)
             {
@@ -29,7 +33,10 @@ namespace RevitToGISsupport.Services
                 ["Windows"] = (0.45f, 0.75f, 0.95f),
             };
 
-        /// <summary>Xuất GLB gồm TRIANGLES (POSITION+NORMAL+COLOR_0), LINES (viền, tùy chọn) và POINTS (nếu có).</summary>
+        /// <summary>
+        /// Xuất GLB gồm TRIANGLES (POSITION+NORMAL+COLOR_0), LINES (viền, tùy chọn) và POINTS (nếu có).
+        /// ĐÃ đổi trục Z-up→Y-up ngay khi ghi dữ liệu + scale đơn vị.
+        /// </summary>
         public static void ExportToGLB(GISStream stream, string outputPath)
         {
             if (stream == null || stream.objects == null || stream.objects.Count == 0)
@@ -60,6 +67,7 @@ namespace RevitToGISsupport.Services
                             var ring = ParseRing(coordsList[0]);
                             if (ring == null || ring.Count < 3) continue;
 
+                            // bỏ điểm đóng duplicate
                             if (ring.Count > 1)
                             {
                                 var first = ring[0];
@@ -67,13 +75,15 @@ namespace RevitToGISsupport.Services
                                 if (Math.Abs(first[0] - last[0]) < 1e-6 && Math.Abs(first[1] - last[1]) < 1e-6)
                                     ring.RemoveAt(ring.Count - 1);
                             }
+                            if (ring.Count < 3) continue;
 
+                            // fix winding nếu cần (theo Z-up trước khi transform)
                             var nTest = ComputeFaceNormal(ring);
                             if (FIX_WINDING && nTest[2] < 0) ring.Reverse();
 
                             var props = obj.properties ?? new Dictionary<string, object>();
                             var col = GetColorForCategory(props);
-                            var nFlat = ComputeFaceNormal(ring);
+                            var nFlat = ComputeFaceNormal(ring); // normal trong Z-up
 
                             int baseOffset = triVertexOffset;
                             int added = 0;
@@ -82,14 +92,33 @@ namespace RevitToGISsupport.Services
                             {
                                 if (c.Count >= 3)
                                 {
-                                    triVerts.Add((float)c[0]);
-                                    triVerts.Add((float)c[1]);
-                                    triVerts.Add((float)c[2]);
+                                    // ---- Z-up -> Y-up + scale ----
+                                    float x = (float)c[0];
+                                    float y = (float)c[1];
+                                    float z = (float)c[2];
 
-                                    triNormals.Add((float)nFlat[0]);
-                                    triNormals.Add((float)nFlat[1]);
-                                    triNormals.Add((float)nFlat[2]);
+                                    float xx = UNIT * x;
+                                    float yy = UNIT * z;    // Y' = Z
+                                    float zz = UNIT * (-y); // Z' = -Y
 
+                                    triVerts.Add(xx);
+                                    triVerts.Add(yy);
+                                    triVerts.Add(zz);
+
+                                    // ---- Transform normal tương ứng (chỉ xoay, không scale) ----
+                                    float nx = (float)nFlat[0];
+                                    float ny = (float)nFlat[1];
+                                    float nz = (float)nFlat[2];
+
+                                    float nx2 = nx;
+                                    float ny2 = nz;   // Y' = Z
+                                    float nz2 = -ny;  // Z' = -Y
+
+                                    triNormals.Add(nx2);
+                                    triNormals.Add(ny2);
+                                    triNormals.Add(nz2);
+
+                                    // ---- Color_0 ----
                                     triColors.Add(col.r);
                                     triColors.Add(col.g);
                                     triColors.Add(col.b);
@@ -98,6 +127,7 @@ namespace RevitToGISsupport.Services
                                 }
                             }
 
+                            // triangulate theo fan (giữ nguyên logic cũ của chị; nếu muốn ear-clipping thì thay block này)
                             if (added >= 3)
                             {
                                 for (int i = 1; i < added - 1; i++)
@@ -108,6 +138,7 @@ namespace RevitToGISsupport.Services
                                 }
                             }
 
+                            // lines (tùy chọn)
                             if (USE_LINES && added >= 2)
                             {
                                 for (int i = 0; i < added - 1; i++)
@@ -128,16 +159,23 @@ namespace RevitToGISsupport.Services
                         {
                             if (TryGet3D(coords, out var x, out var y, out var z))
                             {
-                                pointVerts.Add((float)x);
-                                pointVerts.Add((float)y);
-                                pointVerts.Add((float)z);
+                                // Z-up -> Y-up + scale
+                                float xx = UNIT * (float)x;
+                                float yy = UNIT * (float)z;
+                                float zz = UNIT * (float)(-y);
+                                pointVerts.Add(xx); pointVerts.Add(yy); pointVerts.Add(zz);
                             }
                         }
                         else if (coordsObj is List<double> coordsD && coordsD.Count >= 3)
                         {
-                            pointVerts.Add((float)coordsD[0]);
-                            pointVerts.Add((float)coordsD[1]);
-                            pointVerts.Add((float)coordsD[2]);
+                            float x = (float)coordsD[0];
+                            float y = (float)coordsD[1];
+                            float z = (float)coordsD[2];
+
+                            float xx = UNIT * x;
+                            float yy = UNIT * z;
+                            float zz = UNIT * (-y);
+                            pointVerts.Add(xx); pointVerts.Add(yy); pointVerts.Add(zz);
                         }
                     }
                 }
@@ -146,6 +184,7 @@ namespace RevitToGISsupport.Services
             if (triVerts.Count == 0 && pointVerts.Count == 0)
                 throw new Exception("No geometry to export.");
 
+            // ==== Build BIN =====================================================
             var triVertexBytes = FloatListToBytes(triVerts);
             var triNormalBytes = FloatListToBytes(triNormals);
             var triColorBytes = FloatListToBytes(triColors);
@@ -243,6 +282,7 @@ namespace RevitToGISsupport.Services
             if (triIndexBytes.Length > 0) Buffer.BlockCopy(triIndexBytes, 0, binChunk, triIndexOffsetBytes, triIndexBytes.Length);
             if (lineIndexBytes.Length > 0) Buffer.BlockCopy(lineIndexBytes, 0, binChunk, lineIndexOffsetBytes, lineIndexBytes.Length);
 
+            // ==== bufferViews & accessors ======================================
             var bufferViews = new List<object>();
             var accessors = new List<object>();
 
@@ -339,6 +379,7 @@ namespace RevitToGISsupport.Services
                 lineIdxAccessor = accessors.Count - 1;
             }
 
+            // ==== primitives & glTF ============================================
             var primitives = new List<object>();
 
             if (triPosAccessor >= 0)
@@ -393,20 +434,22 @@ namespace RevitToGISsupport.Services
 
             using var fs = new FileStream(outputPath, FileMode.Create, FileAccess.Write);
             using var bw = new BinaryWriter(fs);
-            bw.Write(0x46546C67);
+            bw.Write(0x46546C67); // "glTF"
             bw.Write((uint)2);
             bw.Write((uint)(12 + 8 + jsonBytes.Length + 8 + binChunk.Length));
+
             bw.Write((uint)jsonBytes.Length);
             bw.Write(Encoding.ASCII.GetBytes("JSON"));
             bw.Write(jsonBytes);
+
             bw.Write((uint)binChunk.Length);
             bw.Write(Encoding.ASCII.GetBytes("BIN\0"));
             bw.Write(binChunk);
 
-            Debug.WriteLine("GLB exported (stable colors + fixed winding + lines): " + outputPath);
+            Debug.WriteLine("GLB exported (Z-up->Y-up + unit scale): " + outputPath);
         }
 
-        /// <summary>Chuyển JSON string sang bytes và pad 4.</summary>
+        // ==== Helpers ==========================================================
         private static byte[] PadJson(string json)
         {
             var bytes = Encoding.UTF8.GetBytes(json);
@@ -418,7 +461,6 @@ namespace RevitToGISsupport.Services
             return padded;
         }
 
-        /// <summary>Parse ring (x,y,z).</summary>
         private static List<List<double>> ParseRing(object ringObj)
         {
             try
@@ -448,7 +490,6 @@ namespace RevitToGISsupport.Services
             return null;
         }
 
-        /// <summary>Ép toạ độ 3D từ list object.</summary>
         private static bool TryGet3D(List<object> coords, out double x, out double y, out double z)
         {
             x = y = z = 0;
@@ -459,7 +500,6 @@ namespace RevitToGISsupport.Services
             return true;
         }
 
-        /// <summary>Đổi list float sang byte[].</summary>
         private static byte[] FloatListToBytes(List<float> floats)
         {
             if (floats == null || floats.Count == 0) return Array.Empty<byte>();
@@ -468,10 +508,8 @@ namespace RevitToGISsupport.Services
             return b;
         }
 
-        /// <summary>Căn 4 byte.</summary>
         private static int AlignTo4(int x) => (x + 3) & ~3;
 
-        /// <summary>Tính min/max cho POSITION.</summary>
         private static (double[] min, double[] max) ComputeMinMax(List<float> floats)
         {
             double minX = double.MaxValue, minY = double.MaxValue, minZ = double.MaxValue;
@@ -491,7 +529,6 @@ namespace RevitToGISsupport.Services
             return (new[] { minX, minY, minZ }, new[] { maxX, maxY, maxZ });
         }
 
-        /// <summary>Tính normal phẳng cho polygon.</summary>
         private static double[] ComputeFaceNormal(List<List<double>> ring)
         {
             for (int i = 0; i < ring.Count - 2; i++)
@@ -508,7 +545,6 @@ namespace RevitToGISsupport.Services
             return new[] { 0.0, 0.0, 1.0 };
         }
 
-        /// <summary>Lấy key màu chuẩn từ props.</summary>
         private static string GetColorKey(Dictionary<string, object> props)
         {
             string Read(string k) =>
@@ -527,7 +563,6 @@ namespace RevitToGISsupport.Services
             return Regex.Replace(key, @"\s+", " ").Trim();
         }
 
-        /// <summary>Map key -> màu RGB ổn định.</summary>
         private static (float r, float g, float b) GetColorForCategory(Dictionary<string, object> props)
         {
             var key = GetColorKey(props);
@@ -535,7 +570,7 @@ namespace RevitToGISsupport.Services
                 return fixedRgb;
 
             using var sha1 = SHA1.Create();
-            var bytes = Encoding.UTF8.GetBytes(key);
+            var bytes = Encoding.UTF8.GetBytes(key ?? "Unknown");
             var hash = sha1.ComputeHash(bytes);
             int hv = (hash[0] << 16) | (hash[1] << 8) | hash[2];
             double hue = (hv % 360) / 360.0;
@@ -543,7 +578,6 @@ namespace RevitToGISsupport.Services
             return ((float)r, (float)g, (float)b);
         }
 
-        /// <summary>Đổi HSL(0..1) sang RGB(0..1).</summary>
         private static (double r, double g, double b) HslToRgb(double h, double s, double l)
         {
             if (s <= 0.0) return (l, l, l);
