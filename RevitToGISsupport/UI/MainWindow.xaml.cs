@@ -1,7 +1,6 @@
 ﻿using Newtonsoft.Json;
 using RevitToGISsupport.Models;
 using RevitToGISsupport.Services;
-using RevitToGISsupport.Utils;
 using System;
 using System.Diagnostics;
 using System.IO;
@@ -178,55 +177,53 @@ namespace RevitToGISsupport.UI
             }
         }
 
-        // ==========================
-        //  ONLY WATCH (FLASK)
-        // ==========================
-        private async void btnOnlineWatch_Click(object sender, RoutedEventArgs e)
-        {
-            try
-            {
-                btnOnlineWatch.IsEnabled = false;
-                lblStatus.Text = "Đang chuẩn bị dữ liệu...";
+        //SỬA ĐỂ NÂNG CẤP SAU
+        //private async void btnOnlineWatch_Click(object sender, RoutedEventArgs e)
+        //{
+        //    try
+        //    {
+        //        btnOnlineWatch.IsEnabled = false;
+        //        lblStatus.Text = "Đang chuẩn bị dữ liệu...";
 
-                var stream = OpenUI.LastStream;
-                if (stream == null || stream.objects == null || stream.objects.Count == 0)
-                {
-                    MessageBox.Show("Chưa có dữ liệu để xem. Vui lòng nhấn 'Collect' trước.",
-                        "OnlyWatch", MessageBoxButton.OK, MessageBoxImage.Warning);
-                    lblStatus.Text = "Không có dữ liệu để xem.";
-                    return;
-                }
+        //        var stream = OpenUI.LastStream;
+        //        if (stream == null || stream.objects == null || stream.objects.Count == 0)
+        //        {
+        //            MessageBox.Show("Chưa có dữ liệu để xem. Vui lòng nhấn 'Collect' trước.",
+        //                "OnlyWatch", MessageBoxButton.OK, MessageBoxImage.Warning);
+        //            lblStatus.Text = "Không có dữ liệu để xem.";
+        //            return;
+        //        }
 
-                // 🟢 Bước 1: Xuất lại JSON + GLB mới nhất
-                string exportFolder = Path.Combine(
-                    Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments),
-                    "RevitExports"
-                );
-                Directory.CreateDirectory(exportFolder);
+        //        // 🟢 Bước 1: Xuất lại JSON + GLB mới nhất
+        //        string exportFolder = Path.Combine(
+        //            Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments),
+        //            "RevitExports"
+        //        );
+        //        Directory.CreateDirectory(exportFolder);
 
-                lblStatus.Text = "Đang xuất file JSON và GLB...";
-                await Task.Run(() => ExportService.ExportJsonAndGlb(stream, exportFolder));
+        //        lblStatus.Text = "Đang xuất file JSON và GLB...";
+        //        await Task.Run(() => ExportService.ExportJsonAndGlb(stream, exportFolder));
 
-                // 🟢 Bước 2: Upload cả JSON + GLB lên Flask
-                lblStatus.Text = "Đang upload lên Flask...";
-                string flaskBase = "http://127.0.0.1:5000";
-                string viewerUrl = await UploadJsonAndGlbAsync(flaskBase, exportFolder);
+        //        // 🟢 Bước 2: Upload cả JSON + GLB lên Flask
+        //        lblStatus.Text = "Đang upload lên Flask...";
+        //        string flaskBase = "http://127.0.0.1:5000";
+        //        string viewerUrl = await UploadJsonAndGlbAsync(flaskBase, exportFolder);
 
-                // 🟢 Bước 3: Mở viewer trong trình duyệt
-                Process.Start(new ProcessStartInfo(viewerUrl) { UseShellExecute = true });
-                lblStatus.Text = "Đã mở viewer thành công.";
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show("❌ Lỗi khi xem online: " + ex.Message,
-                    "OnlyWatch", MessageBoxButton.OK, MessageBoxImage.Error);
-                lblStatus.Text = "Lỗi xem online.";
-            }
-            finally
-            {
-                btnOnlineWatch.IsEnabled = true;
-            }
-        }
+        //        // 🟢 Bước 3: Mở viewer trong trình duyệt
+        //        Process.Start(new ProcessStartInfo(viewerUrl) { UseShellExecute = true });
+        //        lblStatus.Text = "Đã mở viewer thành công.";
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        MessageBox.Show("❌ Lỗi khi xem online: " + ex.Message,
+        //            "OnlyWatch", MessageBoxButton.OK, MessageBoxImage.Error);
+        //        lblStatus.Text = "Lỗi xem online.";
+        //    }
+        //    finally
+        //    {
+        //        btnOnlineWatch.IsEnabled = true;
+        //    }
+        //}
 
 
         // (Hai hàm UploadGeoJson... giữ nguyên không thay đổi)

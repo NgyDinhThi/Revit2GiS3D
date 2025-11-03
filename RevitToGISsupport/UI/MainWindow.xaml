@@ -36,12 +36,15 @@
                     FontWeight="SemiBold"
                     Click="btnExportGLB_Click"/>
 
-            <Button x:Name="btnOnlineWatch"
+           <!--
+             <Button x:Name="btnOnlineWatch"
                     Content="Xem file online"
                     Height="36"
                     Margin="0,0,0,6"
                     FontWeight="Normal"
                     Click="btnOnlineWatch_Click"/>
+                      
+            -->
         </StackPanel>
 
         <!-- Status bar -->
