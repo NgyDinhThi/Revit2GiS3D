@@ -19,7 +19,7 @@ namespace RevitToGISsupport.Services
 
         // Z-up (Revit/GIS) -> Y-up (glTF) + scale đơn vị
         // feet -> meters: 0.3048f ; mm -> meters: 0.001f ; meters: 1f
-        private const float UNIT = 0.3048f;
+        private const float UNIT = 1f;
 
         // Bảng màu cố định (ưu tiên) cho một số category
         private static readonly Dictionary<string, (float r, float g, float b)> FixedPalette =
