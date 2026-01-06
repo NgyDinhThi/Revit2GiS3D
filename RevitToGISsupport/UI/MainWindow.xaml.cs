@@ -1,12 +1,11 @@
-﻿using Newtonsoft.Json;
+﻿using Autodesk.Revit.DB;
+using Newtonsoft.Json;
 using RevitToGISsupport.Models;
 using RevitToGISsupport.Services;
 using System;
 using System.Diagnostics;
 using System.IO;
 using System.Net.Http;
-using System.Reflection;
-using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
 
@@ -14,136 +13,131 @@ namespace RevitToGISsupport.UI
 {
     public partial class MainWindows : Window
     {
+        private Document _doc;
+
         public MainWindows()
         {
             InitializeComponent();
+            Loaded += MainWindows_Loaded;
         }
 
-        // ==========================
-        //  COLLECT
-        // ==========================
+        private void MainWindows_Loaded(object sender, RoutedEventArgs e)
+        {
+            _doc = OpenUI.ActiveDoc ?? OpenUI.UiApp?.ActiveUIDocument?.Document;
+
+            if (_doc == null)
+            {
+                lblStatus.Text = "Không lấy được Document. Hãy mở model và chạy lại lệnh add-in.";
+                return;
+            }
+
+            LoadViews();
+            lblStatus.Text = "Sẵn sàng.";
+        }
+
+        private void LoadViews()
+        {
+            if (_doc == null) return;
+
+            var views = ViewExportContext.GetExportableViews(_doc);
+            cbView.ItemsSource = views;
+
+            if (_doc.ActiveView != null)
+                cbView.SelectedItem = _doc.ActiveView;
+        }
+
+        private void SetSelectedViewToContext()
+        {
+            var selectedView = cbView.SelectedItem as View;
+            ViewExportContext.SelectedViewId = selectedView?.Id;
+        }
+
         private async void btnCollect_Click(object sender, RoutedEventArgs e)
         {
-            // BẮT ĐẦU ĐO THỜI GIAN
-            var stopwatch = System.Diagnostics.Stopwatch.StartNew();
-
             try
             {
                 btnCollect.IsEnabled = false;
                 lblStatus.Text = "Đang thu thập dữ liệu từ Revit...";
-                progressBar.Visibility = Visibility.Visible;
-                progressBar.Value = 0;
-                progressBar.Maximum = 100;
 
-                OpenUI.ProgressReporter = new Progress<int>(pct =>
+                _doc = OpenUI.ActiveDoc ?? OpenUI.UiApp?.ActiveUIDocument?.Document;
+                if (_doc == null)
                 {
-                    if (pct < 0) pct = 0;
-                    if (pct > 100) pct = 100;
-                    progressBar.Value = pct;
-                    lblStatus.Text = $"Đang thu thập... {pct}%";
-                });
+                    MessageBox.Show("Không lấy được Document. Hãy mở model trong Revit.", "Collect",
+                        MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
+
+                if (cbView.ItemsSource == null)
+                    LoadViews();
+
+                SetSelectedViewToContext();
 
                 OpenUI.CollectTcs = new TaskCompletionSource<bool>();
                 if (OpenUI.CollectEvent == null)
                 {
-                    MessageBox.Show("ExternalEvent chưa được khởi tạo. Hãy mở UI từ lệnh Revit trước.", "Lỗi", MessageBoxButton.OK, MessageBoxImage.Error);
+                    MessageBox.Show("ExternalEvent chưa được khởi tạo. Hãy chạy lệnh add-in mở UI từ Revit.", "Collect",
+                        MessageBoxButton.OK, MessageBoxImage.Error);
                     return;
                 }
+
                 OpenUI.CollectEvent.Raise();
 
                 var completed = await Task.WhenAny(OpenUI.CollectTcs.Task, Task.Delay(TimeSpan.FromMinutes(10)));
                 if (completed != OpenUI.CollectTcs.Task)
                 {
-                    MessageBox.Show("⏱️ Hết thời gian chờ (10 phút).", "Timeout", MessageBoxButton.OK, MessageBoxImage.Warning);
-                    lblStatus.Text = "Hết thời gian chờ";
+                    MessageBox.Show("Hết thời gian chờ (10 phút).", "Timeout",
+                        MessageBoxButton.OK, MessageBoxImage.Warning);
+                    lblStatus.Text = "Timeout";
                     return;
                 }
-
-                stopwatch.Stop();
-                var elapsed = stopwatch.Elapsed;
 
                 var stream = OpenUI.LastStream;
                 if (stream == null || stream.objects == null || stream.objects.Count == 0)
                 {
-                    MessageBox.Show("⚠️ Không thu được dữ liệu (stream rỗng).", "Collect", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    MessageBox.Show("Không thu được dữ liệu (stream rỗng).", "Collect",
+                        MessageBoxButton.OK, MessageBoxImage.Warning);
                     lblStatus.Text = "Không có dữ liệu";
+                    return;
                 }
-                else
-                {
-                    lblStatus.Text = $"Đã thu thập {stream.objects.Count} đối tượng";
-                    try
-                    {
-                        var exportFolder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "RevitExports");
-                        Directory.CreateDirectory(exportFolder);
-                        var jsonPath = Path.Combine(exportFolder, "revit_model.json");
-                        File.WriteAllText(jsonPath, JsonConvert.SerializeObject(stream.ToGeoJson(), Formatting.Indented));
-                    }
-                    catch { /* ignore IO */ }
 
-                    string timeString = $"{elapsed.Minutes} phút {elapsed.Seconds} giây";
-                    MessageBox.Show($"✅ Thu thập xong: {stream.objects.Count} đối tượng.\n⏱️ Thời gian xử lý: {timeString}", "Collect", MessageBoxButton.OK, MessageBoxImage.Information);
+                lblStatus.Text = $"Đã thu thập {stream.objects.Count} đối tượng";
+
+                try
+                {
+                    var exportFolder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "RevitExports");
+                    Directory.CreateDirectory(exportFolder);
+                    var jsonPath = Path.Combine(exportFolder, "revit_model.json");
+                    File.WriteAllText(jsonPath, JsonConvert.SerializeObject(stream.ToGeoJson(), Formatting.Indented));
                 }
+                catch { }
+
+                MessageBox.Show($"Thu thập xong: {stream.objects.Count} đối tượng.", "Collect",
+                    MessageBoxButton.OK, MessageBoxImage.Information);
             }
             catch (Exception ex)
             {
-                MessageBox.Show("Lỗi khi thu thập: " + ex.Message, "Collect", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show($"Lỗi khi thu thập: {ex.Message}", "Collect",
+                    MessageBoxButton.OK, MessageBoxImage.Error);
                 lblStatus.Text = "Lỗi thu thập";
             }
             finally
             {
-                if (stopwatch.IsRunning) stopwatch.Stop();
-                progressBar.Visibility = Visibility.Collapsed;
-                progressBar.Value = 0;
-                OpenUI.ProgressReporter = null;
                 btnCollect.IsEnabled = true;
             }
         }
 
-        // ==========================
-        //  EXPORT JSON/GLB
-        // ==========================
         private async void btnExportGLB_Click(object sender, RoutedEventArgs e)
         {
             try
             {
-                GISStream stream = OpenUI.LastStream;
-
-                // *** THAY ĐỔI QUAN TRỌNG BẮT ĐẦU TỪ ĐÂY ***
-                // Nếu chưa có dữ liệu, hãy tự động chạy Collect
+                var stream = OpenUI.LastStream;
                 if (stream == null)
                 {
-                    MessageBox.Show("Chưa có dữ liệu. Chương trình sẽ tự động thu thập từ Revit.", "Thông báo", MessageBoxButton.OK, MessageBoxImage.Information);
-
-                    lblStatus.Text = "Đang tự động thu thập...";
-                    btnExportGLB.IsEnabled = false; // Vô hiệu hóa nút trong khi thu thập
-                    progressBar.Visibility = Visibility.Visible;
-                    progressBar.IsIndeterminate = true; // Thanh tiến trình chạy vô hạn
-
-                    // Thực hiện quá trình Collect
-                    OpenUI.CollectTcs = new TaskCompletionSource<bool>();
-                    if (OpenUI.CollectEvent == null)
-                    {
-                        MessageBox.Show("ExternalEvent chưa được khởi tạo.", "Lỗi", MessageBoxButton.OK, MessageBoxImage.Error);
-                        return;
-                    }
-                    OpenUI.CollectEvent.Raise();
-                    await OpenUI.CollectTcs.Task; // Chờ cho đến khi Collect hoàn tất
-
-                    // Lấy dữ liệu mới
-                    stream = OpenUI.LastStream;
-
-                    progressBar.Visibility = Visibility.Collapsed;
-                    progressBar.IsIndeterminate = false;
-                }
-                // *** KẾT THÚC THAY ĐỔI ***
-
-                if (stream == null)
-                {
-                    MessageBox.Show("❌ Thu thập dữ liệu thất bại, không thể export.", "Export", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    MessageBox.Show("Chưa có dữ liệu. Hãy Collect trước.", "Export",
+                        MessageBoxButton.OK, MessageBoxImage.Warning);
                     return;
                 }
 
-                // Phần còn lại của hàm giữ nguyên: chọn thư mục và xuất file
                 string folderPath = null;
                 using (var dlg = new System.Windows.Forms.FolderBrowserDialog())
                 {
@@ -163,12 +157,13 @@ namespace RevitToGISsupport.UI
 
                 lblStatus.Text = "Xuất xong";
                 MessageBox.Show(
-                    $"✅ Đã xuất xong:\n- JSON: {Path.Combine(folderPath, "revit_model.json")}\n- GLB: {Path.Combine(folderPath, "revit_model.glb")}",
+                    $"Đã xuất xong:\n- JSON: {Path.Combine(folderPath, "revit_model.json")}\n- GLB: {Path.Combine(folderPath, "revit_model.glb")}",
                     "Export", MessageBoxButton.OK, MessageBoxImage.Information);
             }
             catch (Exception ex)
             {
-                MessageBox.Show("❌ Lỗi khi export: " + ex.Message, "Export", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show("Lỗi khi export: " + ex.Message, "Export",
+                    MessageBoxButton.OK, MessageBoxImage.Error);
                 lblStatus.Text = "Lỗi export";
             }
             finally
@@ -177,101 +172,59 @@ namespace RevitToGISsupport.UI
             }
         }
 
-        //SỬA ĐỂ NÂNG CẤP SAU
-        //private async void btnOnlineWatch_Click(object sender, RoutedEventArgs e)
-        //{
-        //    try
-        //    {
-        //        btnOnlineWatch.IsEnabled = false;
-        //        lblStatus.Text = "Đang chuẩn bị dữ liệu...";
-
-        //        var stream = OpenUI.LastStream;
-        //        if (stream == null || stream.objects == null || stream.objects.Count == 0)
-        //        {
-        //            MessageBox.Show("Chưa có dữ liệu để xem. Vui lòng nhấn 'Collect' trước.",
-        //                "OnlyWatch", MessageBoxButton.OK, MessageBoxImage.Warning);
-        //            lblStatus.Text = "Không có dữ liệu để xem.";
-        //            return;
-        //        }
-
-        //        // 🟢 Bước 1: Xuất lại JSON + GLB mới nhất
-        //        string exportFolder = Path.Combine(
-        //            Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments),
-        //            "RevitExports"
-        //        );
-        //        Directory.CreateDirectory(exportFolder);
-
-        //        lblStatus.Text = "Đang xuất file JSON và GLB...";
-        //        await Task.Run(() => ExportService.ExportJsonAndGlb(stream, exportFolder));
-
-        //        // 🟢 Bước 2: Upload cả JSON + GLB lên Flask
-        //        lblStatus.Text = "Đang upload lên Flask...";
-        //        string flaskBase = "http://127.0.0.1:5000";
-        //        string viewerUrl = await UploadJsonAndGlbAsync(flaskBase, exportFolder);
-
-        //        // 🟢 Bước 3: Mở viewer trong trình duyệt
-        //        Process.Start(new ProcessStartInfo(viewerUrl) { UseShellExecute = true });
-        //        lblStatus.Text = "Đã mở viewer thành công.";
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        MessageBox.Show("❌ Lỗi khi xem online: " + ex.Message,
-        //            "OnlyWatch", MessageBoxButton.OK, MessageBoxImage.Error);
-        //        lblStatus.Text = "Lỗi xem online.";
-        //    }
-        //    finally
-        //    {
-        //        btnOnlineWatch.IsEnabled = true;
-        //    }
-        //}
-
-
-        // (Hai hàm UploadGeoJson... giữ nguyên không thay đổi)
-        private static async Task<string> UploadGeoJsonToFlaskAsync(string flaskBaseUrl, string geojson)
+        private async void btnOnlineWatch_Click(object sender, RoutedEventArgs e)
         {
-            using var http = new HttpClient { Timeout = TimeSpan.FromMinutes(5) };
-            var content = new StringContent(geojson, Encoding.UTF8, "application/json");
-            var url = $"{flaskBaseUrl.TrimEnd('/')}/upload";
-            var res = await http.PostAsync(url, content);
-            var body = await res.Content.ReadAsStringAsync();
+            try
+            {
+                SetSelectedViewToContext();
 
-            if (!res.IsSuccessStatusCode)
-                throw new Exception($"Flask upload failed ({(int)res.StatusCode}): {body}");
+                var stream = OpenUI.LastStream;
+                if (stream == null)
+                {
+                    lblStatus.Text = "Đang tự động thu thập...";
+                    btnOnlineWatch.IsEnabled = false;
 
-            dynamic obj = JsonConvert.DeserializeObject(body);
-            string viewerUrl = (string)(obj?.viewer_url ?? obj?.url);
+                    OpenUI.CollectTcs = new TaskCompletionSource<bool>();
+                    OpenUI.CollectEvent?.Raise();
+                    await OpenUI.CollectTcs.Task;
 
-            if (string.IsNullOrWhiteSpace(viewerUrl))
-                throw new Exception("Flask trả về nhưng không có trường 'viewer_url' (body: " + body + ")");
+                    stream = OpenUI.LastStream;
+                }
 
-            if (viewerUrl.StartsWith("/"))
-                viewerUrl = flaskBaseUrl.TrimEnd('/') + viewerUrl;
+                if (stream == null || stream.objects == null || stream.objects.Count == 0)
+                {
+                    MessageBox.Show("Không có dữ liệu để upload.", "Online Watch",
+                        MessageBoxButton.OK, MessageBoxImage.Warning);
+                    lblStatus.Text = "Không có dữ liệu";
+                    return;
+                }
 
-            return viewerUrl;
-        }
+                btnOnlineWatch.IsEnabled = false;
+                lblStatus.Text = "Đang export...";
 
-        private static async Task<string> UploadGeoJsonMultipartAsync(string flaskBaseUrl, string geojson)
-        {
-            using var http = new HttpClient { Timeout = TimeSpan.FromMinutes(5) };
-            using var form = new MultipartFormDataContent();
-            form.Add(new ByteArrayContent(Encoding.UTF8.GetBytes(geojson)), "file", "revit_model.json");
+                string exportFolder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "RevitExports");
+                Directory.CreateDirectory(exportFolder);
 
-            var url = $"{flaskBaseUrl.TrimEnd('/')}/upload";
-            var res = await http.PostAsync(url, form);
-            var body = await res.Content.ReadAsStringAsync();
+                await Task.Run(() => ExportService.ExportJsonAndGlb(stream, exportFolder));
 
-            if (!res.IsSuccessStatusCode)
-                throw new Exception($"Flask upload (multipart) failed ({(int)res.StatusCode}): {body}");
+                lblStatus.Text = "Đang gửi dữ liệu lên server...";
+                string viewerUrl = await UploadJsonAndGlbAsync("http://127.0.0.1:5000", exportFolder);
 
-            dynamic obj = JsonConvert.DeserializeObject(body);
-            string viewerUrl = (string)(obj?.viewer_url ?? obj?.url);
-            if (string.IsNullOrWhiteSpace(viewerUrl))
-                throw new Exception("Flask (multipart) không trả 'viewer_url' (body: " + body + ")");
+                lblStatus.Text = "Đang mở trình duyệt...";
+                Process.Start(new ProcessStartInfo(viewerUrl) { UseShellExecute = true });
 
-            if (viewerUrl.StartsWith("/"))
-                viewerUrl = flaskBaseUrl.TrimEnd('/') + viewerUrl;
-
-            return viewerUrl;
+                lblStatus.Text = "Hoàn tất.";
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Lỗi: {ex.Message}", "Online View",
+                    MessageBoxButton.OK, MessageBoxImage.Error);
+                lblStatus.Text = "Gặp lỗi.";
+            }
+            finally
+            {
+                btnOnlineWatch.IsEnabled = true;
+            }
         }
 
         private static async Task<string> UploadJsonAndGlbAsync(string flaskBaseUrl, string folderPath)
@@ -299,14 +252,12 @@ namespace RevitToGISsupport.UI
             string viewerUrl = (string)(obj?.viewer_url ?? obj?.url);
 
             if (string.IsNullOrWhiteSpace(viewerUrl))
-                throw new Exception("Flask không trả về 'viewer_url' (body: " + body + ")");
+                throw new Exception("Flask không trả về 'viewer_url'.");
 
             if (viewerUrl.StartsWith("/"))
                 viewerUrl = flaskBaseUrl.TrimEnd('/') + viewerUrl;
 
             return viewerUrl;
         }
-
-
     }
 }

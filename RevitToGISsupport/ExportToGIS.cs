@@ -1,8 +1,6 @@
 ﻿using Autodesk.Revit.DB;
 using Autodesk.Revit.UI;
-using RevitToGISsupport;
 using System;
-using System.Windows;
 
 namespace RevitToGISsupport
 {
@@ -13,13 +11,12 @@ namespace RevitToGISsupport
         {
             try
             {
-                // Khởi tạo ExternalEvent
                 OpenUI.Initialize();
 
-                // (option) lưu UIApplication nếu cần: OpenUI.AppData = commandData; // nếu anh muốn
-                // Mở UI (modeless or dialog). Nếu dùng ShowDialog() và UI có owner mismatch, thay bằng window.Show();
-                OpenUI.ShowMainUI();
+                // Quan trọng: cache UIApplication/Document ngay khi chạy command
+                OpenUI.SetContext(commandData.Application);
 
+                OpenUI.ShowMainUI();
                 return Result.Succeeded;
             }
             catch (Exception ex)
@@ -28,6 +25,5 @@ namespace RevitToGISsupport
                 return Result.Failed;
             }
         }
-
     }
 }

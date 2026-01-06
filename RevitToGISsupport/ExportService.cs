@@ -18,7 +18,6 @@ namespace RevitToGISsupport.Services
                 objects = new List<GISObject>()
             };
 
-            // lấy tất cả element trong model
             var collector = new FilteredElementCollector(doc)
                 .WhereElementIsNotElementType();
 
@@ -61,15 +60,67 @@ namespace RevitToGISsupport.Services
             return stream;
         }
 
+        // NEW: collect theo View (Cách 1)
+        public static GISStream CollectData(Document doc, View view)
+        {
+            var stream = new GISStream
+            {
+                streamId = Guid.NewGuid().ToString(),
+                objects = new List<GISObject>()
+            };
+
+            FilteredElementCollector collector =
+                view != null
+                ? new FilteredElementCollector(doc, view.Id)
+                : new FilteredElementCollector(doc);
+
+            collector = collector.WhereElementIsNotElementType();
+
+            int count = 0;
+
+            var opt = new Options
+            {
+                ComputeReferences = true,
+                IncludeNonVisibleObjects = true,
+                DetailLevel = ViewDetailLevel.Fine
+            };
+
+            foreach (Element element in collector)
+            {
+                var props = ExtractProperties(element, doc);
+
+                GeometryElement geomElement = element.get_Geometry(opt);
+                if (geomElement != null)
+                {
+                    ProcessGeometry(geomElement, props, stream, ref count);
+                }
+                else if (element.Location is LocationPoint lp)
+                {
+                    var geometry = new Dictionary<string, object>
+                    {
+                        { "type", "Point" },
+                        { "coordinates", new List<double> {
+                            UnitUtils.ConvertFromInternalUnits(lp.Point.X, UnitTypeId.Meters),
+                            UnitUtils.ConvertFromInternalUnits(lp.Point.Y, UnitTypeId.Meters),
+                            UnitUtils.ConvertFromInternalUnits(lp.Point.Z, UnitTypeId.Meters)
+                        }}
+                    };
+                    stream.objects.Add(new GISObject(geometry, props));
+                    count++;
+                }
+            }
+
+            Debug.WriteLine($"✅ Đã gom {count} đối tượng theo View");
+            return stream;
+        }
+
         public static void ExportJsonAndGlb(GISStream stream, string folderPath)
         {
             Directory.CreateDirectory(folderPath);
 
-            // JSON
             string jsonPath = Path.Combine(folderPath, "revit_model.json");
             File.WriteAllText(jsonPath, JsonConvert.SerializeObject(stream.ToGeoJson(), Formatting.Indented));
 
-            // GLB
             string glbPath = Path.Combine(folderPath, "revit_model.glb");
             GLBExporter.ExportToGLB(stream, glbPath);
         }
