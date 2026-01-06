@@ -1,0 +1,5259 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              5.8699999999999806,
+              3.5599999999999832,
+              -1.6999999999999997
+            ],
+            [
+              5.5499999999999794,
+              3.5599999999999832,
+              -1.6999999999999997
+            ],
+            [
+              5.54999999999998,
+              3.5599999999999832,
+              -1.7
+            ],
+            [
+              5.54999999999998,
+              3.2399999999999829,
+              -1.7
+            ],
+            [
+              5.5499999999999794,
+              3.2399999999999829,
+              -1.7
+            ],
+            [
+              5.8699999999999806,
+              3.2399999999999829,
+              -1.7
+            ],
+            [
+              5.8699999999999806,
+              3.2399999999999829,
+              -1.6999999999999997
+            ],
+            [
+              5.8699999999999806,
+              3.5599999999999832,
+              -1.6999999999999997
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "Category": "-2001300",
+        "ElementId": "1786871",
+        "Export to IFC": "0",
+        "IfcGUID": "3ZaYJqSP1DWQ6415nK5dPS",
+        "Estimated Reinforcement Volume": "0.02",
+        "Has Association": "0",
+        "Rebar Cover - Bottom Face": "Interior (framing, columns)",
+        "Rebar Cover - Top Face": "Interior (framing, columns)",
+        "Rebar Cover - Other Faces": "Interior (framing, columns)",
+        "Design Option": "-1",
+        "Volume": "3.43",
+        "Area": "3.28",
+        "Phase Demolished": "-1",
+        "Phase Created": "New Construction",
+        "Host Id": "-1",
+        "Level": "MÓNG",
+        "Workset": "1453",
+        "Family and Type": "M2",
+        "Family": "M2",
+        "Type": "M2",
+        "Type Id": "M2",
+        "Height Offset From Level": "0.00",
+        "Elevation at Bottom Survey": "-2.15",
+        "Elevation at Top Survey": "-1.70",
+        "Elevation at Top": "-1.70",
+        "Length": "1.00",
+        "Elevation at Bottom": "-2.15",
+        "Width": "1.00",
+        "Moves With Grids": "1",
+        "Host": "Level : MÓNG",
+        "Mark": "M2"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              5.5499999999999794,
+              3.5599999999999832,
+              -1.6999999999999997
+            ],
+            [
+              5.8699999999999806,
+              3.5599999999999832,
+              -1.6999999999999997
+            ],
+            [
+              5.8699999999999806,
+              3.5599999999999832,
+              -1.6999999999999997
+            ],
+            [
+              6.20999999999998,
+              3.899999999999983,
+              -1.95
+            ],
+            [
+              6.20999999999998,
+              3.899999999999983,
+              -1.95
+            ],
+            [
+              5.20999999999998,
+              3.899999999999983,
+              -1.95
+            ],
+            [
+              5.20999999999998,
+              3.899999999999983,
+              -1.95
+            ],
+            [
+              5.5499999999999794,
+              3.5599999999999832,
+              -1.6999999999999997
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "Category": "-2001300",
+        "ElementId": "1786871",
+        "Export to IFC": "0",
+        "IfcGUID": "3ZaYJqSP1DWQ6415nK5dPS",
+        "Estimated Reinforcement Volume": "0.02",
+        "Has Association": "0",
+        "Rebar Cover - Bottom Face": "Interior (framing, columns)",
+        "Rebar Cover - Top Face": "Interior (framing, columns)",
+        "Rebar Cover - Other Faces": "Interior (framing, columns)",
+        "Design Option": "-1",
+        "Volume": "3.43",
+        "Area": "3.28",
+        "Phase Demolished": "-1",
+        "Phase Created": "New Construction",
+        "Host Id": "-1",
+        "Level": "MÓNG",
+        "Workset": "1453",
+        "Family and Type": "M2",
+        "Family": "M2",
+        "Type": "M2",
+        "Type Id": "M2",
+        "Height Offset From Level": "0.00",
+        "Elevation at Bottom Survey": "-2.15",
+        "Elevation at Top Survey": "-1.70",
+        "Elevation at Top": "-1.70",
+        "Length": "1.00",
+        "Elevation at Bottom": "-2.15",
+        "Width": "1.00",
+        "Moves With Grids": "1",
+        "Host": "Level : MÓNG",
+        "Mark": "M2"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              5.54999999999998,
+              3.2399999999999829,
+              -1.7
+            ],
+            [
+              5.54999999999998,
+              3.5599999999999832,
+              -1.7
+            ],
+            [
+              5.5499999999999794,
+              3.5599999999999832,
+              -1.6999999999999997
+            ],
+            [
+              5.20999999999998,
+              3.899999999999983,
+              -1.95
+            ],
+            [
+              5.20999999999998,
+              3.899999999999983,
+              -1.95
+            ],
+            [
+              5.20999999999998,
+              2.89999999999997,
+              -1.95
+            ],
+            [
+              5.20999999999998,
+              2.89999999999997,
+              -1.95
+            ],
+            [
+              5.54999999999998,
+              3.2399999999999829,
+              -1.7
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "Category": "-2001300",
+        "ElementId": "1786871",
+        "Export to IFC": "0",
+        "IfcGUID": "3ZaYJqSP1DWQ6415nK5dPS",
+        "Estimated Reinforcement Volume": "0.02",
+        "Has Association": "0",
+        "Rebar Cover - Bottom Face": "Interior (framing, columns)",
+        "Rebar Cover - Top Face": "Interior (framing, columns)",
+        "Rebar Cover - Other Faces": "Interior (framing, columns)",
+        "Design Option": "-1",
+        "Volume": "3.43",
+        "Area": "3.28",
+        "Phase Demolished": "-1",
+        "Phase Created": "New Construction",
+        "Host Id": "-1",
+        "Level": "MÓNG",
+        "Workset": "1453",
+        "Family and Type": "M2",
+        "Family": "M2",
+        "Type": "M2",
+        "Type Id": "M2",
+        "Height Offset From Level": "0.00",
+        "Elevation at Bottom Survey": "-2.15",
+        "Elevation at Top Survey": "-1.70",
+        "Elevation at Top": "-1.70",
+        "Length": "1.00",
+        "Elevation at Bottom": "-2.15",
+        "Width": "1.00",
+        "Moves With Grids": "1",
+        "Host": "Level : MÓNG",
+        "Mark": "M2"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              5.8699999999999806,
+              3.2399999999999829,
+              -1.7
+            ],
+            [
+              5.5499999999999794,
+              3.2399999999999829,
+              -1.7
+            ],
+            [
+              5.54999999999998,
+              3.2399999999999829,
+              -1.7
+            ],
+            [
+              5.20999999999998,
+              2.89999999999997,
+              -1.95
+            ],
+            [
+              5.20999999999998,
+              2.89999999999997,
+              -1.95
+            ],
+            [
+              6.20999999999998,
+              2.89999999999997,
+              -1.95
+            ],
+            [
+              6.20999999999998,
+              2.89999999999997,
+              -1.95
+            ],
+            [
+              5.8699999999999806,
+              3.2399999999999829,
+              -1.7
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "Category": "-2001300",
+        "ElementId": "1786871",
+        "Export to IFC": "0",
+        "IfcGUID": "3ZaYJqSP1DWQ6415nK5dPS",
+        "Estimated Reinforcement Volume": "0.02",
+        "Has Association": "0",
+        "Rebar Cover - Bottom Face": "Interior (framing, columns)",
+        "Rebar Cover - Top Face": "Interior (framing, columns)",
+        "Rebar Cover - Other Faces": "Interior (framing, columns)",
+        "Design Option": "-1",
+        "Volume": "3.43",
+        "Area": "3.28",
+        "Phase Demolished": "-1",
+        "Phase Created": "New Construction",
+        "Host Id": "-1",
+        "Level": "MÓNG",
+        "Workset": "1453",
+        "Family and Type": "M2",
+        "Family": "M2",
+        "Type": "M2",
+        "Type Id": "M2",
+        "Height Offset From Level": "0.00",
+        "Elevation at Bottom Survey": "-2.15",
+        "Elevation at Top Survey": "-1.70",
+        "Elevation at Top": "-1.70",
+        "Length": "1.00",
+        "Elevation at Bottom": "-2.15",
+        "Width": "1.00",
+        "Moves With Grids": "1",
+        "Host": "Level : MÓNG",
+        "Mark": "M2"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              5.8699999999999806,
+              3.5599999999999832,
+              -1.6999999999999997
+            ],
+            [
+              5.8699999999999806,
+              3.2399999999999829,
+              -1.6999999999999997
+            ],
+            [
+              5.8699999999999806,
+              3.2399999999999829,
+              -1.7
+            ],
+            [
+              6.20999999999998,
+              2.89999999999997,
+              -1.95
+            ],
+            [
+              6.20999999999998,
+              2.89999999999997,
+              -1.95
+            ],
+            [
+              6.20999999999998,
+              3.899999999999983,
+              -1.95
+            ],
+            [
+              6.20999999999998,
+              3.899999999999983,
+              -1.95
+            ],
+            [
+              5.8699999999999806,
+              3.5599999999999832,
+              -1.6999999999999997
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "Category": "-2001300",
+        "ElementId": "1786871",
+        "Export to IFC": "0",
+        "IfcGUID": "3ZaYJqSP1DWQ6415nK5dPS",
+        "Estimated Reinforcement Volume": "0.02",
+        "Has Association": "0",
+        "Rebar Cover - Bottom Face": "Interior (framing, columns)",
+        "Rebar Cover - Top Face": "Interior (framing, columns)",
+        "Rebar Cover - Other Faces": "Interior (framing, columns)",
+        "Design Option": "-1",
+        "Volume": "3.43",
+        "Area": "3.28",
+        "Phase Demolished": "-1",
+        "Phase Created": "New Construction",
+        "Host Id": "-1",
+        "Level": "MÓNG",
+        "Workset": "1453",
+        "Family and Type": "M2",
+        "Family": "M2",
+        "Type": "M2",
+        "Type Id": "M2",
+        "Height Offset From Level": "0.00",
+        "Elevation at Bottom Survey": "-2.15",
+        "Elevation at Top Survey": "-1.70",
+        "Elevation at Top": "-1.70",
+        "Length": "1.00",
+        "Elevation at Bottom": "-2.15",
+        "Width": "1.00",
+        "Moves With Grids": "1",
+        "Host": "Level : MÓNG",
+        "Mark": "M2"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              6.20999999999998,
+              3.899999999999983,
+              -2.15
+            ],
+            [
+              6.20999999999998,
+              2.89999999999997,
+              -2.15
+            ],
+            [
+              6.20999999999998,
+              2.89999999999997,
+              -2.15
+            ],
+            [
+              5.20999999999998,
+              2.89999999999997,
+              -2.15
+            ],
+            [
+              5.20999999999998,
+              2.89999999999997,
+              -2.15
+            ],
+            [
+              5.20999999999998,
+              3.899999999999983,
+              -2.15
+            ],
+            [
+              5.20999999999998,
+              3.899999999999983,
+              -2.15
+            ],
+            [
+              6.20999999999998,
+              3.899999999999983,
+              -2.15
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "Category": "-2001300",
+        "ElementId": "1786871",
+        "Export to IFC": "0",
+        "IfcGUID": "3ZaYJqSP1DWQ6415nK5dPS",
+        "Estimated Reinforcement Volume": "0.02",
+        "Has Association": "0",
+        "Rebar Cover - Bottom Face": "Interior (framing, columns)",
+        "Rebar Cover - Top Face": "Interior (framing, columns)",
+        "Rebar Cover - Other Faces": "Interior (framing, columns)",
+        "Design Option": "-1",
+        "Volume": "3.43",
+        "Area": "3.28",
+        "Phase Demolished": "-1",
+        "Phase Created": "New Construction",
+        "Host Id": "-1",
+        "Level": "MÓNG",
+        "Workset": "1453",
+        "Family and Type": "M2",
+        "Family": "M2",
+        "Type": "M2",
+        "Type Id": "M2",
+        "Height Offset From Level": "0.00",
+        "Elevation at Bottom Survey": "-2.15",
+        "Elevation at Top Survey": "-1.70",
+        "Elevation at Top": "-1.70",
+        "Length": "1.00",
+        "Elevation at Bottom": "-2.15",
+        "Width": "1.00",
+        "Moves With Grids": "1",
+        "Host": "Level : MÓNG",
+        "Mark": "M2"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              6.20999999999998,
+              3.899999999999983,
+              -2.15
+            ],
+            [
+              5.20999999999998,
+              3.899999999999983,
+              -2.15
+            ],
+            [
+              5.20999999999998,
+              3.899999999999983,
+              -2.15
+            ],
+            [
+              5.20999999999998,
+              3.899999999999983,
+              -1.95
+            ],
+            [
+              5.20999999999998,
+              3.899999999999983,
+              -1.95
+            ],
+            [
+              6.20999999999998,
+              3.899999999999983,
+              -1.95
+            ],
+            [
+              6.20999999999998,
+              3.899999999999983,
+              -1.95
+            ],
+            [
+              6.20999999999998,
+              3.899999999999983,
+              -2.15
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "Category": "-2001300",
+        "ElementId": "1786871",
+        "Export to IFC": "0",
+        "IfcGUID": "3ZaYJqSP1DWQ6415nK5dPS",
+        "Estimated Reinforcement Volume": "0.02",
+        "Has Association": "0",
+        "Rebar Cover - Bottom Face": "Interior (framing, columns)",
+        "Rebar Cover - Top Face": "Interior (framing, columns)",
+        "Rebar Cover - Other Faces": "Interior (framing, columns)",
+        "Design Option": "-1",
+        "Volume": "3.43",
+        "Area": "3.28",
+        "Phase Demolished": "-1",
+        "Phase Created": "New Construction",
+        "Host Id": "-1",
+        "Level": "MÓNG",
+        "Workset": "1453",
+        "Family and Type": "M2",
+        "Family": "M2",
+        "Type": "M2",
+        "Type Id": "M2",
+        "Height Offset From Level": "0.00",
+        "Elevation at Bottom Survey": "-2.15",
+        "Elevation at Top Survey": "-1.70",
+        "Elevation at Top": "-1.70",
+        "Length": "1.00",
+        "Elevation at Bottom": "-2.15",
+        "Width": "1.00",
+        "Moves With Grids": "1",
+        "Host": "Level : MÓNG",
+        "Mark": "M2"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              5.20999999999998,
+              3.899999999999983,
+              -2.15
+            ],
+            [
+              5.20999999999998,
+              2.89999999999997,
+              -2.15
+            ],
+            [
+              5.20999999999998,
+              2.89999999999997,
+              -2.15
+            ],
+            [
+              5.20999999999998,
+              2.89999999999997,
+              -1.95
+            ],
+            [
+              5.20999999999998,
+              2.89999999999997,
+              -1.95
+            ],
+            [
+              5.20999999999998,
+              3.899999999999983,
+              -1.95
+            ],
+            [
+              5.20999999999998,
+              3.899999999999983,
+              -1.95
+            ],
+            [
+              5.20999999999998,
+              3.899999999999983,
+              -2.15
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "Category": "-2001300",
+        "ElementId": "1786871",
+        "Export to IFC": "0",
+        "IfcGUID": "3ZaYJqSP1DWQ6415nK5dPS",
+        "Estimated Reinforcement Volume": "0.02",
+        "Has Association": "0",
+        "Rebar Cover - Bottom Face": "Interior (framing, columns)",
+        "Rebar Cover - Top Face": "Interior (framing, columns)",
+        "Rebar Cover - Other Faces": "Interior (framing, columns)",
+        "Design Option": "-1",
+        "Volume": "3.43",
+        "Area": "3.28",
+        "Phase Demolished": "-1",
+        "Phase Created": "New Construction",
+        "Host Id": "-1",
+        "Level": "MÓNG",
+        "Workset": "1453",
+        "Family and Type": "M2",
+        "Family": "M2",
+        "Type": "M2",
+        "Type Id": "M2",
+        "Height Offset From Level": "0.00",
+        "Elevation at Bottom Survey": "-2.15",
+        "Elevation at Top Survey": "-1.70",
+        "Elevation at Top": "-1.70",
+        "Length": "1.00",
+        "Elevation at Bottom": "-2.15",
+        "Width": "1.00",
+        "Moves With Grids": "1",
+        "Host": "Level : MÓNG",
+        "Mark": "M2"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              5.20999999999998,
+              2.89999999999997,
+              -2.15
+            ],
+            [
+              6.20999999999998,
+              2.89999999999997,
+              -2.15
+            ],
+            [
+              6.20999999999998,
+              2.89999999999997,
+              -2.15
+            ],
+            [
+              6.20999999999998,
+              2.89999999999997,
+              -1.95
+            ],
+            [
+              6.20999999999998,
+              2.89999999999997,
+              -1.95
+            ],
+            [
+              5.20999999999998,
+              2.89999999999997,
+              -1.95
+            ],
+            [
+              5.20999999999998,
+              2.89999999999997,
+              -1.95
+            ],
+            [
+              5.20999999999998,
+              2.89999999999997,
+              -2.15
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "Category": "-2001300",
+        "ElementId": "1786871",
+        "Export to IFC": "0",
+        "IfcGUID": "3ZaYJqSP1DWQ6415nK5dPS",
+        "Estimated Reinforcement Volume": "0.02",
+        "Has Association": "0",
+        "Rebar Cover - Bottom Face": "Interior (framing, columns)",
+        "Rebar Cover - Top Face": "Interior (framing, columns)",
+        "Rebar Cover - Other Faces": "Interior (framing, columns)",
+        "Design Option": "-1",
+        "Volume": "3.43",
+        "Area": "3.28",
+        "Phase Demolished": "-1",
+        "Phase Created": "New Construction",
+        "Host Id": "-1",
+        "Level": "MÓNG",
+        "Workset": "1453",
+        "Family and Type": "M2",
+        "Family": "M2",
+        "Type": "M2",
+        "Type Id": "M2",
+        "Height Offset From Level": "0.00",
+        "Elevation at Bottom Survey": "-2.15",
+        "Elevation at Top Survey": "-1.70",
+        "Elevation at Top": "-1.70",
+        "Length": "1.00",
+        "Elevation at Bottom": "-2.15",
+        "Width": "1.00",
+        "Moves With Grids": "1",
+        "Host": "Level : MÓNG",
+        "Mark": "M2"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              6.20999999999998,
+              2.89999999999997,
+              -2.15
+            ],
+            [
+              6.20999999999998,
+              3.899999999999983,
+              -2.15
+            ],
+            [
+              6.20999999999998,
+              3.899999999999983,
+              -2.15
+            ],
+            [
+              6.20999999999998,
+              3.899999999999983,
+              -1.95
+            ],
+            [
+              6.20999999999998,
+              3.899999999999983,
+              -1.95
+            ],
+            [
+              6.20999999999998,
+              2.89999999999997,
+              -1.95
+            ],
+            [
+              6.20999999999998,
+              2.89999999999997,
+              -1.95
+            ],
+            [
+              6.20999999999998,
+              2.89999999999997,
+              -2.15
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "Category": "-2001300",
+        "ElementId": "1786871",
+        "Export to IFC": "0",
+        "IfcGUID": "3ZaYJqSP1DWQ6415nK5dPS",
+        "Estimated Reinforcement Volume": "0.02",
+        "Has Association": "0",
+        "Rebar Cover - Bottom Face": "Interior (framing, columns)",
+        "Rebar Cover - Top Face": "Interior (framing, columns)",
+        "Rebar Cover - Other Faces": "Interior (framing, columns)",
+        "Design Option": "-1",
+        "Volume": "3.43",
+        "Area": "3.28",
+        "Phase Demolished": "-1",
+        "Phase Created": "New Construction",
+        "Host Id": "-1",
+        "Level": "MÓNG",
+        "Workset": "1453",
+        "Family and Type": "M2",
+        "Family": "M2",
+        "Type": "M2",
+        "Type Id": "M2",
+        "Height Offset From Level": "0.00",
+        "Elevation at Bottom Survey": "-2.15",
+        "Elevation at Top Survey": "-1.70",
+        "Elevation at Top": "-1.70",
+        "Length": "1.00",
+        "Elevation at Bottom": "-2.15",
+        "Width": "1.00",
+        "Moves With Grids": "1",
+        "Host": "Level : MÓNG",
+        "Mark": "M2"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              5.8199999999999807,
+              3.5099999999999882,
+              -1.7
+            ],
+            [
+              5.8199999999999807,
+              3.2899999999999885,
+              -1.7
+            ],
+            [
+              5.8199999999999807,
+              3.2899999999999885,
+              -1.7
+            ],
+            [
+              5.599999999999981,
+              3.2899999999999885,
+              -1.7
+            ],
+            [
+              5.599999999999981,
+              3.2899999999999885,
+              -1.7
+            ],
+            [
+              5.599999999999981,
+              3.5099999999999882,
+              -1.7
+            ],
+            [
+              5.599999999999981,
+              3.5099999999999882,
+              -1.7
+            ],
+            [
+              5.8199999999999807,
+              3.5099999999999882,
+              -1.7
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "Category": "-2001330",
+        "ElementId": "1787230",
+        "Column Style": "0",
+        "Export to IFC": "0",
+        "IfcGUID": "3ZaYJqSP1DWQ6415nK5d3r",
+        "Estimated Reinforcement Volume": "0.00",
+        "Has Association": "0",
+        "Rebar Cover - Top Face": "Interior (framing, columns)",
+        "Rebar Cover - Other Faces": "bv dầm + cột",
+        "Design Option": "-1",
+        "Volume": "0.86",
+        "Phase Demolished": "-1",
+        "Phase Created": "New Construction",
+        "Structural Material": "Concrete, Cast-in-Place gray",
+        "Column Location Mark": "X2-Y2",
+        "Host Id": "-1",
+        "Top Offset": "-0.05",
+        "Base Offset": "0.00",
+        "Top Level": "TẦNG 1",
+        "Base Level": "MÓNG",
+        "Level": "MÓNG",
+        "Workset": "1453",
+        "Family and Type": "220x220",
+        "Family": "220x220",
+        "Type": "220x220",
+        "Type Id": "220x220",
+        "Length": "1.65",
+        "Moves With Grids": "1",
+        "Mark": "C2",
+        "Room Bounding": "1"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              5.8199999999999807,
+              3.5099999999999882,
+              -0.05000000000000001
+            ],
+            [
+              5.8199999999999807,
+              3.2899999999999885,
+              -0.05000000000000001
+            ],
+            [
+              5.8199999999999807,
+              3.2899999999999885,
+              -0.05000000000000001
+            ],
+            [
+              5.8199999999999807,
+              3.2899999999999885,
+              -0.40000000000000169
+            ],
+            [
+              5.8199999999999807,
+              3.2899999999999885,
+              -0.40000000000000169
+            ],
+            [
+              5.8199999999999807,
+              3.2899999999999885,
+              -1.7
+            ],
+            [
+              5.8199999999999807,
+              3.2899999999999885,
+              -1.7
+            ],
+            [
+              5.8199999999999807,
+              3.5099999999999882,
+              -1.7
+            ],
+            [
+              5.8199999999999807,
+              3.5099999999999882,
+              -1.7000000000000002
+            ],
+            [
+              5.8199999999999807,
+              3.5099999999999882,
+              -0.40000000000000152
+            ],
+            [
+              5.8199999999999807,
+              3.5099999999999882,
+              -0.40000000000000152
+            ],
+            [
+              5.8199999999999807,
+              3.5099999999999882,
+              -0.05000000000000001
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "Category": "-2001330",
+        "ElementId": "1787230",
+        "Column Style": "0",
+        "Export to IFC": "0",
+        "IfcGUID": "3ZaYJqSP1DWQ6415nK5d3r",
+        "Estimated Reinforcement Volume": "0.00",
+        "Has Association": "0",
+        "Rebar Cover - Top Face": "Interior (framing, columns)",
+        "Rebar Cover - Other Faces": "bv dầm + cột",
+        "Design Option": "-1",
+        "Volume": "0.86",
+        "Phase Demolished": "-1",
+        "Phase Created": "New Construction",
+        "Structural Material": "Concrete, Cast-in-Place gray",
+        "Column Location Mark": "X2-Y2",
+        "Host Id": "-1",
+        "Top Offset": "-0.05",
+        "Base Offset": "0.00",
+        "Top Level": "TẦNG 1",
+        "Base Level": "MÓNG",
+        "Level": "MÓNG",
+        "Workset": "1453",
+        "Family and Type": "220x220",
+        "Family": "220x220",
+        "Type": "220x220",
+        "Type Id": "220x220",
+        "Length": "1.65",
+        "Moves With Grids": "1",
+        "Mark": "C2",
+        "Room Bounding": "1"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              5.8199999999999807,
+              3.2899999999999885,
+              -0.05000000000000001
+            ],
+            [
+              5.599999999999981,
+              3.2899999999999885,
+              -0.05000000000000001
+            ],
+            [
+              5.599999999999981,
+              3.2899999999999885,
+              -0.05000000000000001
+            ],
+            [
+              5.599999999999981,
+              3.2899999999999885,
+              -0.40000000000000169
+            ],
+            [
+              5.599999999999981,
+              3.2899999999999885,
+              -0.40000000000000169
+            ],
+            [
+              5.599999999999981,
+              3.2899999999999885,
+              -1.7
+            ],
+            [
+              5.599999999999981,
+              3.2899999999999885,
+              -1.7
+            ],
+            [
+              5.8199999999999807,
+              3.2899999999999885,
+              -1.7
+            ],
+            [
+              5.8199999999999807,
+              3.2899999999999885,
+              -1.7
+            ],
+            [
+              5.8199999999999807,
+              3.2899999999999885,
+              -0.40000000000000169
+            ],
+            [
+              5.8199999999999807,
+              3.2899999999999885,
+              -0.40000000000000169
+            ],
+            [
+              5.8199999999999807,
+              3.2899999999999885,
+              -0.05000000000000001
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "Category": "-2001330",
+        "ElementId": "1787230",
+        "Column Style": "0",
+        "Export to IFC": "0",
+        "IfcGUID": "3ZaYJqSP1DWQ6415nK5d3r",
+        "Estimated Reinforcement Volume": "0.00",
+        "Has Association": "0",
+        "Rebar Cover - Top Face": "Interior (framing, columns)",
+        "Rebar Cover - Other Faces": "bv dầm + cột",
+        "Design Option": "-1",
+        "Volume": "0.86",
+        "Phase Demolished": "-1",
+        "Phase Created": "New Construction",
+        "Structural Material": "Concrete, Cast-in-Place gray",
+        "Column Location Mark": "X2-Y2",
+        "Host Id": "-1",
+        "Top Offset": "-0.05",
+        "Base Offset": "0.00",
+        "Top Level": "TẦNG 1",
+        "Base Level": "MÓNG",
+        "Level": "MÓNG",
+        "Workset": "1453",
+        "Family and Type": "220x220",
+        "Family": "220x220",
+        "Type": "220x220",
+        "Type Id": "220x220",
+        "Length": "1.65",
+        "Moves With Grids": "1",
+        "Mark": "C2",
+        "Room Bounding": "1"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              5.599999999999981,
+              3.2899999999999885,
+              -0.05000000000000001
+            ],
+            [
+              5.599999999999981,
+              3.5099999999999882,
+              -0.05000000000000001
+            ],
+            [
+              5.599999999999981,
+              3.5099999999999882,
+              -0.05000000000000001
+            ],
+            [
+              5.599999999999981,
+              3.5099999999999882,
+              -0.40000000000000169
+            ],
+            [
+              5.599999999999981,
+              3.5099999999999882,
+              -0.40000000000000169
+            ],
+            [
+              5.599999999999981,
+              3.5099999999999882,
+              -1.7
+            ],
+            [
+              5.599999999999981,
+              3.5099999999999882,
+              -1.7
+            ],
+            [
+              5.599999999999981,
+              3.2899999999999885,
+              -1.7
+            ],
+            [
+              5.599999999999981,
+              3.2899999999999885,
+              -1.7
+            ],
+            [
+              5.599999999999981,
+              3.2899999999999885,
+              -0.40000000000000169
+            ],
+            [
+              5.599999999999981,
+              3.2899999999999885,
+              -0.40000000000000169
+            ],
+            [
+              5.599999999999981,
+              3.2899999999999885,
+              -0.05000000000000001
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "Category": "-2001330",
+        "ElementId": "1787230",
+        "Column Style": "0",
+        "Export to IFC": "0",
+        "IfcGUID": "3ZaYJqSP1DWQ6415nK5d3r",
+        "Estimated Reinforcement Volume": "0.00",
+        "Has Association": "0",
+        "Rebar Cover - Top Face": "Interior (framing, columns)",
+        "Rebar Cover - Other Faces": "bv dầm + cột",
+        "Design Option": "-1",
+        "Volume": "0.86",
+        "Phase Demolished": "-1",
+        "Phase Created": "New Construction",
+        "Structural Material": "Concrete, Cast-in-Place gray",
+        "Column Location Mark": "X2-Y2",
+        "Host Id": "-1",
+        "Top Offset": "-0.05",
+        "Base Offset": "0.00",
+        "Top Level": "TẦNG 1",
+        "Base Level": "MÓNG",
+        "Level": "MÓNG",
+        "Workset": "1453",
+        "Family and Type": "220x220",
+        "Family": "220x220",
+        "Type": "220x220",
+        "Type Id": "220x220",
+        "Length": "1.65",
+        "Moves With Grids": "1",
+        "Mark": "C2",
+        "Room Bounding": "1"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              5.599999999999981,
+              3.5099999999999882,
+              -0.05000000000000001
+            ],
+            [
+              5.8199999999999807,
+              3.5099999999999882,
+              -0.05000000000000001
+            ],
+            [
+              5.8199999999999807,
+              3.5099999999999882,
+              -0.05000000000000001
+            ],
+            [
+              5.8199999999999807,
+              3.5099999999999882,
+              -0.40000000000000152
+            ],
+            [
+              5.8199999999999807,
+              3.5099999999999882,
+              -0.40000000000000152
+            ],
+            [
+              5.8199999999999807,
+              3.5099999999999882,
+              -1.7000000000000002
+            ],
+            [
+              5.8199999999999807,
+              3.5099999999999882,
+              -1.7
+            ],
+            [
+              5.599999999999981,
+              3.5099999999999882,
+              -1.7
+            ],
+            [
+              5.599999999999981,
+              3.5099999999999882,
+              -1.7
+            ],
+            [
+              5.599999999999981,
+              3.5099999999999882,
+              -0.40000000000000169
+            ],
+            [
+              5.599999999999981,
+              3.5099999999999882,
+              -0.40000000000000169
+            ],
+            [
+              5.599999999999981,
+              3.5099999999999882,
+              -0.05000000000000001
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "Category": "-2001330",
+        "ElementId": "1787230",
+        "Column Style": "0",
+        "Export to IFC": "0",
+        "IfcGUID": "3ZaYJqSP1DWQ6415nK5d3r",
+        "Estimated Reinforcement Volume": "0.00",
+        "Has Association": "0",
+        "Rebar Cover - Top Face": "Interior (framing, columns)",
+        "Rebar Cover - Other Faces": "bv dầm + cột",
+        "Design Option": "-1",
+        "Volume": "0.86",
+        "Phase Demolished": "-1",
+        "Phase Created": "New Construction",
+        "Structural Material": "Concrete, Cast-in-Place gray",
+        "Column Location Mark": "X2-Y2",
+        "Host Id": "-1",
+        "Top Offset": "-0.05",
+        "Base Offset": "0.00",
+        "Top Level": "TẦNG 1",
+        "Base Level": "MÓNG",
+        "Level": "MÓNG",
+        "Workset": "1453",
+        "Family and Type": "220x220",
+        "Family": "220x220",
+        "Type": "220x220",
+        "Type Id": "220x220",
+        "Length": "1.65",
+        "Moves With Grids": "1",
+        "Mark": "C2",
+        "Room Bounding": "1"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              5.8199999999999807,
+              3.5099999999999882,
+              -0.05000000000000001
+            ],
+            [
+              5.599999999999981,
+              3.5099999999999882,
+              -0.05000000000000001
+            ],
+            [
+              5.599999999999981,
+              3.5099999999999882,
+              -0.05000000000000001
+            ],
+            [
+              5.599999999999981,
+              3.2899999999999885,
+              -0.05000000000000001
+            ],
+            [
+              5.599999999999981,
+              3.2899999999999885,
+              -0.05000000000000001
+            ],
+            [
+              5.8199999999999807,
+              3.2899999999999885,
+              -0.05000000000000001
+            ],
+            [
+              5.8199999999999807,
+              3.2899999999999885,
+              -0.05000000000000001
+            ],
+            [
+              5.8199999999999807,
+              3.5099999999999882,
+              -0.05000000000000001
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "Category": "-2001330",
+        "ElementId": "1787230",
+        "Column Style": "0",
+        "Export to IFC": "0",
+        "IfcGUID": "3ZaYJqSP1DWQ6415nK5d3r",
+        "Estimated Reinforcement Volume": "0.00",
+        "Has Association": "0",
+        "Rebar Cover - Top Face": "Interior (framing, columns)",
+        "Rebar Cover - Other Faces": "bv dầm + cột",
+        "Design Option": "-1",
+        "Volume": "0.86",
+        "Phase Demolished": "-1",
+        "Phase Created": "New Construction",
+        "Structural Material": "Concrete, Cast-in-Place gray",
+        "Column Location Mark": "X2-Y2",
+        "Host Id": "-1",
+        "Top Offset": "-0.05",
+        "Base Offset": "0.00",
+        "Top Level": "TẦNG 1",
+        "Base Level": "MÓNG",
+        "Level": "MÓNG",
+        "Workset": "1453",
+        "Family and Type": "220x220",
+        "Family": "220x220",
+        "Type": "220x220",
+        "Type Id": "220x220",
+        "Length": "1.65",
+        "Moves With Grids": "1",
+        "Mark": "C2",
+        "Room Bounding": "1"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              9.8900000000002386,
+              3.5099999999999727,
+              -0.050000000000001731
+            ],
+            [
+              9.8900000000002386,
+              3.28999999999997,
+              -0.050000000000001731
+            ],
+            [
+              9.8900000000002386,
+              3.28999999999997,
+              -0.050000000000001731
+            ],
+            [
+              13.170000000000238,
+              3.2899999999999596,
+              -0.050000000000001731
+            ],
+            [
+              13.170000000000238,
+              3.2899999999999596,
+              -0.050000000000001731
+            ],
+            [
+              13.170000000000238,
+              3.5099999999999625,
+              -0.050000000000001731
+            ],
+            [
+              13.170000000000238,
+              3.5099999999999625,
+              -0.0500000000000018
+            ],
+            [
+              11.339999999999774,
+              3.5099999999999683,
+              -0.0500000000000018
+            ],
+            [
+              11.339999999999774,
+              3.5099999999999683,
+              -0.0500000000000018
+            ],
+            [
+              11.11999999999977,
+              3.5099999999999696,
+              -0.0500000000000018
+            ],
+            [
+              11.11999999999977,
+              3.5099999999999696,
+              -0.0500000000000018
+            ],
+            [
+              9.8900000000002386,
+              3.5099999999999731,
+              -0.0500000000000018
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "Category": "-2001320",
+        "ElementId": "1789530",
+        "Join Status": "0",
+        "z Offset Value": "-0.05",
+        "z Justification": "0",
+        "y Offset Value": "0.00",
+        "y Justification": "2",
+        "yz Justification": "0",
+        "End Attachment Type": "4",
+        "Start Attachment Type": "4",
+        "Export to IFC": "0",
+        "IfcGUID": "2Foyg4uybFtwTfewoVVCKY",
+        "Estimated Reinforcement Volume": "0.00",
+        "Has Association": "0",
+        "Rebar Cover - Bottom Face": "bv dầm + cột",
+        "Rebar Cover - Other Faces": "bv dầm + cột",
+        "Design Option": "-1",
+        "Volume": "10.46",
+        "Phase Demolished": "-1",
+        "Phase Created": "New Construction",
+        "Comments": "GIẰNG MÓNG",
+        "Structural Material": "Concrete, Cast-in-Place gray",
+        "Host Id": "-1",
+        "Level": "-1",
+        "Workset": "1453",
+        "Family and Type": "220x350",
+        "Family": "220x350",
+        "Type": "220x350",
+        "Type Id": "220x350",
+        "Reference Level Elevation": "0.00",
+        "Elevation at Top": "-0.05",
+        "Cross-Section Rotation": "0.00",
+        "Orientation": "0",
+        "End Level Offset": "0.00",
+        "Start Level Offset": "0.00",
+        "Elevation at Bottom": "-0.40",
+        "Cut Length": "13.06",
+        "Reference Level": "TẦNG 1",
+        "Structural Usage": "3",
+        "Work Plane": "Level : TẦNG 1",
+        "Length": "13.28",
+        "Mark": "GM-Y-1"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              9.8900000000002386,
+              3.5099999999999731,
+              -0.40000000000000169
+            ],
+            [
+              9.8900000000002386,
+              3.5099999999999731,
+              -0.13000000000000009
+            ],
+            [
+              9.8900000000002386,
+              3.5099999999999731,
+              -0.13000000000000009
+            ],
+            [
+              9.8900000000002386,
+              3.5099999999999731,
+              -0.0500000000000018
+            ],
+            [
+              9.8900000000002386,
+              3.5099999999999731,
+              -0.0500000000000018
+            ],
+            [
+              11.11999999999977,
+              3.5099999999999696,
+              -0.0500000000000018
+            ],
+            [
+              11.11999999999977,
+              3.5099999999999696,
+              -0.0500000000000018
+            ],
+            [
+              11.339999999999774,
+              3.5099999999999683,
+              -0.0500000000000018
+            ],
+            [
+              11.339999999999774,
+              3.5099999999999683,
+              -0.0500000000000018
+            ],
+            [
+              13.170000000000238,
+              3.5099999999999625,
+              -0.0500000000000018
+            ],
+            [
+              13.170000000000238,
+              3.5099999999999625,
+              -0.0500000000000018
+            ],
+            [
+              13.170000000000238,
+              3.5099999999999625,
+              -0.10000000000000002
+            ],
+            [
+              13.170000000000238,
+              3.5099999999999625,
+              -0.10000000000000002
+            ],
+            [
+              13.170000000000238,
+              3.5099999999999625,
+              -0.18000000000000005
+            ],
+            [
+              13.170000000000238,
+              3.5099999999999625,
+              -0.18000000000000005
+            ],
+            [
+              13.170000000000238,
+              3.5099999999999625,
+              -0.40000000000000169
+            ],
+            [
+              13.170000000000238,
+              3.5099999999999629,
+              -0.40000000000000169
+            ],
+            [
+              9.8900000000002386,
+              3.5099999999999731,
+              -0.40000000000000169
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "Category": "-2001320",
+        "ElementId": "1789530",
+        "Join Status": "0",
+        "z Offset Value": "-0.05",
+        "z Justification": "0",
+        "y Offset Value": "0.00",
+        "y Justification": "2",
+        "yz Justification": "0",
+        "End Attachment Type": "4",
+        "Start Attachment Type": "4",
+        "Export to IFC": "0",
+        "IfcGUID": "2Foyg4uybFtwTfewoVVCKY",
+        "Estimated Reinforcement Volume": "0.00",
+        "Has Association": "0",
+        "Rebar Cover - Bottom Face": "bv dầm + cột",
+        "Rebar Cover - Other Faces": "bv dầm + cột",
+        "Design Option": "-1",
+        "Volume": "10.46",
+        "Phase Demolished": "-1",
+        "Phase Created": "New Construction",
+        "Comments": "GIẰNG MÓNG",
+        "Structural Material": "Concrete, Cast-in-Place gray",
+        "Host Id": "-1",
+        "Level": "-1",
+        "Workset": "1453",
+        "Family and Type": "220x350",
+        "Family": "220x350",
+        "Type": "220x350",
+        "Type Id": "220x350",
+        "Reference Level Elevation": "0.00",
+        "Elevation at Top": "-0.05",
+        "Cross-Section Rotation": "0.00",
+        "Orientation": "0",
+        "End Level Offset": "0.00",
+        "Start Level Offset": "0.00",
+        "Elevation at Bottom": "-0.40",
+        "Cut Length": "13.06",
+        "Reference Level": "TẦNG 1",
+        "Structural Usage": "3",
+        "Work Plane": "Level : TẦNG 1",
+        "Length": "13.28",
+        "Mark": "GM-Y-1"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              9.8900000000002386,
+              3.28999999999997,
+              -0.40000000000000169
+            ],
+            [
+              9.8900000000002386,
+              3.5099999999999731,
+              -0.40000000000000169
+            ],
+            [
+              9.8900000000002386,
+              3.5099999999999731,
+              -0.40000000000000169
+            ],
+            [
+              13.170000000000238,
+              3.5099999999999629,
+              -0.40000000000000169
+            ],
+            [
+              13.170000000000238,
+              3.5099999999999629,
+              -0.40000000000000169
+            ],
+            [
+              13.170000000000238,
+              3.2899999999999596,
+              -0.40000000000000169
+            ],
+            [
+              13.170000000000238,
+              3.2899999999999596,
+              -0.40000000000000169
+            ],
+            [
+              9.8900000000002386,
+              3.2899999999999703,
+              -0.40000000000000169
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "Category": "-2001320",
+        "ElementId": "1789530",
+        "Join Status": "0",
+        "z Offset Value": "-0.05",
+        "z Justification": "0",
+        "y Offset Value": "0.00",
+        "y Justification": "2",
+        "yz Justification": "0",
+        "End Attachment Type": "4",
+        "Start Attachment Type": "4",
+        "Export to IFC": "0",
+        "IfcGUID": "2Foyg4uybFtwTfewoVVCKY",
+        "Estimated Reinforcement Volume": "0.00",
+        "Has Association": "0",
+        "Rebar Cover - Bottom Face": "bv dầm + cột",
+        "Rebar Cover - Other Faces": "bv dầm + cột",
+        "Design Option": "-1",
+        "Volume": "10.46",
+        "Phase Demolished": "-1",
+        "Phase Created": "New Construction",
+        "Comments": "GIẰNG MÓNG",
+        "Structural Material": "Concrete, Cast-in-Place gray",
+        "Host Id": "-1",
+        "Level": "-1",
+        "Workset": "1453",
+        "Family and Type": "220x350",
+        "Family": "220x350",
+        "Type": "220x350",
+        "Type Id": "220x350",
+        "Reference Level Elevation": "0.00",
+        "Elevation at Top": "-0.05",
+        "Cross-Section Rotation": "0.00",
+        "Orientation": "0",
+        "End Level Offset": "0.00",
+        "Start Level Offset": "0.00",
+        "Elevation at Bottom": "-0.40",
+        "Cut Length": "13.06",
+        "Reference Level": "TẦNG 1",
+        "Structural Usage": "3",
+        "Work Plane": "Level : TẦNG 1",
+        "Length": "13.28",
+        "Mark": "GM-Y-1"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              9.8900000000002386,
+              3.2899999999999703,
+              -0.050000000000001731
+            ],
+            [
+              9.8900000000002386,
+              3.2899999999999703,
+              -0.13000000000000003
+            ],
+            [
+              9.8900000000002386,
+              3.2899999999999703,
+              -0.13000000000000003
+            ],
+            [
+              9.8900000000002386,
+              3.2899999999999703,
+              -0.40000000000000169
+            ],
+            [
+              9.8900000000002386,
+              3.2899999999999703,
+              -0.40000000000000169
+            ],
+            [
+              13.170000000000238,
+              3.2899999999999596,
+              -0.40000000000000169
+            ],
+            [
+              13.170000000000238,
+              3.2899999999999596,
+              -0.40000000000000169
+            ],
+            [
+              13.170000000000238,
+              3.2899999999999596,
+              -0.13000000000000003
+            ],
+            [
+              13.170000000000238,
+              3.2899999999999596,
+              -0.13000000000000003
+            ],
+            [
+              13.170000000000238,
+              3.2899999999999596,
+              -0.050000000000001731
+            ],
+            [
+              13.170000000000238,
+              3.2899999999999596,
+              -0.050000000000001731
+            ],
+            [
+              9.8900000000002386,
+              3.28999999999997,
+              -0.050000000000001731
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "Category": "-2001320",
+        "ElementId": "1789530",
+        "Join Status": "0",
+        "z Offset Value": "-0.05",
+        "z Justification": "0",
+        "y Offset Value": "0.00",
+        "y Justification": "2",
+        "yz Justification": "0",
+        "End Attachment Type": "4",
+        "Start Attachment Type": "4",
+        "Export to IFC": "0",
+        "IfcGUID": "2Foyg4uybFtwTfewoVVCKY",
+        "Estimated Reinforcement Volume": "0.00",
+        "Has Association": "0",
+        "Rebar Cover - Bottom Face": "bv dầm + cột",
+        "Rebar Cover - Other Faces": "bv dầm + cột",
+        "Design Option": "-1",
+        "Volume": "10.46",
+        "Phase Demolished": "-1",
+        "Phase Created": "New Construction",
+        "Comments": "GIẰNG MÓNG",
+        "Structural Material": "Concrete, Cast-in-Place gray",
+        "Host Id": "-1",
+        "Level": "-1",
+        "Workset": "1453",
+        "Family and Type": "220x350",
+        "Family": "220x350",
+        "Type": "220x350",
+        "Type Id": "220x350",
+        "Reference Level Elevation": "0.00",
+        "Elevation at Top": "-0.05",
+        "Cross-Section Rotation": "0.00",
+        "Orientation": "0",
+        "End Level Offset": "0.00",
+        "Start Level Offset": "0.00",
+        "Elevation at Bottom": "-0.40",
+        "Cut Length": "13.06",
+        "Reference Level": "TẦNG 1",
+        "Structural Usage": "3",
+        "Work Plane": "Level : TẦNG 1",
+        "Length": "13.28",
+        "Mark": "GM-Y-1"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              13.170000000000238,
+              3.5099999999999625,
+              -0.050000000000001731
+            ],
+            [
+              13.170000000000238,
+              3.2899999999999596,
+              -0.050000000000001731
+            ],
+            [
+              13.170000000000238,
+              3.2899999999999596,
+              -0.050000000000001731
+            ],
+            [
+              13.170000000000238,
+              3.2899999999999596,
+              -0.13000000000000003
+            ],
+            [
+              13.170000000000238,
+              3.2899999999999596,
+              -0.13000000000000003
+            ],
+            [
+              13.170000000000238,
+              3.2899999999999596,
+              -0.40000000000000169
+            ],
+            [
+              13.170000000000238,
+              3.2899999999999596,
+              -0.40000000000000169
+            ],
+            [
+              13.170000000000238,
+              3.5099999999999629,
+              -0.40000000000000169
+            ],
+            [
+              13.170000000000238,
+              3.5099999999999625,
+              -0.40000000000000169
+            ],
+            [
+              13.170000000000238,
+              3.5099999999999625,
+              -0.18000000000000005
+            ],
+            [
+              13.170000000000238,
+              3.5099999999999625,
+              -0.18000000000000005
+            ],
+            [
+              13.170000000000238,
+              3.5099999999999625,
+              -0.10000000000000002
+            ],
+            [
+              13.170000000000238,
+              3.5099999999999625,
+              -0.10000000000000002
+            ],
+            [
+              13.170000000000238,
+              3.5099999999999625,
+              -0.0500000000000018
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "Category": "-2001320",
+        "ElementId": "1789530",
+        "Join Status": "0",
+        "z Offset Value": "-0.05",
+        "z Justification": "0",
+        "y Offset Value": "0.00",
+        "y Justification": "2",
+        "yz Justification": "0",
+        "End Attachment Type": "4",
+        "Start Attachment Type": "4",
+        "Export to IFC": "0",
+        "IfcGUID": "2Foyg4uybFtwTfewoVVCKY",
+        "Estimated Reinforcement Volume": "0.00",
+        "Has Association": "0",
+        "Rebar Cover - Bottom Face": "bv dầm + cột",
+        "Rebar Cover - Other Faces": "bv dầm + cột",
+        "Design Option": "-1",
+        "Volume": "10.46",
+        "Phase Demolished": "-1",
+        "Phase Created": "New Construction",
+        "Comments": "GIẰNG MÓNG",
+        "Structural Material": "Concrete, Cast-in-Place gray",
+        "Host Id": "-1",
+        "Level": "-1",
+        "Workset": "1453",
+        "Family and Type": "220x350",
+        "Family": "220x350",
+        "Type": "220x350",
+        "Type Id": "220x350",
+        "Reference Level Elevation": "0.00",
+        "Elevation at Top": "-0.05",
+        "Cross-Section Rotation": "0.00",
+        "Orientation": "0",
+        "End Level Offset": "0.00",
+        "Start Level Offset": "0.00",
+        "Elevation at Bottom": "-0.40",
+        "Cut Length": "13.06",
+        "Reference Level": "TẦNG 1",
+        "Structural Usage": "3",
+        "Work Plane": "Level : TẦNG 1",
+        "Length": "13.28",
+        "Mark": "GM-Y-1"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              9.8900000000002386,
+              3.5099999999999731,
+              -0.0500000000000018
+            ],
+            [
+              9.8900000000002386,
+              3.5099999999999731,
+              -0.13000000000000009
+            ],
+            [
+              9.8900000000002386,
+              3.5099999999999731,
+              -0.13000000000000009
+            ],
+            [
+              9.8900000000002386,
+              3.5099999999999731,
+              -0.40000000000000169
+            ],
+            [
+              9.8900000000002386,
+              3.5099999999999731,
+              -0.40000000000000169
+            ],
+            [
+              9.8900000000002386,
+              3.28999999999997,
+              -0.40000000000000169
+            ],
+            [
+              9.8900000000002386,
+              3.2899999999999703,
+              -0.40000000000000169
+            ],
+            [
+              9.8900000000002386,
+              3.2899999999999703,
+              -0.13000000000000003
+            ],
+            [
+              9.8900000000002386,
+              3.2899999999999703,
+              -0.13000000000000003
+            ],
+            [
+              9.8900000000002386,
+              3.2899999999999703,
+              -0.050000000000001731
+            ],
+            [
+              9.8900000000002386,
+              3.28999999999997,
+              -0.050000000000001731
+            ],
+            [
+              9.8900000000002386,
+              3.5099999999999727,
+              -0.050000000000001731
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "Category": "-2001320",
+        "ElementId": "1789530",
+        "Join Status": "0",
+        "z Offset Value": "-0.05",
+        "z Justification": "0",
+        "y Offset Value": "0.00",
+        "y Justification": "2",
+        "yz Justification": "0",
+        "End Attachment Type": "4",
+        "Start Attachment Type": "4",
+        "Export to IFC": "0",
+        "IfcGUID": "2Foyg4uybFtwTfewoVVCKY",
+        "Estimated Reinforcement Volume": "0.00",
+        "Has Association": "0",
+        "Rebar Cover - Bottom Face": "bv dầm + cột",
+        "Rebar Cover - Other Faces": "bv dầm + cột",
+        "Design Option": "-1",
+        "Volume": "10.46",
+        "Phase Demolished": "-1",
+        "Phase Created": "New Construction",
+        "Comments": "GIẰNG MÓNG",
+        "Structural Material": "Concrete, Cast-in-Place gray",
+        "Host Id": "-1",
+        "Level": "-1",
+        "Workset": "1453",
+        "Family and Type": "220x350",
+        "Family": "220x350",
+        "Type": "220x350",
+        "Type Id": "220x350",
+        "Reference Level Elevation": "0.00",
+        "Elevation at Top": "-0.05",
+        "Cross-Section Rotation": "0.00",
+        "Orientation": "0",
+        "End Level Offset": "0.00",
+        "Start Level Offset": "0.00",
+        "Elevation at Bottom": "-0.40",
+        "Cut Length": "13.06",
+        "Reference Level": "TẦNG 1",
+        "Structural Usage": "3",
+        "Work Plane": "Level : TẦNG 1",
+        "Length": "13.28",
+        "Mark": "GM-Y-1"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              9.67000000000024,
+              3.509999999999974,
+              -0.40000000000000169
+            ],
+            [
+              9.67000000000024,
+              3.509999999999974,
+              -0.13000000000000009
+            ],
+            [
+              9.67000000000024,
+              3.509999999999974,
+              -0.13000000000000009
+            ],
+            [
+              9.67000000000024,
+              3.509999999999974,
+              -0.0500000000000018
+            ],
+            [
+              9.67000000000024,
+              3.509999999999974,
+              -0.050000000000001731
+            ],
+            [
+              9.67000000000024,
+              3.2899999999999707,
+              -0.050000000000001731
+            ],
+            [
+              9.67000000000024,
+              3.2899999999999707,
+              -0.050000000000001731
+            ],
+            [
+              9.67000000000024,
+              3.2899999999999707,
+              -0.13000000000000003
+            ],
+            [
+              9.67000000000024,
+              3.2899999999999707,
+              -0.13000000000000003
+            ],
+            [
+              9.67000000000024,
+              3.2899999999999707,
+              -0.40000000000000169
+            ],
+            [
+              9.67000000000024,
+              3.2899999999999707,
+              -0.40000000000000169
+            ],
+            [
+              9.67000000000024,
+              3.509999999999974,
+              -0.40000000000000169
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "Category": "-2001320",
+        "ElementId": "1789530",
+        "Join Status": "0",
+        "z Offset Value": "-0.05",
+        "z Justification": "0",
+        "y Offset Value": "0.00",
+        "y Justification": "2",
+        "yz Justification": "0",
+        "End Attachment Type": "4",
+        "Start Attachment Type": "4",
+        "Export to IFC": "0",
+        "IfcGUID": "2Foyg4uybFtwTfewoVVCKY",
+        "Estimated Reinforcement Volume": "0.00",
+        "Has Association": "0",
+        "Rebar Cover - Bottom Face": "bv dầm + cột",
+        "Rebar Cover - Other Faces": "bv dầm + cột",
+        "Design Option": "-1",
+        "Volume": "10.46",
+        "Phase Demolished": "-1",
+        "Phase Created": "New Construction",
+        "Comments": "GIẰNG MÓNG",
+        "Structural Material": "Concrete, Cast-in-Place gray",
+        "Host Id": "-1",
+        "Level": "-1",
+        "Workset": "1453",
+        "Family and Type": "220x350",
+        "Family": "220x350",
+        "Type": "220x350",
+        "Type Id": "220x350",
+        "Reference Level Elevation": "0.00",
+        "Elevation at Top": "-0.05",
+        "Cross-Section Rotation": "0.00",
+        "Orientation": "0",
+        "End Level Offset": "0.00",
+        "Start Level Offset": "0.00",
+        "Elevation at Bottom": "-0.40",
+        "Cut Length": "13.06",
+        "Reference Level": "TẦNG 1",
+        "Structural Usage": "3",
+        "Work Plane": "Level : TẦNG 1",
+        "Length": "13.28",
+        "Mark": "GM-Y-1"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              5.599999999999981,
+              3.5099999999999869,
+              -0.0500000000000018
+            ],
+            [
+              5.59999999999998,
+              3.5099999999999869,
+              -0.13
+            ],
+            [
+              5.59999999999998,
+              3.5099999999999869,
+              -0.13
+            ],
+            [
+              5.599999999999981,
+              3.5099999999999869,
+              -0.40000000000000169
+            ],
+            [
+              5.599999999999981,
+              3.5099999999999874,
+              -0.40000000000000169
+            ],
+            [
+              0.11000000000000694,
+              3.5100000000000047,
+              -0.40000000000000169
+            ],
+            [
+              0.1100000000000064,
+              3.5100000000000047,
+              -0.40000000000000169
+            ],
+            [
+              0.1100000000000064,
+              3.5100000000000047,
+              -0.13000000000000009
+            ],
+            [
+              0.1100000000000064,
+              3.5100000000000047,
+              -0.13000000000000009
+            ],
+            [
+              0.1100000000000064,
+              3.5100000000000047,
+              -0.0500000000000018
+            ],
+            [
+              0.1100000000000064,
+              3.5100000000000047,
+              -0.0500000000000018
+            ],
+            [
+              5.5999999999999828,
+              3.5099999999999869,
+              -0.0500000000000018
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "Category": "-2001320",
+        "ElementId": "1789530",
+        "Join Status": "0",
+        "z Offset Value": "-0.05",
+        "z Justification": "0",
+        "y Offset Value": "0.00",
+        "y Justification": "2",
+        "yz Justification": "0",
+        "End Attachment Type": "4",
+        "Start Attachment Type": "4",
+        "Export to IFC": "0",
+        "IfcGUID": "2Foyg4uybFtwTfewoVVCKY",
+        "Estimated Reinforcement Volume": "0.00",
+        "Has Association": "0",
+        "Rebar Cover - Bottom Face": "bv dầm + cột",
+        "Rebar Cover - Other Faces": "bv dầm + cột",
+        "Design Option": "-1",
+        "Volume": "10.46",
+        "Phase Demolished": "-1",
+        "Phase Created": "New Construction",
+        "Comments": "GIẰNG MÓNG",
+        "Structural Material": "Concrete, Cast-in-Place gray",
+        "Host Id": "-1",
+        "Level": "-1",
+        "Workset": "1453",
+        "Family and Type": "220x350",
+        "Family": "220x350",
+        "Type": "220x350",
+        "Type Id": "220x350",
+        "Reference Level Elevation": "0.00",
+        "Elevation at Top": "-0.05",
+        "Cross-Section Rotation": "0.00",
+        "Orientation": "0",
+        "End Level Offset": "0.00",
+        "Start Level Offset": "0.00",
+        "Elevation at Bottom": "-0.40",
+        "Cut Length": "13.06",
+        "Reference Level": "TẦNG 1",
+        "Structural Usage": "3",
+        "Work Plane": "Level : TẦNG 1",
+        "Length": "13.28",
+        "Mark": "GM-Y-1"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              5.599999999999981,
+              3.5099999999999874,
+              -0.40000000000000169
+            ],
+            [
+              5.599999999999981,
+              3.2899999999999836,
+              -0.40000000000000169
+            ],
+            [
+              5.599999999999981,
+              3.2899999999999836,
+              -0.40000000000000169
+            ],
+            [
+              0.11000000000000623,
+              3.2900000000000018,
+              -0.40000000000000169
+            ],
+            [
+              0.1100000000000064,
+              3.2900000000000018,
+              -0.40000000000000169
+            ],
+            [
+              0.1100000000000064,
+              3.5100000000000047,
+              -0.40000000000000169
+            ],
+            [
+              0.11000000000000694,
+              3.5100000000000047,
+              -0.40000000000000169
+            ],
+            [
+              5.599999999999981,
+              3.5099999999999874,
+              -0.40000000000000169
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "Category": "-2001320",
+        "ElementId": "1789530",
+        "Join Status": "0",
+        "z Offset Value": "-0.05",
+        "z Justification": "0",
+        "y Offset Value": "0.00",
+        "y Justification": "2",
+        "yz Justification": "0",
+        "End Attachment Type": "4",
+        "Start Attachment Type": "4",
+        "Export to IFC": "0",
+        "IfcGUID": "2Foyg4uybFtwTfewoVVCKY",
+        "Estimated Reinforcement Volume": "0.00",
+        "Has Association": "0",
+        "Rebar Cover - Bottom Face": "bv dầm + cột",
+        "Rebar Cover - Other Faces": "bv dầm + cột",
+        "Design Option": "-1",
+        "Volume": "10.46",
+        "Phase Demolished": "-1",
+        "Phase Created": "New Construction",
+        "Comments": "GIẰNG MÓNG",
+        "Structural Material": "Concrete, Cast-in-Place gray",
+        "Host Id": "-1",
+        "Level": "-1",
+        "Workset": "1453",
+        "Family and Type": "220x350",
+        "Family": "220x350",
+        "Type": "220x350",
+        "Type Id": "220x350",
+        "Reference Level Elevation": "0.00",
+        "Elevation at Top": "-0.05",
+        "Cross-Section Rotation": "0.00",
+        "Orientation": "0",
+        "End Level Offset": "0.00",
+        "Start Level Offset": "0.00",
+        "Elevation at Bottom": "-0.40",
+        "Cut Length": "13.06",
+        "Reference Level": "TẦNG 1",
+        "Structural Usage": "3",
+        "Work Plane": "Level : TẦNG 1",
+        "Length": "13.28",
+        "Mark": "GM-Y-1"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              5.599999999999981,
+              3.2899999999999836,
+              -0.40000000000000169
+            ],
+            [
+              5.599999999999981,
+              3.2899999999999836,
+              -0.13000000000000006
+            ],
+            [
+              5.599999999999981,
+              3.2899999999999836,
+              -0.13000000000000006
+            ],
+            [
+              5.599999999999981,
+              3.2899999999999836,
+              -0.050000000000001765
+            ],
+            [
+              5.599999999999981,
+              3.2899999999999836,
+              -0.050000000000001731
+            ],
+            [
+              2.0650000000000128,
+              3.2899999999999956,
+              -0.050000000000001731
+            ],
+            [
+              2.0650000000000128,
+              3.2899999999999956,
+              -0.050000000000001731
+            ],
+            [
+              1.8450000000000097,
+              3.289999999999996,
+              -0.050000000000001731
+            ],
+            [
+              1.8450000000000097,
+              3.289999999999996,
+              -0.050000000000001731
+            ],
+            [
+              0.11000000000000623,
+              3.2900000000000018,
+              -0.050000000000001731
+            ],
+            [
+              0.1100000000000064,
+              3.2900000000000018,
+              -0.050000000000001765
+            ],
+            [
+              0.1100000000000064,
+              3.2900000000000018,
+              -0.13000000000000003
+            ],
+            [
+              0.1100000000000064,
+              3.2900000000000018,
+              -0.13000000000000003
+            ],
+            [
+              0.1100000000000064,
+              3.2900000000000018,
+              -0.40000000000000169
+            ],
+            [
+              0.11000000000000623,
+              3.2900000000000018,
+              -0.40000000000000169
+            ],
+            [
+              5.599999999999981,
+              3.2899999999999836,
+              -0.40000000000000169
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "Category": "-2001320",
+        "ElementId": "1789530",
+        "Join Status": "0",
+        "z Offset Value": "-0.05",
+        "z Justification": "0",
+        "y Offset Value": "0.00",
+        "y Justification": "2",
+        "yz Justification": "0",
+        "End Attachment Type": "4",
+        "Start Attachment Type": "4",
+        "Export to IFC": "0",
+        "IfcGUID": "2Foyg4uybFtwTfewoVVCKY",
+        "Estimated Reinforcement Volume": "0.00",
+        "Has Association": "0",
+        "Rebar Cover - Bottom Face": "bv dầm + cột",
+        "Rebar Cover - Other Faces": "bv dầm + cột",
+        "Design Option": "-1",
+        "Volume": "10.46",
+        "Phase Demolished": "-1",
+        "Phase Created": "New Construction",
+        "Comments": "GIẰNG MÓNG",
+        "Structural Material": "Concrete, Cast-in-Place gray",
+        "Host Id": "-1",
+        "Level": "-1",
+        "Workset": "1453",
+        "Family and Type": "220x350",
+        "Family": "220x350",
+        "Type": "220x350",
+        "Type Id": "220x350",
+        "Reference Level Elevation": "0.00",
+        "Elevation at Top": "-0.05",
+        "Cross-Section Rotation": "0.00",
+        "Orientation": "0",
+        "End Level Offset": "0.00",
+        "Start Level Offset": "0.00",
+        "Elevation at Bottom": "-0.40",
+        "Cut Length": "13.06",
+        "Reference Level": "TẦNG 1",
+        "Structural Usage": "3",
+        "Work Plane": "Level : TẦNG 1",
+        "Length": "13.28",
+        "Mark": "GM-Y-1"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              5.8199999999999807,
+              3.5099999999999865,
+              -0.0500000000000018
+            ],
+            [
+              5.81999999999998,
+              3.5099999999999865,
+              -0.13
+            ],
+            [
+              5.81999999999998,
+              3.5099999999999865,
+              -0.13
+            ],
+            [
+              5.8199999999999807,
+              3.5099999999999865,
+              -0.40000000000000169
+            ],
+            [
+              5.8199999999999807,
+              3.5099999999999865,
+              -0.40000000000000169
+            ],
+            [
+              5.8199999999999807,
+              3.2899999999999832,
+              -0.40000000000000169
+            ],
+            [
+              5.8199999999999807,
+              3.2899999999999832,
+              -0.40000000000000169
+            ],
+            [
+              5.8199999999999807,
+              3.2899999999999832,
+              -0.13
+            ],
+            [
+              5.8199999999999807,
+              3.2899999999999832,
+              -0.13
+            ],
+            [
+              5.8199999999999807,
+              3.2899999999999832,
+              -0.050000000000001765
+            ],
+            [
+              5.8199999999999807,
+              3.2899999999999832,
+              -0.050000000000001731
+            ],
+            [
+              5.8199999999999807,
+              3.5099999999999865,
+              -0.050000000000001731
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "Category": "-2001320",
+        "ElementId": "1789530",
+        "Join Status": "0",
+        "z Offset Value": "-0.05",
+        "z Justification": "0",
+        "y Offset Value": "0.00",
+        "y Justification": "2",
+        "yz Justification": "0",
+        "End Attachment Type": "4",
+        "Start Attachment Type": "4",
+        "Export to IFC": "0",
+        "IfcGUID": "2Foyg4uybFtwTfewoVVCKY",
+        "Estimated Reinforcement Volume": "0.00",
+        "Has Association": "0",
+        "Rebar Cover - Bottom Face": "bv dầm + cột",
+        "Rebar Cover - Other Faces": "bv dầm + cột",
+        "Design Option": "-1",
+        "Volume": "10.46",
+        "Phase Demolished": "-1",
+        "Phase Created": "New Construction",
+        "Comments": "GIẰNG MÓNG",
+        "Structural Material": "Concrete, Cast-in-Place gray",
+        "Host Id": "-1",
+        "Level": "-1",
+        "Workset": "1453",
+        "Family and Type": "220x350",
+        "Family": "220x350",
+        "Type": "220x350",
+        "Type Id": "220x350",
+        "Reference Level Elevation": "0.00",
+        "Elevation at Top": "-0.05",
+        "Cross-Section Rotation": "0.00",
+        "Orientation": "0",
+        "End Level Offset": "0.00",
+        "Start Level Offset": "0.00",
+        "Elevation at Bottom": "-0.40",
+        "Cut Length": "13.06",
+        "Reference Level": "TẦNG 1",
+        "Structural Usage": "3",
+        "Work Plane": "Level : TẦNG 1",
+        "Length": "13.28",
+        "Mark": "GM-Y-1"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              5.599999999999981,
+              3.5099999999999869,
+              -0.40000000000000169
+            ],
+            [
+              5.59999999999998,
+              3.5099999999999869,
+              -0.13
+            ],
+            [
+              5.59999999999998,
+              3.5099999999999869,
+              -0.13
+            ],
+            [
+              5.599999999999981,
+              3.5099999999999869,
+              -0.0500000000000018
+            ],
+            [
+              5.599999999999981,
+              3.5099999999999869,
+              -0.050000000000001731
+            ],
+            [
+              5.599999999999981,
+              3.2899999999999836,
+              -0.050000000000001731
+            ],
+            [
+              5.599999999999981,
+              3.2899999999999836,
+              -0.050000000000001765
+            ],
+            [
+              5.599999999999981,
+              3.2899999999999836,
+              -0.13000000000000006
+            ],
+            [
+              5.599999999999981,
+              3.2899999999999836,
+              -0.13000000000000006
+            ],
+            [
+              5.599999999999981,
+              3.2899999999999836,
+              -0.40000000000000169
+            ],
+            [
+              5.599999999999981,
+              3.2899999999999836,
+              -0.40000000000000169
+            ],
+            [
+              5.599999999999981,
+              3.5099999999999874,
+              -0.40000000000000169
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "Category": "-2001320",
+        "ElementId": "1789530",
+        "Join Status": "0",
+        "z Offset Value": "-0.05",
+        "z Justification": "0",
+        "y Offset Value": "0.00",
+        "y Justification": "2",
+        "yz Justification": "0",
+        "End Attachment Type": "4",
+        "Start Attachment Type": "4",
+        "Export to IFC": "0",
+        "IfcGUID": "2Foyg4uybFtwTfewoVVCKY",
+        "Estimated Reinforcement Volume": "0.00",
+        "Has Association": "0",
+        "Rebar Cover - Bottom Face": "bv dầm + cột",
+        "Rebar Cover - Other Faces": "bv dầm + cột",
+        "Design Option": "-1",
+        "Volume": "10.46",
+        "Phase Demolished": "-1",
+        "Phase Created": "New Construction",
+        "Comments": "GIẰNG MÓNG",
+        "Structural Material": "Concrete, Cast-in-Place gray",
+        "Host Id": "-1",
+        "Level": "-1",
+        "Workset": "1453",
+        "Family and Type": "220x350",
+        "Family": "220x350",
+        "Type": "220x350",
+        "Type Id": "220x350",
+        "Reference Level Elevation": "0.00",
+        "Elevation at Top": "-0.05",
+        "Cross-Section Rotation": "0.00",
+        "Orientation": "0",
+        "End Level Offset": "0.00",
+        "Start Level Offset": "0.00",
+        "Elevation at Bottom": "-0.40",
+        "Cut Length": "13.06",
+        "Reference Level": "TẦNG 1",
+        "Structural Usage": "3",
+        "Work Plane": "Level : TẦNG 1",
+        "Length": "13.28",
+        "Mark": "GM-Y-1"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              9.67000000000024,
+              3.509999999999974,
+              -0.0500000000000018
+            ],
+            [
+              9.67000000000024,
+              3.509999999999974,
+              -0.13000000000000009
+            ],
+            [
+              9.67000000000024,
+              3.509999999999974,
+              -0.13000000000000009
+            ],
+            [
+              9.67000000000024,
+              3.509999999999974,
+              -0.40000000000000169
+            ],
+            [
+              9.6700000000002415,
+              3.509999999999974,
+              -0.40000000000000169
+            ],
+            [
+              5.8199999999999807,
+              3.5099999999999865,
+              -0.40000000000000169
+            ],
+            [
+              5.8199999999999807,
+              3.5099999999999865,
+              -0.40000000000000169
+            ],
+            [
+              5.81999999999998,
+              3.5099999999999865,
+              -0.13
+            ],
+            [
+              5.81999999999998,
+              3.5099999999999865,
+              -0.13
+            ],
+            [
+              5.8199999999999807,
+              3.5099999999999865,
+              -0.0500000000000018
+            ],
+            [
+              5.8199999999999807,
+              3.5099999999999865,
+              -0.0500000000000018
+            ],
+            [
+              9.67000000000024,
+              3.509999999999974,
+              -0.0500000000000018
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "Category": "-2001320",
+        "ElementId": "1789530",
+        "Join Status": "0",
+        "z Offset Value": "-0.05",
+        "z Justification": "0",
+        "y Offset Value": "0.00",
+        "y Justification": "2",
+        "yz Justification": "0",
+        "End Attachment Type": "4",
+        "Start Attachment Type": "4",
+        "Export to IFC": "0",
+        "IfcGUID": "2Foyg4uybFtwTfewoVVCKY",
+        "Estimated Reinforcement Volume": "0.00",
+        "Has Association": "0",
+        "Rebar Cover - Bottom Face": "bv dầm + cột",
+        "Rebar Cover - Other Faces": "bv dầm + cột",
+        "Design Option": "-1",
+        "Volume": "10.46",
+        "Phase Demolished": "-1",
+        "Phase Created": "New Construction",
+        "Comments": "GIẰNG MÓNG",
+        "Structural Material": "Concrete, Cast-in-Place gray",
+        "Host Id": "-1",
+        "Level": "-1",
+        "Workset": "1453",
+        "Family and Type": "220x350",
+        "Family": "220x350",
+        "Type": "220x350",
+        "Type Id": "220x350",
+        "Reference Level Elevation": "0.00",
+        "Elevation at Top": "-0.05",
+        "Cross-Section Rotation": "0.00",
+        "Orientation": "0",
+        "End Level Offset": "0.00",
+        "Start Level Offset": "0.00",
+        "Elevation at Bottom": "-0.40",
+        "Cut Length": "13.06",
+        "Reference Level": "TẦNG 1",
+        "Structural Usage": "3",
+        "Work Plane": "Level : TẦNG 1",
+        "Length": "13.28",
+        "Mark": "GM-Y-1"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              9.67000000000024,
+              3.509999999999974,
+              -0.40000000000000169
+            ],
+            [
+              9.67000000000024,
+              3.2899999999999707,
+              -0.40000000000000169
+            ],
+            [
+              9.6700000000002415,
+              3.2899999999999707,
+              -0.40000000000000169
+            ],
+            [
+              5.8199999999999807,
+              3.2899999999999832,
+              -0.40000000000000169
+            ],
+            [
+              5.8199999999999807,
+              3.2899999999999832,
+              -0.40000000000000169
+            ],
+            [
+              5.8199999999999807,
+              3.5099999999999865,
+              -0.40000000000000169
+            ],
+            [
+              5.8199999999999807,
+              3.5099999999999865,
+              -0.40000000000000169
+            ],
+            [
+              9.6700000000002415,
+              3.509999999999974,
+              -0.40000000000000169
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "Category": "-2001320",
+        "ElementId": "1789530",
+        "Join Status": "0",
+        "z Offset Value": "-0.05",
+        "z Justification": "0",
+        "y Offset Value": "0.00",
+        "y Justification": "2",
+        "yz Justification": "0",
+        "End Attachment Type": "4",
+        "Start Attachment Type": "4",
+        "Export to IFC": "0",
+        "IfcGUID": "2Foyg4uybFtwTfewoVVCKY",
+        "Estimated Reinforcement Volume": "0.00",
+        "Has Association": "0",
+        "Rebar Cover - Bottom Face": "bv dầm + cột",
+        "Rebar Cover - Other Faces": "bv dầm + cột",
+        "Design Option": "-1",
+        "Volume": "10.46",
+        "Phase Demolished": "-1",
+        "Phase Created": "New Construction",
+        "Comments": "GIẰNG MÓNG",
+        "Structural Material": "Concrete, Cast-in-Place gray",
+        "Host Id": "-1",
+        "Level": "-1",
+        "Workset": "1453",
+        "Family and Type": "220x350",
+        "Family": "220x350",
+        "Type": "220x350",
+        "Type Id": "220x350",
+        "Reference Level Elevation": "0.00",
+        "Elevation at Top": "-0.05",
+        "Cross-Section Rotation": "0.00",
+        "Orientation": "0",
+        "End Level Offset": "0.00",
+        "Start Level Offset": "0.00",
+        "Elevation at Bottom": "-0.40",
+        "Cut Length": "13.06",
+        "Reference Level": "TẦNG 1",
+        "Structural Usage": "3",
+        "Work Plane": "Level : TẦNG 1",
+        "Length": "13.28",
+        "Mark": "GM-Y-1"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              9.67000000000024,
+              3.2899999999999707,
+              -0.40000000000000169
+            ],
+            [
+              9.67000000000024,
+              3.2899999999999707,
+              -0.13000000000000003
+            ],
+            [
+              9.67000000000024,
+              3.2899999999999707,
+              -0.13000000000000003
+            ],
+            [
+              9.67000000000024,
+              3.2899999999999707,
+              -0.050000000000001731
+            ],
+            [
+              9.6700000000002415,
+              3.2899999999999707,
+              -0.050000000000001731
+            ],
+            [
+              8.63500000000023,
+              3.2899999999999738,
+              -0.050000000000001731
+            ],
+            [
+              8.63500000000023,
+              3.2899999999999738,
+              -0.050000000000001731
+            ],
+            [
+              8.4150000000002265,
+              3.2899999999999747,
+              -0.050000000000001731
+            ],
+            [
+              8.4150000000002265,
+              3.2899999999999747,
+              -0.050000000000001731
+            ],
+            [
+              5.8199999999999807,
+              3.2899999999999832,
+              -0.050000000000001731
+            ],
+            [
+              5.8199999999999807,
+              3.2899999999999832,
+              -0.050000000000001765
+            ],
+            [
+              5.8199999999999807,
+              3.2899999999999832,
+              -0.13
+            ],
+            [
+              5.8199999999999807,
+              3.2899999999999832,
+              -0.13
+            ],
+            [
+              5.8199999999999807,
+              3.2899999999999832,
+              -0.40000000000000169
+            ],
+            [
+              5.8199999999999807,
+              3.2899999999999832,
+              -0.40000000000000169
+            ],
+            [
+              9.6700000000002415,
+              3.2899999999999707,
+              -0.40000000000000169
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "Category": "-2001320",
+        "ElementId": "1789530",
+        "Join Status": "0",
+        "z Offset Value": "-0.05",
+        "z Justification": "0",
+        "y Offset Value": "0.00",
+        "y Justification": "2",
+        "yz Justification": "0",
+        "End Attachment Type": "4",
+        "Start Attachment Type": "4",
+        "Export to IFC": "0",
+        "IfcGUID": "2Foyg4uybFtwTfewoVVCKY",
+        "Estimated Reinforcement Volume": "0.00",
+        "Has Association": "0",
+        "Rebar Cover - Bottom Face": "bv dầm + cột",
+        "Rebar Cover - Other Faces": "bv dầm + cột",
+        "Design Option": "-1",
+        "Volume": "10.46",
+        "Phase Demolished": "-1",
+        "Phase Created": "New Construction",
+        "Comments": "GIẰNG MÓNG",
+        "Structural Material": "Concrete, Cast-in-Place gray",
+        "Host Id": "-1",
+        "Level": "-1",
+        "Workset": "1453",
+        "Family and Type": "220x350",
+        "Family": "220x350",
+        "Type": "220x350",
+        "Type Id": "220x350",
+        "Reference Level Elevation": "0.00",
+        "Elevation at Top": "-0.05",
+        "Cross-Section Rotation": "0.00",
+        "Orientation": "0",
+        "End Level Offset": "0.00",
+        "Start Level Offset": "0.00",
+        "Elevation at Bottom": "-0.40",
+        "Cut Length": "13.06",
+        "Reference Level": "TẦNG 1",
+        "Structural Usage": "3",
+        "Work Plane": "Level : TẦNG 1",
+        "Length": "13.28",
+        "Mark": "GM-Y-1"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              0.1100000000000064,
+              3.5100000000000047,
+              -0.0500000000000018
+            ],
+            [
+              0.1100000000000064,
+              3.5100000000000047,
+              -0.13000000000000009
+            ],
+            [
+              0.1100000000000064,
+              3.5100000000000047,
+              -0.13000000000000009
+            ],
+            [
+              0.1100000000000064,
+              3.5100000000000047,
+              -0.40000000000000169
+            ],
+            [
+              0.1100000000000064,
+              3.5100000000000047,
+              -0.40000000000000169
+            ],
+            [
+              0.1100000000000064,
+              3.2900000000000018,
+              -0.40000000000000169
+            ],
+            [
+              0.1100000000000064,
+              3.2900000000000018,
+              -0.40000000000000169
+            ],
+            [
+              0.1100000000000064,
+              3.2900000000000018,
+              -0.13000000000000003
+            ],
+            [
+              0.1100000000000064,
+              3.2900000000000018,
+              -0.13000000000000003
+            ],
+            [
+              0.1100000000000064,
+              3.2900000000000018,
+              -0.050000000000001765
+            ],
+            [
+              0.1100000000000064,
+              3.2900000000000018,
+              -0.050000000000001731
+            ],
+            [
+              0.1100000000000064,
+              3.5100000000000047,
+              -0.050000000000001731
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "Category": "-2001320",
+        "ElementId": "1789530",
+        "Join Status": "0",
+        "z Offset Value": "-0.05",
+        "z Justification": "0",
+        "y Offset Value": "0.00",
+        "y Justification": "2",
+        "yz Justification": "0",
+        "End Attachment Type": "4",
+        "Start Attachment Type": "4",
+        "Export to IFC": "0",
+        "IfcGUID": "2Foyg4uybFtwTfewoVVCKY",
+        "Estimated Reinforcement Volume": "0.00",
+        "Has Association": "0",
+        "Rebar Cover - Bottom Face": "bv dầm + cột",
+        "Rebar Cover - Other Faces": "bv dầm + cột",
+        "Design Option": "-1",
+        "Volume": "10.46",
+        "Phase Demolished": "-1",
+        "Phase Created": "New Construction",
+        "Comments": "GIẰNG MÓNG",
+        "Structural Material": "Concrete, Cast-in-Place gray",
+        "Host Id": "-1",
+        "Level": "-1",
+        "Workset": "1453",
+        "Family and Type": "220x350",
+        "Family": "220x350",
+        "Type": "220x350",
+        "Type Id": "220x350",
+        "Reference Level Elevation": "0.00",
+        "Elevation at Top": "-0.05",
+        "Cross-Section Rotation": "0.00",
+        "Orientation": "0",
+        "End Level Offset": "0.00",
+        "Start Level Offset": "0.00",
+        "Elevation at Bottom": "-0.40",
+        "Cut Length": "13.06",
+        "Reference Level": "TẦNG 1",
+        "Structural Usage": "3",
+        "Work Plane": "Level : TẦNG 1",
+        "Length": "13.28",
+        "Mark": "GM-Y-1"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              5.599999999999981,
+              3.2899999999999836,
+              -0.050000000000001731
+            ],
+            [
+              5.599999999999981,
+              3.5099999999999869,
+              -0.050000000000001731
+            ],
+            [
+              5.5999999999999828,
+              3.5099999999999869,
+              -0.0500000000000018
+            ],
+            [
+              0.1100000000000064,
+              3.5100000000000047,
+              -0.0500000000000018
+            ],
+            [
+              0.1100000000000064,
+              3.5100000000000047,
+              -0.050000000000001731
+            ],
+            [
+              0.1100000000000064,
+              3.2900000000000018,
+              -0.050000000000001731
+            ],
+            [
+              0.11000000000000623,
+              3.2900000000000018,
+              -0.050000000000001731
+            ],
+            [
+              1.8450000000000097,
+              3.289999999999996,
+              -0.050000000000001731
+            ],
+            [
+              1.8450000000000097,
+              3.289999999999996,
+              -0.050000000000001731
+            ],
+            [
+              2.0650000000000128,
+              3.2899999999999956,
+              -0.050000000000001731
+            ],
+            [
+              2.0650000000000128,
+              3.2899999999999956,
+              -0.050000000000001731
+            ],
+            [
+              5.599999999999981,
+              3.2899999999999836,
+              -0.050000000000001731
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "Category": "-2001320",
+        "ElementId": "1789530",
+        "Join Status": "0",
+        "z Offset Value": "-0.05",
+        "z Justification": "0",
+        "y Offset Value": "0.00",
+        "y Justification": "2",
+        "yz Justification": "0",
+        "End Attachment Type": "4",
+        "Start Attachment Type": "4",
+        "Export to IFC": "0",
+        "IfcGUID": "2Foyg4uybFtwTfewoVVCKY",
+        "Estimated Reinforcement Volume": "0.00",
+        "Has Association": "0",
+        "Rebar Cover - Bottom Face": "bv dầm + cột",
+        "Rebar Cover - Other Faces": "bv dầm + cột",
+        "Design Option": "-1",
+        "Volume": "10.46",
+        "Phase Demolished": "-1",
+        "Phase Created": "New Construction",
+        "Comments": "GIẰNG MÓNG",
+        "Structural Material": "Concrete, Cast-in-Place gray",
+        "Host Id": "-1",
+        "Level": "-1",
+        "Workset": "1453",
+        "Family and Type": "220x350",
+        "Family": "220x350",
+        "Type": "220x350",
+        "Type Id": "220x350",
+        "Reference Level Elevation": "0.00",
+        "Elevation at Top": "-0.05",
+        "Cross-Section Rotation": "0.00",
+        "Orientation": "0",
+        "End Level Offset": "0.00",
+        "Start Level Offset": "0.00",
+        "Elevation at Bottom": "-0.40",
+        "Cut Length": "13.06",
+        "Reference Level": "TẦNG 1",
+        "Structural Usage": "3",
+        "Work Plane": "Level : TẦNG 1",
+        "Length": "13.28",
+        "Mark": "GM-Y-1"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              9.67000000000024,
+              3.2899999999999707,
+              -0.050000000000001731
+            ],
+            [
+              9.67000000000024,
+              3.509999999999974,
+              -0.050000000000001731
+            ],
+            [
+              9.67000000000024,
+              3.509999999999974,
+              -0.0500000000000018
+            ],
+            [
+              5.8199999999999807,
+              3.5099999999999865,
+              -0.0500000000000018
+            ],
+            [
+              5.8199999999999807,
+              3.5099999999999865,
+              -0.050000000000001731
+            ],
+            [
+              5.8199999999999807,
+              3.2899999999999832,
+              -0.050000000000001731
+            ],
+            [
+              5.8199999999999807,
+              3.2899999999999832,
+              -0.050000000000001731
+            ],
+            [
+              8.4150000000002265,
+              3.2899999999999747,
+              -0.050000000000001731
+            ],
+            [
+              8.4150000000002265,
+              3.2899999999999747,
+              -0.050000000000001731
+            ],
+            [
+              8.63500000000023,
+              3.2899999999999738,
+              -0.050000000000001731
+            ],
+            [
+              8.63500000000023,
+              3.2899999999999738,
+              -0.050000000000001731
+            ],
+            [
+              9.6700000000002415,
+              3.2899999999999707,
+              -0.050000000000001731
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "Category": "-2001320",
+        "ElementId": "1789530",
+        "Join Status": "0",
+        "z Offset Value": "-0.05",
+        "z Justification": "0",
+        "y Offset Value": "0.00",
+        "y Justification": "2",
+        "yz Justification": "0",
+        "End Attachment Type": "4",
+        "Start Attachment Type": "4",
+        "Export to IFC": "0",
+        "IfcGUID": "2Foyg4uybFtwTfewoVVCKY",
+        "Estimated Reinforcement Volume": "0.00",
+        "Has Association": "0",
+        "Rebar Cover - Bottom Face": "bv dầm + cột",
+        "Rebar Cover - Other Faces": "bv dầm + cột",
+        "Design Option": "-1",
+        "Volume": "10.46",
+        "Phase Demolished": "-1",
+        "Phase Created": "New Construction",
+        "Comments": "GIẰNG MÓNG",
+        "Structural Material": "Concrete, Cast-in-Place gray",
+        "Host Id": "-1",
+        "Level": "-1",
+        "Workset": "1453",
+        "Family and Type": "220x350",
+        "Family": "220x350",
+        "Type": "220x350",
+        "Type Id": "220x350",
+        "Reference Level Elevation": "0.00",
+        "Elevation at Top": "-0.05",
+        "Cross-Section Rotation": "0.00",
+        "Orientation": "0",
+        "End Level Offset": "0.00",
+        "Start Level Offset": "0.00",
+        "Elevation at Bottom": "-0.40",
+        "Cut Length": "13.06",
+        "Reference Level": "TẦNG 1",
+        "Structural Usage": "3",
+        "Work Plane": "Level : TẦNG 1",
+        "Length": "13.28",
+        "Mark": "GM-Y-1"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              5.8199999999999843,
+              7.3899999999997492,
+              -0.050000000000001731
+            ],
+            [
+              5.5999999999999828,
+              7.3899999999997492,
+              -0.050000000000001731
+            ],
+            [
+              5.5999999999999828,
+              7.3899999999997492,
+              -0.0500000000000018
+            ],
+            [
+              5.5999999999999757,
+              3.5099999999999882,
+              -0.0500000000000018
+            ],
+            [
+              5.5999999999999757,
+              3.5099999999999882,
+              -0.050000000000001731
+            ],
+            [
+              5.819999999999979,
+              3.5099999999999882,
+              -0.050000000000001731
+            ],
+            [
+              5.819999999999979,
+              3.5099999999999891,
+              -0.050000000000001731
+            ],
+            [
+              5.8199999999999843,
+              7.3899999999997492,
+              -0.050000000000001731
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "Category": "-2001320",
+        "ElementId": "1789580",
+        "Join Status": "0",
+        "z Offset Value": "-0.05",
+        "z Justification": "0",
+        "y Offset Value": "0.00",
+        "y Justification": "2",
+        "yz Justification": "0",
+        "End Attachment Type": "4",
+        "Start Attachment Type": "4",
+        "Export to IFC": "0",
+        "IfcGUID": "2Foyg4uybFtwTfewoVVCNq",
+        "Estimated Reinforcement Volume": "0.06",
+        "Has Association": "0",
+        "Rebar Cover - Bottom Face": "bv dầm + cột",
+        "Rebar Cover - Top Face": "Interior (framing, columns)",
+        "Design Option": "-1",
+        "Volume": "5.85",
+        "Phase Demolished": "-1",
+        "Phase Created": "New Construction",
+        "Comments": "GIẰNG MÓNG",
+        "Structural Material": "Concrete, Cast-in-Place gray",
+        "Host Id": "-1",
+        "Level": "-1",
+        "Workset": "1453",
+        "Family and Type": "220x350",
+        "Family": "220x350",
+        "Type": "220x350",
+        "Type Id": "220x350",
+        "Reference Level Elevation": "0.00",
+        "Elevation at Top": "-0.05",
+        "Cross-Section Rotation": "0.00",
+        "Orientation": "0",
+        "End Level Offset": "0.00",
+        "Start Level Offset": "0.00",
+        "Elevation at Bottom": "-0.40",
+        "Cut Length": "7.28",
+        "Reference Level": "TẦNG 1",
+        "Structural Usage": "3",
+        "Work Plane": "Level : TẦNG 1",
+        "Length": "7.50",
+        "Mark": "GM-X-3"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              5.5999999999999828,
+              7.3899999999997492,
+              -0.0500000000000018
+            ],
+            [
+              5.5999999999999828,
+              7.3899999999997492,
+              -0.13
+            ],
+            [
+              5.5999999999999828,
+              7.3899999999997492,
+              -0.13
+            ],
+            [
+              5.5999999999999828,
+              7.3899999999997492,
+              -0.40000000000000169
+            ],
+            [
+              5.599999999999981,
+              7.3899999999997492,
+              -0.40000000000000169
+            ],
+            [
+              5.5999999999999748,
+              3.5099999999999882,
+              -0.40000000000000169
+            ],
+            [
+              5.5999999999999757,
+              3.5099999999999882,
+              -0.40000000000000169
+            ],
+            [
+              5.5999999999999757,
+              3.5099999999999882,
+              -0.13000000000000009
+            ],
+            [
+              5.5999999999999757,
+              3.5099999999999882,
+              -0.13000000000000009
+            ],
+            [
+              5.5999999999999757,
+              3.5099999999999882,
+              -0.0500000000000018
+            ],
+            [
+              5.5999999999999757,
+              3.5099999999999882,
+              -0.0500000000000018
+            ],
+            [
+              5.5999999999999828,
+              7.3899999999997492,
+              -0.0500000000000018
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "Category": "-2001320",
+        "ElementId": "1789580",
+        "Join Status": "0",
+        "z Offset Value": "-0.05",
+        "z Justification": "0",
+        "y Offset Value": "0.00",
+        "y Justification": "2",
+        "yz Justification": "0",
+        "End Attachment Type": "4",
+        "Start Attachment Type": "4",
+        "Export to IFC": "0",
+        "IfcGUID": "2Foyg4uybFtwTfewoVVCNq",
+        "Estimated Reinforcement Volume": "0.06",
+        "Has Association": "0",
+        "Rebar Cover - Bottom Face": "bv dầm + cột",
+        "Rebar Cover - Top Face": "Interior (framing, columns)",
+        "Design Option": "-1",
+        "Volume": "5.85",
+        "Phase Demolished": "-1",
+        "Phase Created": "New Construction",
+        "Comments": "GIẰNG MÓNG",
+        "Structural Material": "Concrete, Cast-in-Place gray",
+        "Host Id": "-1",
+        "Level": "-1",
+        "Workset": "1453",
+        "Family and Type": "220x350",
+        "Family": "220x350",
+        "Type": "220x350",
+        "Type Id": "220x350",
+        "Reference Level Elevation": "0.00",
+        "Elevation at Top": "-0.05",
+        "Cross-Section Rotation": "0.00",
+        "Orientation": "0",
+        "End Level Offset": "0.00",
+        "Start Level Offset": "0.00",
+        "Elevation at Bottom": "-0.40",
+        "Cut Length": "7.28",
+        "Reference Level": "TẦNG 1",
+        "Structural Usage": "3",
+        "Work Plane": "Level : TẦNG 1",
+        "Length": "7.50",
+        "Mark": "GM-X-3"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              5.599999999999981,
+              7.3899999999997492,
+              -0.40000000000000169
+            ],
+            [
+              5.8199999999999852,
+              7.3899999999997492,
+              -0.40000000000000169
+            ],
+            [
+              5.8199999999999852,
+              7.3899999999997492,
+              -0.40000000000000169
+            ],
+            [
+              5.819999999999979,
+              3.5099999999999882,
+              -0.40000000000000169
+            ],
+            [
+              5.819999999999979,
+              3.5099999999999882,
+              -0.40000000000000169
+            ],
+            [
+              5.5999999999999748,
+              3.5099999999999882,
+              -0.40000000000000169
+            ],
+            [
+              5.5999999999999748,
+              3.5099999999999882,
+              -0.40000000000000169
+            ],
+            [
+              5.599999999999981,
+              7.3899999999997492,
+              -0.40000000000000169
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "Category": "-2001320",
+        "ElementId": "1789580",
+        "Join Status": "0",
+        "z Offset Value": "-0.05",
+        "z Justification": "0",
+        "y Offset Value": "0.00",
+        "y Justification": "2",
+        "yz Justification": "0",
+        "End Attachment Type": "4",
+        "Start Attachment Type": "4",
+        "Export to IFC": "0",
+        "IfcGUID": "2Foyg4uybFtwTfewoVVCNq",
+        "Estimated Reinforcement Volume": "0.06",
+        "Has Association": "0",
+        "Rebar Cover - Bottom Face": "bv dầm + cột",
+        "Rebar Cover - Top Face": "Interior (framing, columns)",
+        "Design Option": "-1",
+        "Volume": "5.85",
+        "Phase Demolished": "-1",
+        "Phase Created": "New Construction",
+        "Comments": "GIẰNG MÓNG",
+        "Structural Material": "Concrete, Cast-in-Place gray",
+        "Host Id": "-1",
+        "Level": "-1",
+        "Workset": "1453",
+        "Family and Type": "220x350",
+        "Family": "220x350",
+        "Type": "220x350",
+        "Type Id": "220x350",
+        "Reference Level Elevation": "0.00",
+        "Elevation at Top": "-0.05",
+        "Cross-Section Rotation": "0.00",
+        "Orientation": "0",
+        "End Level Offset": "0.00",
+        "Start Level Offset": "0.00",
+        "Elevation at Bottom": "-0.40",
+        "Cut Length": "7.28",
+        "Reference Level": "TẦNG 1",
+        "Structural Usage": "3",
+        "Work Plane": "Level : TẦNG 1",
+        "Length": "7.50",
+        "Mark": "GM-X-3"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              5.8199999999999852,
+              7.3899999999997492,
+              -0.40000000000000169
+            ],
+            [
+              5.8199999999999852,
+              7.3899999999997492,
+              -0.13000000000000003
+            ],
+            [
+              5.8199999999999852,
+              7.3899999999997492,
+              -0.13000000000000003
+            ],
+            [
+              5.8199999999999852,
+              7.3899999999997492,
+              -0.050000000000001731
+            ],
+            [
+              5.8199999999999843,
+              7.3899999999997492,
+              -0.050000000000001731
+            ],
+            [
+              5.819999999999979,
+              3.5099999999999891,
+              -0.050000000000001731
+            ],
+            [
+              5.819999999999979,
+              3.5099999999999882,
+              -0.050000000000001696
+            ],
+            [
+              5.819999999999979,
+              3.5099999999999882,
+              -0.13
+            ],
+            [
+              5.819999999999979,
+              3.5099999999999882,
+              -0.13
+            ],
+            [
+              5.819999999999979,
+              3.5099999999999882,
+              -0.40000000000000169
+            ],
+            [
+              5.819999999999979,
+              3.5099999999999882,
+              -0.40000000000000169
+            ],
+            [
+              5.8199999999999852,
+              7.3899999999997492,
+              -0.40000000000000169
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "Category": "-2001320",
+        "ElementId": "1789580",
+        "Join Status": "0",
+        "z Offset Value": "-0.05",
+        "z Justification": "0",
+        "y Offset Value": "0.00",
+        "y Justification": "2",
+        "yz Justification": "0",
+        "End Attachment Type": "4",
+        "Start Attachment Type": "4",
+        "Export to IFC": "0",
+        "IfcGUID": "2Foyg4uybFtwTfewoVVCNq",
+        "Estimated Reinforcement Volume": "0.06",
+        "Has Association": "0",
+        "Rebar Cover - Bottom Face": "bv dầm + cột",
+        "Rebar Cover - Top Face": "Interior (framing, columns)",
+        "Design Option": "-1",
+        "Volume": "5.85",
+        "Phase Demolished": "-1",
+        "Phase Created": "New Construction",
+        "Comments": "GIẰNG MÓNG",
+        "Structural Material": "Concrete, Cast-in-Place gray",
+        "Host Id": "-1",
+        "Level": "-1",
+        "Workset": "1453",
+        "Family and Type": "220x350",
+        "Family": "220x350",
+        "Type": "220x350",
+        "Type Id": "220x350",
+        "Reference Level Elevation": "0.00",
+        "Elevation at Top": "-0.05",
+        "Cross-Section Rotation": "0.00",
+        "Orientation": "0",
+        "End Level Offset": "0.00",
+        "Start Level Offset": "0.00",
+        "Elevation at Bottom": "-0.40",
+        "Cut Length": "7.28",
+        "Reference Level": "TẦNG 1",
+        "Structural Usage": "3",
+        "Work Plane": "Level : TẦNG 1",
+        "Length": "7.50",
+        "Mark": "GM-X-3"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              5.5999999999999828,
+              7.3899999999997492,
+              -0.40000000000000169
+            ],
+            [
+              5.5999999999999828,
+              7.3899999999997492,
+              -0.13
+            ],
+            [
+              5.5999999999999828,
+              7.3899999999997492,
+              -0.13
+            ],
+            [
+              5.5999999999999828,
+              7.3899999999997492,
+              -0.0500000000000018
+            ],
+            [
+              5.5999999999999828,
+              7.3899999999997492,
+              -0.050000000000001731
+            ],
+            [
+              5.8199999999999843,
+              7.3899999999997492,
+              -0.050000000000001731
+            ],
+            [
+              5.8199999999999852,
+              7.3899999999997492,
+              -0.050000000000001731
+            ],
+            [
+              5.8199999999999852,
+              7.3899999999997492,
+              -0.13000000000000003
+            ],
+            [
+              5.8199999999999852,
+              7.3899999999997492,
+              -0.13000000000000003
+            ],
+            [
+              5.8199999999999852,
+              7.3899999999997492,
+              -0.40000000000000169
+            ],
+            [
+              5.8199999999999852,
+              7.3899999999997492,
+              -0.40000000000000169
+            ],
+            [
+              5.599999999999981,
+              7.3899999999997492,
+              -0.40000000000000169
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "Category": "-2001320",
+        "ElementId": "1789580",
+        "Join Status": "0",
+        "z Offset Value": "-0.05",
+        "z Justification": "0",
+        "y Offset Value": "0.00",
+        "y Justification": "2",
+        "yz Justification": "0",
+        "End Attachment Type": "4",
+        "Start Attachment Type": "4",
+        "Export to IFC": "0",
+        "IfcGUID": "2Foyg4uybFtwTfewoVVCNq",
+        "Estimated Reinforcement Volume": "0.06",
+        "Has Association": "0",
+        "Rebar Cover - Bottom Face": "bv dầm + cột",
+        "Rebar Cover - Top Face": "Interior (framing, columns)",
+        "Design Option": "-1",
+        "Volume": "5.85",
+        "Phase Demolished": "-1",
+        "Phase Created": "New Construction",
+        "Comments": "GIẰNG MÓNG",
+        "Structural Material": "Concrete, Cast-in-Place gray",
+        "Host Id": "-1",
+        "Level": "-1",
+        "Workset": "1453",
+        "Family and Type": "220x350",
+        "Family": "220x350",
+        "Type": "220x350",
+        "Type Id": "220x350",
+        "Reference Level Elevation": "0.00",
+        "Elevation at Top": "-0.05",
+        "Cross-Section Rotation": "0.00",
+        "Orientation": "0",
+        "End Level Offset": "0.00",
+        "Start Level Offset": "0.00",
+        "Elevation at Bottom": "-0.40",
+        "Cut Length": "7.28",
+        "Reference Level": "TẦNG 1",
+        "Structural Usage": "3",
+        "Work Plane": "Level : TẦNG 1",
+        "Length": "7.50",
+        "Mark": "GM-X-3"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              5.59999999999997,
+              0.10999999999998718,
+              -0.0500000000000018
+            ],
+            [
+              5.59999999999997,
+              0.10999999999998718,
+              -0.13
+            ],
+            [
+              5.59999999999997,
+              0.10999999999998718,
+              -0.13
+            ],
+            [
+              5.59999999999997,
+              0.10999999999998718,
+              -0.40000000000000169
+            ],
+            [
+              5.5999999999999694,
+              0.10999999999998718,
+              -0.40000000000000169
+            ],
+            [
+              5.8199999999999736,
+              0.10999999999998718,
+              -0.40000000000000169
+            ],
+            [
+              5.8199999999999736,
+              0.10999999999998718,
+              -0.40000000000000169
+            ],
+            [
+              5.8199999999999736,
+              0.10999999999998718,
+              -0.13000000000000003
+            ],
+            [
+              5.8199999999999736,
+              0.10999999999998718,
+              -0.13000000000000003
+            ],
+            [
+              5.8199999999999736,
+              0.10999999999998718,
+              -0.050000000000001731
+            ],
+            [
+              5.8199999999999736,
+              0.10999999999998718,
+              -0.050000000000001731
+            ],
+            [
+              5.59999999999997,
+              0.10999999999998718,
+              -0.050000000000001731
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "Category": "-2001320",
+        "ElementId": "1789580",
+        "Join Status": "0",
+        "z Offset Value": "-0.05",
+        "z Justification": "0",
+        "y Offset Value": "0.00",
+        "y Justification": "2",
+        "yz Justification": "0",
+        "End Attachment Type": "4",
+        "Start Attachment Type": "4",
+        "Export to IFC": "0",
+        "IfcGUID": "2Foyg4uybFtwTfewoVVCNq",
+        "Estimated Reinforcement Volume": "0.06",
+        "Has Association": "0",
+        "Rebar Cover - Bottom Face": "bv dầm + cột",
+        "Rebar Cover - Top Face": "Interior (framing, columns)",
+        "Design Option": "-1",
+        "Volume": "5.85",
+        "Phase Demolished": "-1",
+        "Phase Created": "New Construction",
+        "Comments": "GIẰNG MÓNG",
+        "Structural Material": "Concrete, Cast-in-Place gray",
+        "Host Id": "-1",
+        "Level": "-1",
+        "Workset": "1453",
+        "Family and Type": "220x350",
+        "Family": "220x350",
+        "Type": "220x350",
+        "Type Id": "220x350",
+        "Reference Level Elevation": "0.00",
+        "Elevation at Top": "-0.05",
+        "Cross-Section Rotation": "0.00",
+        "Orientation": "0",
+        "End Level Offset": "0.00",
+        "Start Level Offset": "0.00",
+        "Elevation at Bottom": "-0.40",
+        "Cut Length": "7.28",
+        "Reference Level": "TẦNG 1",
+        "Structural Usage": "3",
+        "Work Plane": "Level : TẦNG 1",
+        "Length": "7.50",
+        "Mark": "GM-X-3"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              5.5999999999999757,
+              3.2899999999999885,
+              -0.40000000000000169
+            ],
+            [
+              5.5999999999999757,
+              3.2899999999999885,
+              -0.13000000000000009
+            ],
+            [
+              5.5999999999999757,
+              3.2899999999999885,
+              -0.13000000000000009
+            ],
+            [
+              5.5999999999999757,
+              3.2899999999999885,
+              -0.0500000000000018
+            ],
+            [
+              5.5999999999999757,
+              3.2899999999999885,
+              -0.050000000000001731
+            ],
+            [
+              5.8199999999999781,
+              3.2899999999999885,
+              -0.050000000000001731
+            ],
+            [
+              5.819999999999979,
+              3.2899999999999885,
+              -0.050000000000001731
+            ],
+            [
+              5.819999999999979,
+              3.2899999999999885,
+              -0.13
+            ],
+            [
+              5.819999999999979,
+              3.2899999999999885,
+              -0.13
+            ],
+            [
+              5.819999999999979,
+              3.2899999999999885,
+              -0.40000000000000169
+            ],
+            [
+              5.819999999999979,
+              3.2899999999999885,
+              -0.40000000000000169
+            ],
+            [
+              5.5999999999999748,
+              3.2899999999999885,
+              -0.40000000000000169
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "Category": "-2001320",
+        "ElementId": "1789580",
+        "Join Status": "0",
+        "z Offset Value": "-0.05",
+        "z Justification": "0",
+        "y Offset Value": "0.00",
+        "y Justification": "2",
+        "yz Justification": "0",
+        "End Attachment Type": "4",
+        "Start Attachment Type": "4",
+        "Export to IFC": "0",
+        "IfcGUID": "2Foyg4uybFtwTfewoVVCNq",
+        "Estimated Reinforcement Volume": "0.06",
+        "Has Association": "0",
+        "Rebar Cover - Bottom Face": "bv dầm + cột",
+        "Rebar Cover - Top Face": "Interior (framing, columns)",
+        "Design Option": "-1",
+        "Volume": "5.85",
+        "Phase Demolished": "-1",
+        "Phase Created": "New Construction",
+        "Comments": "GIẰNG MÓNG",
+        "Structural Material": "Concrete, Cast-in-Place gray",
+        "Host Id": "-1",
+        "Level": "-1",
+        "Workset": "1453",
+        "Family and Type": "220x350",
+        "Family": "220x350",
+        "Type": "220x350",
+        "Type Id": "220x350",
+        "Reference Level Elevation": "0.00",
+        "Elevation at Top": "-0.05",
+        "Cross-Section Rotation": "0.00",
+        "Orientation": "0",
+        "End Level Offset": "0.00",
+        "Start Level Offset": "0.00",
+        "Elevation at Bottom": "-0.40",
+        "Cut Length": "7.28",
+        "Reference Level": "TẦNG 1",
+        "Structural Usage": "3",
+        "Work Plane": "Level : TẦNG 1",
+        "Length": "7.50",
+        "Mark": "GM-X-3"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              5.5999999999999757,
+              3.5099999999999882,
+              -0.0500000000000018
+            ],
+            [
+              5.5999999999999757,
+              3.5099999999999882,
+              -0.13000000000000009
+            ],
+            [
+              5.5999999999999757,
+              3.5099999999999882,
+              -0.13000000000000009
+            ],
+            [
+              5.5999999999999757,
+              3.5099999999999882,
+              -0.40000000000000169
+            ],
+            [
+              5.5999999999999748,
+              3.5099999999999882,
+              -0.40000000000000169
+            ],
+            [
+              5.819999999999979,
+              3.5099999999999882,
+              -0.40000000000000169
+            ],
+            [
+              5.819999999999979,
+              3.5099999999999882,
+              -0.40000000000000169
+            ],
+            [
+              5.819999999999979,
+              3.5099999999999882,
+              -0.13
+            ],
+            [
+              5.819999999999979,
+              3.5099999999999882,
+              -0.13
+            ],
+            [
+              5.819999999999979,
+              3.5099999999999882,
+              -0.050000000000001696
+            ],
+            [
+              5.819999999999979,
+              3.5099999999999882,
+              -0.050000000000001731
+            ],
+            [
+              5.5999999999999757,
+              3.5099999999999882,
+              -0.050000000000001731
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "Category": "-2001320",
+        "ElementId": "1789580",
+        "Join Status": "0",
+        "z Offset Value": "-0.05",
+        "z Justification": "0",
+        "y Offset Value": "0.00",
+        "y Justification": "2",
+        "yz Justification": "0",
+        "End Attachment Type": "4",
+        "Start Attachment Type": "4",
+        "Export to IFC": "0",
+        "IfcGUID": "2Foyg4uybFtwTfewoVVCNq",
+        "Estimated Reinforcement Volume": "0.06",
+        "Has Association": "0",
+        "Rebar Cover - Bottom Face": "bv dầm + cột",
+        "Rebar Cover - Top Face": "Interior (framing, columns)",
+        "Design Option": "-1",
+        "Volume": "5.85",
+        "Phase Demolished": "-1",
+        "Phase Created": "New Construction",
+        "Comments": "GIẰNG MÓNG",
+        "Structural Material": "Concrete, Cast-in-Place gray",
+        "Host Id": "-1",
+        "Level": "-1",
+        "Workset": "1453",
+        "Family and Type": "220x350",
+        "Family": "220x350",
+        "Type": "220x350",
+        "Type Id": "220x350",
+        "Reference Level Elevation": "0.00",
+        "Elevation at Top": "-0.05",
+        "Cross-Section Rotation": "0.00",
+        "Orientation": "0",
+        "End Level Offset": "0.00",
+        "Start Level Offset": "0.00",
+        "Elevation at Bottom": "-0.40",
+        "Cut Length": "7.28",
+        "Reference Level": "TẦNG 1",
+        "Structural Usage": "3",
+        "Work Plane": "Level : TẦNG 1",
+        "Length": "7.50",
+        "Mark": "GM-X-3"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              5.59999999999997,
+              0.10999999999998718,
+              -0.40000000000000169
+            ],
+            [
+              5.59999999999997,
+              0.10999999999998718,
+              -0.13
+            ],
+            [
+              5.59999999999997,
+              0.10999999999998718,
+              -0.13
+            ],
+            [
+              5.59999999999997,
+              0.10999999999998718,
+              -0.0500000000000018
+            ],
+            [
+              5.59999999999997,
+              0.10999999999998732,
+              -0.0500000000000018
+            ],
+            [
+              5.5999999999999757,
+              3.2899999999999885,
+              -0.0500000000000018
+            ],
+            [
+              5.5999999999999757,
+              3.2899999999999885,
+              -0.0500000000000018
+            ],
+            [
+              5.5999999999999757,
+              3.2899999999999885,
+              -0.13000000000000009
+            ],
+            [
+              5.5999999999999757,
+              3.2899999999999885,
+              -0.13000000000000009
+            ],
+            [
+              5.5999999999999757,
+              3.2899999999999885,
+              -0.40000000000000169
+            ],
+            [
+              5.5999999999999748,
+              3.2899999999999885,
+              -0.40000000000000169
+            ],
+            [
+              5.5999999999999694,
+              0.10999999999998732,
+              -0.40000000000000169
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "Category": "-2001320",
+        "ElementId": "1789580",
+        "Join Status": "0",
+        "z Offset Value": "-0.05",
+        "z Justification": "0",
+        "y Offset Value": "0.00",
+        "y Justification": "2",
+        "yz Justification": "0",
+        "End Attachment Type": "4",
+        "Start Attachment Type": "4",
+        "Export to IFC": "0",
+        "IfcGUID": "2Foyg4uybFtwTfewoVVCNq",
+        "Estimated Reinforcement Volume": "0.06",
+        "Has Association": "0",
+        "Rebar Cover - Bottom Face": "bv dầm + cột",
+        "Rebar Cover - Top Face": "Interior (framing, columns)",
+        "Design Option": "-1",
+        "Volume": "5.85",
+        "Phase Demolished": "-1",
+        "Phase Created": "New Construction",
+        "Comments": "GIẰNG MÓNG",
+        "Structural Material": "Concrete, Cast-in-Place gray",
+        "Host Id": "-1",
+        "Level": "-1",
+        "Workset": "1453",
+        "Family and Type": "220x350",
+        "Family": "220x350",
+        "Type": "220x350",
+        "Type Id": "220x350",
+        "Reference Level Elevation": "0.00",
+        "Elevation at Top": "-0.05",
+        "Cross-Section Rotation": "0.00",
+        "Orientation": "0",
+        "End Level Offset": "0.00",
+        "Start Level Offset": "0.00",
+        "Elevation at Bottom": "-0.40",
+        "Cut Length": "7.28",
+        "Reference Level": "TẦNG 1",
+        "Structural Usage": "3",
+        "Work Plane": "Level : TẦNG 1",
+        "Length": "7.50",
+        "Mark": "GM-X-3"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              5.8199999999999736,
+              0.10999999999998718,
+              -0.40000000000000169
+            ],
+            [
+              5.5999999999999694,
+              0.10999999999998718,
+              -0.40000000000000169
+            ],
+            [
+              5.5999999999999694,
+              0.10999999999998732,
+              -0.40000000000000169
+            ],
+            [
+              5.5999999999999748,
+              3.2899999999999885,
+              -0.40000000000000169
+            ],
+            [
+              5.5999999999999748,
+              3.2899999999999885,
+              -0.40000000000000169
+            ],
+            [
+              5.819999999999979,
+              3.2899999999999885,
+              -0.40000000000000169
+            ],
+            [
+              5.819999999999979,
+              3.2899999999999885,
+              -0.40000000000000169
+            ],
+            [
+              5.8199999999999736,
+              0.10999999999998698,
+              -0.40000000000000169
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "Category": "-2001320",
+        "ElementId": "1789580",
+        "Join Status": "0",
+        "z Offset Value": "-0.05",
+        "z Justification": "0",
+        "y Offset Value": "0.00",
+        "y Justification": "2",
+        "yz Justification": "0",
+        "End Attachment Type": "4",
+        "Start Attachment Type": "4",
+        "Export to IFC": "0",
+        "IfcGUID": "2Foyg4uybFtwTfewoVVCNq",
+        "Estimated Reinforcement Volume": "0.06",
+        "Has Association": "0",
+        "Rebar Cover - Bottom Face": "bv dầm + cột",
+        "Rebar Cover - Top Face": "Interior (framing, columns)",
+        "Design Option": "-1",
+        "Volume": "5.85",
+        "Phase Demolished": "-1",
+        "Phase Created": "New Construction",
+        "Comments": "GIẰNG MÓNG",
+        "Structural Material": "Concrete, Cast-in-Place gray",
+        "Host Id": "-1",
+        "Level": "-1",
+        "Workset": "1453",
+        "Family and Type": "220x350",
+        "Family": "220x350",
+        "Type": "220x350",
+        "Type Id": "220x350",
+        "Reference Level Elevation": "0.00",
+        "Elevation at Top": "-0.05",
+        "Cross-Section Rotation": "0.00",
+        "Orientation": "0",
+        "End Level Offset": "0.00",
+        "Start Level Offset": "0.00",
+        "Elevation at Bottom": "-0.40",
+        "Cut Length": "7.28",
+        "Reference Level": "TẦNG 1",
+        "Structural Usage": "3",
+        "Work Plane": "Level : TẦNG 1",
+        "Length": "7.50",
+        "Mark": "GM-X-3"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              5.8199999999999736,
+              0.10999999999998718,
+              -0.050000000000001731
+            ],
+            [
+              5.8199999999999736,
+              0.10999999999998718,
+              -0.13000000000000003
+            ],
+            [
+              5.8199999999999736,
+              0.10999999999998718,
+              -0.13000000000000003
+            ],
+            [
+              5.8199999999999736,
+              0.10999999999998718,
+              -0.40000000000000169
+            ],
+            [
+              5.8199999999999736,
+              0.10999999999998698,
+              -0.40000000000000169
+            ],
+            [
+              5.819999999999979,
+              3.2899999999999885,
+              -0.40000000000000169
+            ],
+            [
+              5.819999999999979,
+              3.2899999999999885,
+              -0.40000000000000169
+            ],
+            [
+              5.819999999999979,
+              3.2899999999999885,
+              -0.13
+            ],
+            [
+              5.819999999999979,
+              3.2899999999999885,
+              -0.13
+            ],
+            [
+              5.819999999999979,
+              3.2899999999999885,
+              -0.050000000000001731
+            ],
+            [
+              5.8199999999999781,
+              3.2899999999999885,
+              -0.050000000000001731
+            ],
+            [
+              5.8199999999999736,
+              0.10999999999998718,
+              -0.050000000000001731
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "Category": "-2001320",
+        "ElementId": "1789580",
+        "Join Status": "0",
+        "z Offset Value": "-0.05",
+        "z Justification": "0",
+        "y Offset Value": "0.00",
+        "y Justification": "2",
+        "yz Justification": "0",
+        "End Attachment Type": "4",
+        "Start Attachment Type": "4",
+        "Export to IFC": "0",
+        "IfcGUID": "2Foyg4uybFtwTfewoVVCNq",
+        "Estimated Reinforcement Volume": "0.06",
+        "Has Association": "0",
+        "Rebar Cover - Bottom Face": "bv dầm + cột",
+        "Rebar Cover - Top Face": "Interior (framing, columns)",
+        "Design Option": "-1",
+        "Volume": "5.85",
+        "Phase Demolished": "-1",
+        "Phase Created": "New Construction",
+        "Comments": "GIẰNG MÓNG",
+        "Structural Material": "Concrete, Cast-in-Place gray",
+        "Host Id": "-1",
+        "Level": "-1",
+        "Workset": "1453",
+        "Family and Type": "220x350",
+        "Family": "220x350",
+        "Type": "220x350",
+        "Type Id": "220x350",
+        "Reference Level Elevation": "0.00",
+        "Elevation at Top": "-0.05",
+        "Cross-Section Rotation": "0.00",
+        "Orientation": "0",
+        "End Level Offset": "0.00",
+        "Start Level Offset": "0.00",
+        "Elevation at Bottom": "-0.40",
+        "Cut Length": "7.28",
+        "Reference Level": "TẦNG 1",
+        "Structural Usage": "3",
+        "Work Plane": "Level : TẦNG 1",
+        "Length": "7.50",
+        "Mark": "GM-X-3"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              5.59999999999997,
+              0.10999999999998718,
+              -0.050000000000001731
+            ],
+            [
+              5.8199999999999736,
+              0.10999999999998718,
+              -0.050000000000001731
+            ],
+            [
+              5.8199999999999736,
+              0.10999999999998718,
+              -0.050000000000001731
+            ],
+            [
+              5.8199999999999781,
+              3.2899999999999885,
+              -0.050000000000001731
+            ],
+            [
+              5.8199999999999781,
+              3.2899999999999885,
+              -0.050000000000001731
+            ],
+            [
+              5.5999999999999757,
+              3.2899999999999885,
+              -0.050000000000001731
+            ],
+            [
+              5.5999999999999757,
+              3.2899999999999885,
+              -0.0500000000000018
+            ],
+            [
+              5.59999999999997,
+              0.10999999999998732,
+              -0.0500000000000018
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "Category": "-2001320",
+        "ElementId": "1789580",
+        "Join Status": "0",
+        "z Offset Value": "-0.05",
+        "z Justification": "0",
+        "y Offset Value": "0.00",
+        "y Justification": "2",
+        "yz Justification": "0",
+        "End Attachment Type": "4",
+        "Start Attachment Type": "4",
+        "Export to IFC": "0",
+        "IfcGUID": "2Foyg4uybFtwTfewoVVCNq",
+        "Estimated Reinforcement Volume": "0.06",
+        "Has Association": "0",
+        "Rebar Cover - Bottom Face": "bv dầm + cột",
+        "Rebar Cover - Top Face": "Interior (framing, columns)",
+        "Design Option": "-1",
+        "Volume": "5.85",
+        "Phase Demolished": "-1",
+        "Phase Created": "New Construction",
+        "Comments": "GIẰNG MÓNG",
+        "Structural Material": "Concrete, Cast-in-Place gray",
+        "Host Id": "-1",
+        "Level": "-1",
+        "Workset": "1453",
+        "Family and Type": "220x350",
+        "Family": "220x350",
+        "Type": "220x350",
+        "Type Id": "220x350",
+        "Reference Level Elevation": "0.00",
+        "Elevation at Top": "-0.05",
+        "Cross-Section Rotation": "0.00",
+        "Orientation": "0",
+        "End Level Offset": "0.00",
+        "Start Level Offset": "0.00",
+        "Elevation at Bottom": "-0.40",
+        "Cut Length": "7.28",
+        "Reference Level": "TẦNG 1",
+        "Structural Usage": "3",
+        "Work Plane": "Level : TẦNG 1",
+        "Length": "7.50",
+        "Mark": "GM-X-3"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              6.3100000000000387,
+              3.9999999999999258,
+              -2.15
+            ],
+            [
+              5.1100000000000385,
+              3.9999999999999258,
+              -2.15
+            ],
+            [
+              5.1100000000000385,
+              3.9999999999999258,
+              -2.15
+            ],
+            [
+              5.1100000000000385,
+              2.7999999999999257,
+              -2.15
+            ],
+            [
+              5.1100000000000385,
+              2.7999999999999257,
+              -2.15
+            ],
+            [
+              6.3100000000000387,
+              2.7999999999999257,
+              -2.15
+            ],
+            [
+              6.3100000000000387,
+              2.7999999999999257,
+              -2.15
+            ],
+            [
+              6.3100000000000387,
+              3.9999999999999258,
+              -2.15
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "Category": "-2001300",
+        "ElementId": "1936293",
+        "Export to IFC": "0",
+        "IfcGUID": "1OK6xYQjbAuOfbGg3FaRxz",
+        "Has Association": "0",
+        "Rebar Cover - Bottom Face": "Interior (framing, columns)",
+        "Rebar Cover - Top Face": "Interior (framing, columns)",
+        "Rebar Cover - Other Faces": "Interior (framing, columns)",
+        "Design Option": "-1",
+        "Volume": "1.55",
+        "Area": "4.72",
+        "Phase Demolished": "-1",
+        "Phase Created": "New Construction",
+        "Structural Material": "Concrete, Cast-in-Place gray",
+        "Host Id": "-1",
+        "Level": "MÓNG",
+        "Workset": "1453",
+        "Family and Type": "BT LÓT MÓNG B7,5 ĐÁ 2X4",
+        "Family": "BT LÓT MÓNG B7,5 ĐÁ 2X4",
+        "Type": "BT LÓT MÓNG B7,5 ĐÁ 2X4",
+        "Type Id": "BT LÓT MÓNG B7,5 ĐÁ 2X4",
+        "Height Offset From Level": "-0.45",
+        "Elevation at Bottom Survey": "-2.25",
+        "Elevation at Top Survey": "-2.15",
+        "Elevation at Top": "-2.15",
+        "Length": "1.20",
+        "Elevation at Bottom": "-2.25",
+        "Width": "1.20",
+        "Moves With Grids": "1",
+        "Host": "Level : MÓNG"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              6.3100000000000387,
+              3.9999999999999258,
+              -2.25
+            ],
+            [
+              6.3100000000000387,
+              2.7999999999999257,
+              -2.25
+            ],
+            [
+              6.3100000000000387,
+              2.7999999999999257,
+              -2.25
+            ],
+            [
+              5.1100000000000385,
+              2.7999999999999257,
+              -2.25
+            ],
+            [
+              5.1100000000000385,
+              2.7999999999999257,
+              -2.25
+            ],
+            [
+              5.1100000000000385,
+              3.9999999999999258,
+              -2.25
+            ],
+            [
+              5.1100000000000385,
+              3.9999999999999258,
+              -2.25
+            ],
+            [
+              6.3100000000000387,
+              3.9999999999999258,
+              -2.25
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "Category": "-2001300",
+        "ElementId": "1936293",
+        "Export to IFC": "0",
+        "IfcGUID": "1OK6xYQjbAuOfbGg3FaRxz",
+        "Has Association": "0",
+        "Rebar Cover - Bottom Face": "Interior (framing, columns)",
+        "Rebar Cover - Top Face": "Interior (framing, columns)",
+        "Rebar Cover - Other Faces": "Interior (framing, columns)",
+        "Design Option": "-1",
+        "Volume": "1.55",
+        "Area": "4.72",
+        "Phase Demolished": "-1",
+        "Phase Created": "New Construction",
+        "Structural Material": "Concrete, Cast-in-Place gray",
+        "Host Id": "-1",
+        "Level": "MÓNG",
+        "Workset": "1453",
+        "Family and Type": "BT LÓT MÓNG B7,5 ĐÁ 2X4",
+        "Family": "BT LÓT MÓNG B7,5 ĐÁ 2X4",
+        "Type": "BT LÓT MÓNG B7,5 ĐÁ 2X4",
+        "Type Id": "BT LÓT MÓNG B7,5 ĐÁ 2X4",
+        "Height Offset From Level": "-0.45",
+        "Elevation at Bottom Survey": "-2.25",
+        "Elevation at Top Survey": "-2.15",
+        "Elevation at Top": "-2.15",
+        "Length": "1.20",
+        "Elevation at Bottom": "-2.25",
+        "Width": "1.20",
+        "Moves With Grids": "1",
+        "Host": "Level : MÓNG"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              5.1100000000000385,
+              3.9999999999999258,
+              -2.15
+            ],
+            [
+              6.3100000000000387,
+              3.9999999999999258,
+              -2.15
+            ],
+            [
+              6.3100000000000378,
+              3.9999999999999258,
+              -2.15
+            ],
+            [
+              6.3100000000000378,
+              3.9999999999999258,
+              -2.25
+            ],
+            [
+              6.3100000000000387,
+              3.9999999999999258,
+              -2.25
+            ],
+            [
+              5.1100000000000385,
+              3.9999999999999258,
+              -2.25
+            ],
+            [
+              5.1100000000000385,
+              3.9999999999999258,
+              -2.25
+            ],
+            [
+              5.1100000000000385,
+              3.9999999999999258,
+              -2.15
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "Category": "-2001300",
+        "ElementId": "1936293",
+        "Export to IFC": "0",
+        "IfcGUID": "1OK6xYQjbAuOfbGg3FaRxz",
+        "Has Association": "0",
+        "Rebar Cover - Bottom Face": "Interior (framing, columns)",
+        "Rebar Cover - Top Face": "Interior (framing, columns)",
+        "Rebar Cover - Other Faces": "Interior (framing, columns)",
+        "Design Option": "-1",
+        "Volume": "1.55",
+        "Area": "4.72",
+        "Phase Demolished": "-1",
+        "Phase Created": "New Construction",
+        "Structural Material": "Concrete, Cast-in-Place gray",
+        "Host Id": "-1",
+        "Level": "MÓNG",
+        "Workset": "1453",
+        "Family and Type": "BT LÓT MÓNG B7,5 ĐÁ 2X4",
+        "Family": "BT LÓT MÓNG B7,5 ĐÁ 2X4",
+        "Type": "BT LÓT MÓNG B7,5 ĐÁ 2X4",
+        "Type Id": "BT LÓT MÓNG B7,5 ĐÁ 2X4",
+        "Height Offset From Level": "-0.45",
+        "Elevation at Bottom Survey": "-2.25",
+        "Elevation at Top Survey": "-2.15",
+        "Elevation at Top": "-2.15",
+        "Length": "1.20",
+        "Elevation at Bottom": "-2.25",
+        "Width": "1.20",
+        "Moves With Grids": "1",
+        "Host": "Level : MÓNG"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              5.1100000000000385,
+              2.7999999999999257,
+              -2.15
+            ],
+            [
+              5.1100000000000385,
+              3.9999999999999258,
+              -2.15
+            ],
+            [
+              5.1100000000000385,
+              3.9999999999999258,
+              -2.15
+            ],
+            [
+              5.1100000000000385,
+              3.9999999999999258,
+              -2.25
+            ],
+            [
+              5.1100000000000385,
+              3.9999999999999258,
+              -2.25
+            ],
+            [
+              5.1100000000000385,
+              2.7999999999999257,
+              -2.25
+            ],
+            [
+              5.1100000000000385,
+              2.7999999999999261,
+              -2.25
+            ],
+            [
+              5.1100000000000385,
+              2.7999999999999261,
+              -2.15
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "Category": "-2001300",
+        "ElementId": "1936293",
+        "Export to IFC": "0",
+        "IfcGUID": "1OK6xYQjbAuOfbGg3FaRxz",
+        "Has Association": "0",
+        "Rebar Cover - Bottom Face": "Interior (framing, columns)",
+        "Rebar Cover - Top Face": "Interior (framing, columns)",
+        "Rebar Cover - Other Faces": "Interior (framing, columns)",
+        "Design Option": "-1",
+        "Volume": "1.55",
+        "Area": "4.72",
+        "Phase Demolished": "-1",
+        "Phase Created": "New Construction",
+        "Structural Material": "Concrete, Cast-in-Place gray",
+        "Host Id": "-1",
+        "Level": "MÓNG",
+        "Workset": "1453",
+        "Family and Type": "BT LÓT MÓNG B7,5 ĐÁ 2X4",
+        "Family": "BT LÓT MÓNG B7,5 ĐÁ 2X4",
+        "Type": "BT LÓT MÓNG B7,5 ĐÁ 2X4",
+        "Type Id": "BT LÓT MÓNG B7,5 ĐÁ 2X4",
+        "Height Offset From Level": "-0.45",
+        "Elevation at Bottom Survey": "-2.25",
+        "Elevation at Top Survey": "-2.15",
+        "Elevation at Top": "-2.15",
+        "Length": "1.20",
+        "Elevation at Bottom": "-2.25",
+        "Width": "1.20",
+        "Moves With Grids": "1",
+        "Host": "Level : MÓNG"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              6.3100000000000387,
+              2.7999999999999257,
+              -2.15
+            ],
+            [
+              5.1100000000000385,
+              2.7999999999999257,
+              -2.15
+            ],
+            [
+              5.1100000000000385,
+              2.7999999999999261,
+              -2.15
+            ],
+            [
+              5.1100000000000385,
+              2.7999999999999261,
+              -2.25
+            ],
+            [
+              5.1100000000000385,
+              2.7999999999999257,
+              -2.25
+            ],
+            [
+              6.3100000000000387,
+              2.7999999999999257,
+              -2.25
+            ],
+            [
+              6.3100000000000378,
+              2.7999999999999261,
+              -2.25
+            ],
+            [
+              6.3100000000000378,
+              2.7999999999999261,
+              -2.15
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "Category": "-2001300",
+        "ElementId": "1936293",
+        "Export to IFC": "0",
+        "IfcGUID": "1OK6xYQjbAuOfbGg3FaRxz",
+        "Has Association": "0",
+        "Rebar Cover - Bottom Face": "Interior (framing, columns)",
+        "Rebar Cover - Top Face": "Interior (framing, columns)",
+        "Rebar Cover - Other Faces": "Interior (framing, columns)",
+        "Design Option": "-1",
+        "Volume": "1.55",
+        "Area": "4.72",
+        "Phase Demolished": "-1",
+        "Phase Created": "New Construction",
+        "Structural Material": "Concrete, Cast-in-Place gray",
+        "Host Id": "-1",
+        "Level": "MÓNG",
+        "Workset": "1453",
+        "Family and Type": "BT LÓT MÓNG B7,5 ĐÁ 2X4",
+        "Family": "BT LÓT MÓNG B7,5 ĐÁ 2X4",
+        "Type": "BT LÓT MÓNG B7,5 ĐÁ 2X4",
+        "Type Id": "BT LÓT MÓNG B7,5 ĐÁ 2X4",
+        "Height Offset From Level": "-0.45",
+        "Elevation at Bottom Survey": "-2.25",
+        "Elevation at Top Survey": "-2.15",
+        "Elevation at Top": "-2.15",
+        "Length": "1.20",
+        "Elevation at Bottom": "-2.25",
+        "Width": "1.20",
+        "Moves With Grids": "1",
+        "Host": "Level : MÓNG"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              6.3100000000000387,
+              3.9999999999999258,
+              -2.15
+            ],
+            [
+              6.3100000000000387,
+              2.7999999999999257,
+              -2.15
+            ],
+            [
+              6.3100000000000378,
+              2.7999999999999261,
+              -2.15
+            ],
+            [
+              6.3100000000000378,
+              2.7999999999999261,
+              -2.25
+            ],
+            [
+              6.3100000000000387,
+              2.7999999999999257,
+              -2.25
+            ],
+            [
+              6.3100000000000387,
+              3.9999999999999258,
+              -2.25
+            ],
+            [
+              6.3100000000000378,
+              3.9999999999999258,
+              -2.25
+            ],
+            [
+              6.3100000000000378,
+              3.9999999999999258,
+              -2.15
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "Category": "-2001300",
+        "ElementId": "1936293",
+        "Export to IFC": "0",
+        "IfcGUID": "1OK6xYQjbAuOfbGg3FaRxz",
+        "Has Association": "0",
+        "Rebar Cover - Bottom Face": "Interior (framing, columns)",
+        "Rebar Cover - Top Face": "Interior (framing, columns)",
+        "Rebar Cover - Other Faces": "Interior (framing, columns)",
+        "Design Option": "-1",
+        "Volume": "1.55",
+        "Area": "4.72",
+        "Phase Demolished": "-1",
+        "Phase Created": "New Construction",
+        "Structural Material": "Concrete, Cast-in-Place gray",
+        "Host Id": "-1",
+        "Level": "MÓNG",
+        "Workset": "1453",
+        "Family and Type": "BT LÓT MÓNG B7,5 ĐÁ 2X4",
+        "Family": "BT LÓT MÓNG B7,5 ĐÁ 2X4",
+        "Type": "BT LÓT MÓNG B7,5 ĐÁ 2X4",
+        "Type Id": "BT LÓT MÓNG B7,5 ĐÁ 2X4",
+        "Height Offset From Level": "-0.45",
+        "Elevation at Bottom Survey": "-2.25",
+        "Elevation at Top Survey": "-2.15",
+        "Elevation at Top": "-2.15",
+        "Length": "1.20",
+        "Elevation at Bottom": "-2.25",
+        "Width": "1.20",
+        "Moves With Grids": "1",
+        "Host": "Level : MÓNG"
+      }
+    }
+  ]
+}
