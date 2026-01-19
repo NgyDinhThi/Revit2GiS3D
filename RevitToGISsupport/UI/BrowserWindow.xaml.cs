@@ -17,9 +17,7 @@ namespace RevitToGISsupport.UI
         private readonly Document _doc;
         private readonly ExternalEvent _activateEvent;
 
-        private BrowserNode _viewsRoot;
-        private BrowserNode _sheetsRoot;
-        private BrowserNode _schedulesRoot;
+        private BrowserNode _root;
 
         public BrowserWindow(UIApplication uiapp, ExternalEvent activateEvent)
         {
@@ -41,22 +39,89 @@ namespace RevitToGISsupport.UI
                 return;
             }
 
-            BuildAllTrees();
-            BindAllTrees();
+            BuildRootTree();
+            BindTree();
         }
 
-        private void BuildAllTrees()
+        private void btnRefresh_Click(object sender, RoutedEventArgs e)
         {
-            _viewsRoot = BuildViewsTree(_doc);
-            _sheetsRoot = BuildSheetsTree(_doc);
-            _schedulesRoot = BuildSchedulesTree(_doc);
+            BuildRootTree();
+            ApplySearch();
         }
 
-        private void BindAllTrees()
+        private void tbSearch_TextChanged(object sender, TextChangedEventArgs e)
         {
-            tvViews.ItemsSource = new[] { _viewsRoot };
-            tvSheets.ItemsSource = new[] { _sheetsRoot };
-            tvSchedules.ItemsSource = new[] { _schedulesRoot };
+            ApplySearch();
+        }
+
+        private void BindTree()
+        {
+            tvRoot.ItemsSource = new[] { _root };
+        }
+
+        private void ApplySearch()
+        {
+            var q = (tbSearch.Text ?? "").Trim();
+            if (string.IsNullOrWhiteSpace(q))
+            {
+                BindTree();
+                return;
+            }
+
+            var filtered = FilterTree(_root, q);
+            tvRoot.ItemsSource = filtered != null ? new[] { filtered } : Array.Empty<BrowserNode>();
+        }
+
+        private BrowserNode FilterTree(BrowserNode node, string q)
+        {
+            if (node == null) return null;
+
+            if (node.IsLeaf)
+            {
+                if ((node.Title ?? "").IndexOf(q, StringComparison.CurrentCultureIgnoreCase) >= 0)
+                    return node;
+                return null;
+            }
+
+            var copy = new BrowserNode { Title = node.Title, Type = node.Type, ElementId = node.ElementId };
+            foreach (var c in node.Children)
+            {
+                var fc = FilterTree(c, q);
+                if (fc != null) copy.Children.Add(fc);
+            }
+
+            return copy.Children.Count > 0 ? copy : null;
+        }
+
+        private void Tree_MouseDoubleClick(object sender, MouseButtonEventArgs e)
+        {
+            var node = tvRoot?.SelectedItem as BrowserNode;
+            if (node == null) return;
+            if (!node.IsLeaf) return;
+            if (node.ElementId == null || node.ElementId == ElementId.InvalidElementId) return;
+
+            ActivateRequest.Set(node.ElementId);
+            _activateEvent?.Raise();
+        }
+
+        // =========================
+        // BUILD ROOT TREE
+        // =========================
+        private void BuildRootTree()
+        {
+            _root = new BrowserNode
+            {
+                Title = "Project Browser",
+                Type = BrowserNodeType.Folder,
+                ElementId = ElementId.InvalidElementId
+            };
+
+            _root.Children.Add(BuildViewsTree(_doc));
+            _root.Children.Add(BuildSheetsTree(_doc));
+            _root.Children.Add(BuildSchedulesTree(_doc));
+            _root.Children.Add(BuildFamiliesTree(_doc));
+            _root.Children.Add(BuildGroupsTree(_doc));
+            _root.Children.Add(BuildRevitLinksTree(_doc));
         }
 
         private BrowserNode BuildViewsTree(Document doc)
@@ -112,14 +177,12 @@ namespace RevitToGISsupport.UI
 
             var root = BrowserTreeBuilder.BuildTree(
                 doc,
-                "Schedules",
+                "Schedules/Quantities",
                 schedules,
                 org,
                 e => (e as ViewSchedule)?.Name ?? e.Name);
 
-            // Optional: Panel schedules (nếu có) - để an toàn dùng reflection
             TryAppendPanelSchedules(doc, root);
-
             return root;
         }
 
@@ -161,61 +224,170 @@ namespace RevitToGISsupport.UI
             }
         }
 
-        private void btnRefresh_Click(object sender, RoutedEventArgs e)
+        // =========================
+        // Families: Category -> Family -> Types
+        // =========================
+        private BrowserNode BuildFamiliesTree(Document doc)
         {
-            BuildAllTrees();
-            ApplySearch();
-        }
-
-        private void tbSearch_TextChanged(object sender, TextChangedEventArgs e)
-        {
-            ApplySearch();
-        }
-
-        private void ApplySearch()
-        {
-            var q = (tbSearch.Text ?? "").Trim();
-            if (string.IsNullOrWhiteSpace(q))
+            var root = new BrowserNode
             {
-                BindAllTrees();
-                return;
+                Title = "Families",
+                Type = BrowserNodeType.Folder,
+                ElementId = ElementId.InvalidElementId
+            };
+
+            var symbols = new FilteredElementCollector(doc)
+                .OfClass(typeof(FamilySymbol))
+                .Cast<FamilySymbol>()
+                .ToList();
+
+            var byCategory = symbols
+                .GroupBy(s => s.Category?.Name ?? "Unknown")
+                .OrderBy(g => g.Key, StringComparer.CurrentCultureIgnoreCase);
+
+            foreach (var catGroup in byCategory)
+            {
+                var catNode = new BrowserNode
+                {
+                    Title = catGroup.Key,
+                    Type = BrowserNodeType.Folder,
+                    ElementId = ElementId.InvalidElementId
+                };
+
+                var byFamily = catGroup
+                    .GroupBy(s => s.Family?.Name ?? "(No Family)")
+                    .OrderBy(g => g.Key, StringComparer.CurrentCultureIgnoreCase);
+
+                foreach (var famGroup in byFamily)
+                {
+                    var famNode = new BrowserNode
+                    {
+                        Title = famGroup.Key,
+                        Type = BrowserNodeType.Folder,
+                        ElementId = ElementId.InvalidElementId
+                    };
+
+                    foreach (var sym in famGroup.OrderBy(x => x.Name, StringComparer.CurrentCultureIgnoreCase))
+                    {
+                        famNode.Children.Add(new BrowserNode
+                        {
+                            Title = sym.Name,
+                            Type = BrowserNodeType.Item,
+                            ElementId = sym.Id
+                        });
+                    }
+
+                    if (famNode.Children.Count > 0)
+                        catNode.Children.Add(famNode);
+                }
+
+                if (catNode.Children.Count > 0)
+                    root.Children.Add(catNode);
             }
 
-            tvViews.ItemsSource = new[] { FilterTree(_viewsRoot, q) }.Where(x => x != null).ToList();
-            tvSheets.ItemsSource = new[] { FilterTree(_sheetsRoot, q) }.Where(x => x != null).ToList();
-            tvSchedules.ItemsSource = new[] { FilterTree(_schedulesRoot, q) }.Where(x => x != null).ToList();
+            return root;
         }
 
-        private BrowserNode FilterTree(BrowserNode node, string q)
+        // =========================
+        // Groups: Model Groups / Detail Groups -> Group Types
+        // =========================
+        private BrowserNode BuildGroupsTree(Document doc)
         {
-            if (node == null) return null;
-
-            if (node.IsLeaf)
+            var root = new BrowserNode
             {
-                if ((node.Title ?? "").IndexOf(q, StringComparison.CurrentCultureIgnoreCase) >= 0)
-                    return node;
-                return null;
+                Title = "Groups",
+                Type = BrowserNodeType.Folder,
+                ElementId = ElementId.InvalidElementId
+            };
+
+            var groupTypes = new FilteredElementCollector(doc)
+                .OfClass(typeof(GroupType))
+                .Cast<GroupType>()
+                .ToList();
+
+            // Dựa theo Category.Name (có thể khác ngôn ngữ template, nhưng vẫn ổn cho khung)
+            var byCat = groupTypes
+                .GroupBy(gt => gt.Category?.Name ?? "Unknown")
+                .OrderBy(g => g.Key, StringComparer.CurrentCultureIgnoreCase);
+
+            foreach (var catGroup in byCat)
+            {
+                var catNode = new BrowserNode
+                {
+                    Title = catGroup.Key,
+                    Type = BrowserNodeType.Folder,
+                    ElementId = ElementId.InvalidElementId
+                };
+
+                foreach (var gt in catGroup.OrderBy(x => x.Name, StringComparer.CurrentCultureIgnoreCase))
+                {
+                    catNode.Children.Add(new BrowserNode
+                    {
+                        Title = gt.Name,
+                        Type = BrowserNodeType.Item,
+                        ElementId = gt.Id
+                    });
+                }
+
+                if (catNode.Children.Count > 0)
+                    root.Children.Add(catNode);
             }
 
-            var copy = new BrowserNode { Title = node.Title, Type = node.Type, ElementId = node.ElementId };
-            foreach (var c in node.Children)
-            {
-                var fc = FilterTree(c, q);
-                if (fc != null) copy.Children.Add(fc);
-            }
-
-            return copy.Children.Count > 0 ? copy : null;
+            return root;
         }
 
-        private void Tree_MouseDoubleClick(object sender, MouseButtonEventArgs e)
+        // =========================
+        // Revit Links: Link Types -> Instances
+        // =========================
+        private BrowserNode BuildRevitLinksTree(Document doc)
         {
-            var tv = sender as TreeView;
-            var node = tv?.SelectedItem as BrowserNode;
-            if (node == null) return;
-            if (!node.IsLeaf) return;
+            var root = new BrowserNode
+            {
+                Title = "Revit Links",
+                Type = BrowserNodeType.Folder,
+                ElementId = ElementId.InvalidElementId
+            };
 
-            ActivateRequest.Set(node.ElementId);
-            _activateEvent?.Raise();
+            var linkTypes = new FilteredElementCollector(doc)
+                .OfClass(typeof(RevitLinkType))
+                .Cast<RevitLinkType>()
+                .ToList();
+
+            var linkInstances = new FilteredElementCollector(doc)
+                .OfClass(typeof(RevitLinkInstance))
+                .Cast<RevitLinkInstance>()
+                .ToList();
+
+            var instByType = linkInstances
+                .GroupBy(i => i.GetTypeId())
+                .ToDictionary(g => g.Key, g => g.ToList());
+
+            foreach (var lt in linkTypes.OrderBy(x => x.Name, StringComparer.CurrentCultureIgnoreCase))
+            {
+                var typeNode = new BrowserNode
+                {
+                    Title = lt.Name,
+                    Type = BrowserNodeType.Folder,
+                    ElementId = lt.Id
+                };
+
+                if (instByType.TryGetValue(lt.Id, out var insts))
+                {
+                    foreach (var inst in insts.OrderBy(x => x.Name, StringComparer.CurrentCultureIgnoreCase))
+                    {
+                        typeNode.Children.Add(new BrowserNode
+                        {
+                            Title = inst.Name,
+                            Type = BrowserNodeType.Item,
+                            ElementId = inst.Id
+                        });
+                    }
+                }
+
+                root.Children.Add(typeNode);
+            }
+
+            return root;
         }
     }
 }

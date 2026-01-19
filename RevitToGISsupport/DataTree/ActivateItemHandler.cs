@@ -1,5 +1,6 @@
 ﻿using Autodesk.Revit.DB;
 using Autodesk.Revit.UI;
+using System.Collections.Generic;
 
 namespace RevitToGISsupport.DataTree
 {
@@ -14,16 +15,33 @@ namespace RevitToGISsupport.DataTree
             var doc = uidoc?.Document;
             if (doc == null) return;
 
-            var view = doc.GetElement(id) as View;
-            if (view == null || view.IsTemplate) return;
+            var elem = doc.GetElement(id);
+            if (elem == null) return;
 
+            // Nếu là View (bao gồm Sheet/Schedule) thì activate
+            if (elem is View v && !v.IsTemplate)
+            {
+                try
+                {
+                    uidoc.ActiveView = v;
+                    return;
+                }
+                catch
+                {
+                    TaskDialog.Show("Activate", "Không thể activate view này.");
+                    return;
+                }
+            }
+
+            // Nếu không phải View: select element (FamilySymbol/GroupType/RevitLinkInstance...)
             try
             {
-                uidoc.ActiveView = view;
+                uidoc.Selection.SetElementIds(new List<ElementId> { id });
+                uidoc.ShowElements(id);
             }
             catch
             {
-                TaskDialog.Show("Activate", "Không thể activate view này.");
+                // ignore
             }
         }
 
