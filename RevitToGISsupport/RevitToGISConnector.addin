@@ -1,11 +1,20 @@
 ﻿<?xml version="1.0" encoding="utf-8" standalone="no"?>
 <RevitAddIns>
-	<AddIn Type="Command">
-		<Name>RevitToGIS</Name>
-		<Assembly>RevitToGISsupport.dll</Assembly>
-		<AddInId>{338AD6D6-0B26-453F-A3BC-685D2E653F5B}</AddInId>
-		<FullClassName>RevitToGISsupport.ExportToGIS</FullClassName>
-		<VendorId>REV</VendorId>
-		<VendorDescription>Revit to GIS Exporter</VendorDescription>
-	</AddIn>
+  <AddIn Type="Command">
+    <Name>RevitToGIS</Name>
+    <Assembly>RevitToGISsupport.dll</Assembly>
+    <AddInId>{338AD6D6-0B26-453F-A3BC-685D2E653F5B}</AddInId>
+    <FullClassName>RevitToGISsupport.ExportToGIS</FullClassName>
+    <VendorId>REV</VendorId>
+    <VendorDescription>Revit to GIS Exporter</VendorDescription>
+  </AddIn>
+
+  <AddIn Type="Command">
+    <Name>Project Browser Clone</Name>
+    <Assembly>RevitToGISsupport.dll</Assembly>
+    <AddInId>{C1A7B1D2-7F45-4E86-9A2F-0D5A9F7B1C22}</AddInId>
+    <FullClassName>RevitToGISsupport.CmdOpenBrowser</FullClassName>
+    <VendorId>REV</VendorId>
+    <VendorDescription>Clone Views/Sheets/Schedules tree using Browser Organization</VendorDescription>
+  </AddIn>
 </RevitAddIns>
