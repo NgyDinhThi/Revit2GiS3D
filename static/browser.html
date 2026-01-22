@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8"/>
+  <title>Project Browser Clone</title>
+  <style>
+    body{font-family:Segoe UI, sans-serif; margin:12px;}
+    .node{margin-left:14px;}
+    button{margin-left:8px;}
+  </style>
+</head>
+<body>
+  <h3>Project Browser Clone</h3>
+  <input id="q" placeholder="Search..." />
+  <button onclick="load()">Refresh</button>
+  <div id="tree"></div>
+
+<script>
+const projectId = new URLSearchParams(location.search).get("projectId") || "P001";
+
+async function load(){
+  const res = await fetch(`/api/projects/${projectId}/browser-index/latest`);
+  const data = await res.json();
+
+  const nodes = data.nodes || [];
+  const q = (document.getElementById("q").value || "").toLowerCase();
+
+  const root = {};
+  for(const n of nodes){
+    const title = (n.title || "").toLowerCase();
+    if(q && !title.includes(q)) continue;
+
+    let cur = root;
+    for(const p of (n.path || [])){
+      cur[p] = cur[p] || {};
+      cur = cur[p];
+    }
+    cur["__items__"] = cur["__items__"] || [];
+    cur["__items__"].push(n);
+  }
+
+  const el = document.getElementById("tree");
+  el.innerHTML = "";
+  el.appendChild(render(root));
+}
+
+function render(obj){
+  const wrap = document.createElement("div");
+
+  for(const key of Object.keys(obj)){
+    if(key === "__items__") continue;
+
+    const details = document.createElement("details");
+    details.open = true;
+
+    const sum = document.createElement("summary");
+    sum.textContent = key;
+    details.appendChild(sum);
+
+    const child = render(obj[key]);
+    child.className = "node";
+    details.appendChild(child);
+
+    wrap.appendChild(details);
+  }
+
+  const items = obj["__items__"] || [];
+  for(const it of items){
+    const row = document.createElement("div");
+    row.className = "node";
+    row.textContent = it.title;
+
+    if(it.kind === "view" || it.kind === "sheet" || it.kind === "schedule"){
+      const btn = document.createElement("button");
+      btn.textContent = "Open in Revit";
+      btn.onclick = () => sendOpen(it.revit?.uniqueId);
+      row.appendChild(btn);
+    }
+    wrap.appendChild(row);
+  }
+
+  return wrap;
+}
+
+async function sendOpen(uniqueId){
+  if(!uniqueId){ alert("Missing uniqueId"); return; }
+
+  await fetch(`/api/projects/${projectId}/commands`, {
+    method:"POST",
+    headers:{ "Content-Type":"application/json" },
+    body: JSON.stringify({
+      action: "activate_view",
+      targetUniqueId: uniqueId
+    })
+  });
+}
+
+load();
+</script>
+</body>
+</html>
