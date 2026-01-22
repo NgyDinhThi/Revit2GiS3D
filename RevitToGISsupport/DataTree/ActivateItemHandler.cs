@@ -18,9 +18,9 @@ namespace RevitToGISsupport.DataTree
             var elem = doc.GetElement(id);
             if (elem == null) return;
 
-            // Nếu là View (bao gồm Sheet/Schedule) thì activate
+            // Nếu là View (bao gồm Sheet/Schedule) thì activate  
             if (elem is View v && !v.IsTemplate)
-            {
+            {   
                 try
                 {
                     uidoc.ActiveView = v;
@@ -33,7 +33,6 @@ namespace RevitToGISsupport.DataTree
                 }
             }
 
-            // Nếu không phải View: select element (FamilySymbol/GroupType/RevitLinkInstance...)
             try
             {
                 uidoc.Selection.SetElementIds(new List<ElementId> { id });
@@ -41,7 +40,6 @@ namespace RevitToGISsupport.DataTree
             }
             catch
             {
-                // ignore
             }
         }
 

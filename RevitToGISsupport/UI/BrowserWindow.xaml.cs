@@ -1,10 +1,15 @@
 ﻿using Autodesk.Revit.DB;
 using Autodesk.Revit.UI;
+using Newtonsoft.Json;
 using RevitToGISsupport.DataTree;
+using RevitToGISsupport.RemoteControl;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.Http;
 using System.Reflection;
+using System.Text;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -18,6 +23,11 @@ namespace RevitToGISsupport.UI
         private readonly ExternalEvent _activateEvent;
 
         private BrowserNode _root;
+        private HttpClient _http;
+
+        private static RemoteCommandHandler _remoteHandler;
+        private static ExternalEvent _remoteEvent;
+        private RemoteCommandPoller _poller;
 
         public BrowserWindow(UIApplication uiapp, ExternalEvent activateEvent)
         {
@@ -27,7 +37,10 @@ namespace RevitToGISsupport.UI
             _doc = uiapp?.ActiveUIDocument?.Document;
             _activateEvent = activateEvent;
 
+            _http = new HttpClient { Timeout = TimeSpan.FromSeconds(10) };
+
             Loaded += BrowserWindow_Loaded;
+            Closed += BrowserWindow_Closed;
         }
 
         private void BrowserWindow_Loaded(object sender, RoutedEventArgs e)
@@ -41,17 +54,89 @@ namespace RevitToGISsupport.UI
 
             BuildRootTree();
             BindTree();
+
+            StartOrRestartPoller();
+            lblStatus.Text = "Ready.";
+        }
+
+        private void BrowserWindow_Closed(object sender, EventArgs e)
+        {
+            try { _poller?.Dispose(); } catch { }
+            _poller = null;
+
+            try { _http?.Dispose(); } catch { }
+            _http = null;
         }
 
         private void btnRefresh_Click(object sender, RoutedEventArgs e)
         {
             BuildRootTree();
             ApplySearch();
+            StartOrRestartPoller();
+            lblStatus.Text = "Refreshed.";
         }
 
         private void tbSearch_TextChanged(object sender, TextChangedEventArgs e)
         {
             ApplySearch();
+        }
+
+        private async void btnPublish_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                btnPublish.IsEnabled = false;
+                lblStatus.Text = "Publishing browser index...";
+
+                StartOrRestartPoller();
+
+                var server = (tbServer.Text ?? "").Trim().TrimEnd('/');
+                var projectId = (tbProjectId.Text ?? "").Trim();
+
+                if (string.IsNullOrWhiteSpace(server) || string.IsNullOrWhiteSpace(projectId))
+                {
+                    MessageBox.Show("Server/ProjectId không hợp lệ.", "Publish", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
+
+                var index = BuildBrowserIndex(projectId);
+                var url = $"{server}/api/projects/{Uri.EscapeDataString(projectId)}/browser-index";
+                var json = JsonConvert.SerializeObject(index);
+
+                var res = await _http.PostAsync(
+                    url,
+                    new StringContent(json, Encoding.UTF8, "application/json"));
+
+                var body = await res.Content.ReadAsStringAsync();
+                if (!res.IsSuccessStatusCode)
+                {
+                    MessageBox.Show($"Publish failed ({(int)res.StatusCode}): {body}", "Publish", MessageBoxButton.OK, MessageBoxImage.Error);
+                    lblStatus.Text = "Publish failed.";
+                    return;
+                }
+
+                lblStatus.Text = "Published successfully.";
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Publish error: {ex.Message}", "Publish", MessageBoxButton.OK, MessageBoxImage.Error);
+                lblStatus.Text = "Publish error.";
+            }
+            finally
+            {
+                btnPublish.IsEnabled = true;
+            }
+        }
+
+        private void Tree_MouseDoubleClick(object sender, MouseButtonEventArgs e)
+        {
+            var node = tvRoot?.SelectedItem as BrowserNode;
+            if (node == null) return;
+            if (!node.IsLeaf) return;
+            if (node.ElementId == null || node.ElementId == ElementId.InvalidElementId) return;
+
+            ActivateRequest.Set(node.ElementId);
+            _activateEvent?.Raise();
         }
 
         private void BindTree()
@@ -93,19 +178,30 @@ namespace RevitToGISsupport.UI
             return copy.Children.Count > 0 ? copy : null;
         }
 
-        private void Tree_MouseDoubleClick(object sender, MouseButtonEventArgs e)
+        private void StartOrRestartPoller()
         {
-            var node = tvRoot?.SelectedItem as BrowserNode;
-            if (node == null) return;
-            if (!node.IsLeaf) return;
-            if (node.ElementId == null || node.ElementId == ElementId.InvalidElementId) return;
+            var server = (tbServer.Text ?? "").Trim().TrimEnd('/');
+            var projectId = (tbProjectId.Text ?? "").Trim();
 
-            ActivateRequest.Set(node.ElementId);
-            _activateEvent?.Raise();
+            if (string.IsNullOrWhiteSpace(server) || string.IsNullOrWhiteSpace(projectId))
+                return;
+
+            if (_remoteHandler == null)
+            {
+                _remoteHandler = new RemoteCommandHandler();
+                _remoteEvent = ExternalEvent.Create(_remoteHandler);
+            }
+
+            try { _poller?.Dispose(); } catch { }
+            _poller = null;
+
+            var clientId = Environment.MachineName;
+
+            _poller = new RemoteCommandPoller(server, projectId, clientId, _remoteEvent);
         }
 
         // =========================
-        // BUILD ROOT TREE
+        // Build Root Tree (Project Browser)
         // =========================
         private void BuildRootTree()
         {
@@ -220,13 +316,9 @@ namespace RevitToGISsupport.UI
             }
             catch
             {
-                // ignore
             }
         }
 
-        // =========================
-        // Families: Category -> Family -> Types
-        // =========================
         private BrowserNode BuildFamiliesTree(Document doc)
         {
             var root = new BrowserNode
@@ -288,9 +380,6 @@ namespace RevitToGISsupport.UI
             return root;
         }
 
-        // =========================
-        // Groups: Model Groups / Detail Groups -> Group Types
-        // =========================
         private BrowserNode BuildGroupsTree(Document doc)
         {
             var root = new BrowserNode
@@ -305,7 +394,6 @@ namespace RevitToGISsupport.UI
                 .Cast<GroupType>()
                 .ToList();
 
-            // Dựa theo Category.Name (có thể khác ngôn ngữ template, nhưng vẫn ổn cho khung)
             var byCat = groupTypes
                 .GroupBy(gt => gt.Category?.Name ?? "Unknown")
                 .OrderBy(g => g.Key, StringComparer.CurrentCultureIgnoreCase);
@@ -336,9 +424,6 @@ namespace RevitToGISsupport.UI
             return root;
         }
 
-        // =========================
-        // Revit Links: Link Types -> Instances
-        // =========================
         private BrowserNode BuildRevitLinksTree(Document doc)
         {
             var root = new BrowserNode
@@ -388,6 +473,88 @@ namespace RevitToGISsupport.UI
             }
 
             return root;
+        }
+
+        // =========================
+        // Build Browser Index JSON
+        // =========================
+        private object BuildBrowserIndex(string projectId)
+        {
+            var nodes = new List<object>();
+
+            foreach (var branch in _root.Children)
+            {
+                TraverseLeaf(branch, new List<string>(), nodes);
+            }
+
+            var modelTitle = "";
+            try { modelTitle = _doc?.Title ?? ""; } catch { }
+
+            return new Dictionary<string, object>
+            {
+                ["projectId"] = projectId,
+                ["generatedAt"] = DateTimeOffset.Now.ToString("o"),
+                ["revitModelTitle"] = modelTitle,
+                ["nodes"] = nodes
+            };
+        }
+
+        private void TraverseLeaf(BrowserNode node, List<string> path, List<object> output)
+        {
+            if (node == null) return;
+
+            if (node.Type == BrowserNodeType.Folder)
+            {
+                path.Add(node.Title);
+
+                foreach (var c in node.Children)
+                    TraverseLeaf(c, path, output);
+
+                path.RemoveAt(path.Count - 1);
+                return;
+            }
+
+            var id = node.ElementId;
+            if (id == null || id == ElementId.InvalidElementId) return;
+
+            var elem = _doc.GetElement(id);
+            if (elem == null) return;
+
+            var kind = "item";
+            if (elem is View v)
+            {
+                if (v is ViewSheet) kind = "sheet";
+                else if (v is ViewSchedule) kind = "schedule";
+                else kind = "view";
+            }
+            else if (elem is FamilySymbol) kind = "family_type";
+            else if (elem is GroupType) kind = "group_type";
+            else if (elem is RevitLinkInstance) kind = "revit_link_instance";
+            else if (elem is RevitLinkType) kind = "revit_link_type";
+
+            var uniqueId = "";
+            try { uniqueId = elem.UniqueId; } catch { }
+
+            var meta = new Dictionary<string, object>();
+            if (elem is View vv)
+            {
+                try { meta["viewType"] = vv.ViewType.ToString(); } catch { }
+                try { meta["discipline"] = vv.Discipline.ToString(); } catch { }
+            }
+
+            output.Add(new Dictionary<string, object>
+            {   
+                ["nodeId"] = string.Join("|", path.Concat(new[] { node.Title })),
+                ["kind"] = kind,
+                ["title"] = node.Title,
+                ["path"] = path.ToArray(),
+                ["revit"] = new Dictionary<string, object>
+                {
+                    ["elementId"] = id.IntegerValue,
+                    ["uniqueId"] = uniqueId
+                },
+                ["meta"] = meta
+            });
         }
     }
 }
