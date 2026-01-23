@@ -182,6 +182,8 @@ namespace RevitToGISsupport.UI
         {
             var server = (tbServer.Text ?? "").Trim().TrimEnd('/');
             var projectId = (tbProjectId.Text ?? "").Trim();
+            RemoteSettings.ServerBaseUrl = server;
+            RemoteSettings.ProjectId = projectId;
 
             if (string.IsNullOrWhiteSpace(server) || string.IsNullOrWhiteSpace(projectId))
                 return;

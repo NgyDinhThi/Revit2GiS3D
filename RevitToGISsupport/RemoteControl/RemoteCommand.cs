@@ -7,6 +7,7 @@ namespace RevitToGISsupport.RemoteControl
         public string id { get; set; }
         public string action { get; set; }
         public string targetUniqueId { get; set; }
+        public int pixelSize { get; set; } = 4000;
     }
 
     public static class RemoteCommandQueue
