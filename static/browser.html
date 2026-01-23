@@ -2,36 +2,88 @@
 <html lang="vi">
 <head>
   <meta charset="utf-8"/>
-  <title>Project Browser Clone</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Project Browser Clone (Hybrid)</title>
   <style>
-    body{font-family:Segoe UI, sans-serif; margin:12px;}
-    .node{margin-left:14px;}
-    button{margin-left:8px;}
+    body { font-family: Segoe UI, Arial, sans-serif; margin: 12px; }
+    .top { display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+    input { height: 28px; padding: 0 8px; }
+    button { height: 30px; padding: 0 10px; cursor: pointer; }
+    .split { display:flex; gap:12px; margin-top: 12px; }
+    #tree { flex: 1; min-width: 320px; }
+    #preview { width: 420px; max-width: 45vw; border-left: 1px solid #ddd; padding-left: 12px; }
+    .node { margin-left: 14px; }
+    .leaf { display:flex; align-items:center; gap:6px; margin:4px 0; }
+    .leaf-title { flex:1; }
+    details > summary { cursor: pointer; }
+    .muted { color:#666; font-size: 12px; }
+    .status { margin-top: 8px; }
+    .imgwrap { border:1px solid #ddd; padding:8px; border-radius:6px; }
+    .imgwrap img { width:100%; height:auto; display:block; }
+    .tag { font-size: 11px; background:#f1f1f1; padding:2px 6px; border-radius:10px; }
   </style>
 </head>
 <body>
-  <h3>Project Browser Clone</h3>
-  <input id="q" placeholder="Search..." />
-  <button onclick="load()">Refresh</button>
-  <div id="tree"></div>
+  <h3>Project Browser Clone (Hybrid)</h3>
+
+  <div class="top">
+    <span>ProjectId:</span>
+    <input id="projectId" style="width:120px" />
+
+    <span>Search:</span>
+    <input id="q" style="width:220px" placeholder="Tên view/sheet/schedule..." />
+
+    <button onclick="loadIndex()">Refresh</button>
+    <button onclick="openLatest3D()">Open 3D (Latest)</button>
+
+    <span class="muted">2D/Sheet/Schedule: Render Exact → PNG giống Revit</span>
+  </div>
+
+  <div class="split">
+    <div id="tree"></div>
+
+    <div id="preview">
+      <div class="muted">Preview (Exact Render)</div>
+      <div class="imgwrap" id="imgwrap" style="display:none;">
+        <img id="img" alt="snapshot"/>
+        <div class="muted" id="imgmeta"></div>
+      </div>
+      <div class="status" id="status">Ready.</div>
+    </div>
+  </div>
 
 <script>
-const projectId = new URLSearchParams(location.search).get("projectId") || "P001";
+const qs = new URLSearchParams(location.search);
+const defaultProjectId = qs.get("projectId") || "P001";
+document.getElementById("projectId").value = defaultProjectId;
 
-async function load(){
-  const res = await fetch(`/api/projects/${projectId}/browser-index/latest`);
-  const data = await res.json();
+let lastIndex = null;
 
-  const nodes = data.nodes || [];
+async function loadIndex(){
+  const projectId = document.getElementById("projectId").value.trim() || "P001";
   const q = (document.getElementById("q").value || "").toLowerCase();
 
+  setStatus("Loading browser index...");
+  const res = await fetch(`/api/projects/${encodeURIComponent(projectId)}/browser-index/latest`);
+  if(!res.ok){
+    setStatus("No index found. Publish from Revit plugin first.");
+    document.getElementById("tree").innerHTML = "";
+    return;
+  }
+
+  const data = await res.json();
+  lastIndex = data;
+
+  const nodes = Array.isArray(data.nodes) ? data.nodes : [];
   const root = {};
+
   for(const n of nodes){
     const title = (n.title || "").toLowerCase();
     if(q && !title.includes(q)) continue;
 
     let cur = root;
-    for(const p of (n.path || [])){
+    const path = Array.isArray(n.path) ? n.path : [];
+    for(const p of path){
       cur[p] = cur[p] || {};
       cur = cur[p];
     }
@@ -41,10 +93,12 @@ async function load(){
 
   const el = document.getElementById("tree");
   el.innerHTML = "";
-  el.appendChild(render(root));
+  el.appendChild(renderTree(root, projectId));
+
+  setStatus(`Loaded nodes: ${nodes.length}`);
 }
 
-function render(obj){
+function renderTree(obj, projectId){
   const wrap = document.createElement("div");
 
   for(const key of Object.keys(obj)){
@@ -57,7 +111,7 @@ function render(obj){
     sum.textContent = key;
     details.appendChild(sum);
 
-    const child = render(obj[key]);
+    const child = renderTree(obj[key], projectId);
     child.className = "node";
     details.appendChild(child);
 
@@ -67,35 +121,145 @@ function render(obj){
   const items = obj["__items__"] || [];
   for(const it of items){
     const row = document.createElement("div");
-    row.className = "node";
-    row.textContent = it.title;
+    row.className = "leaf";
 
-    if(it.kind === "view" || it.kind === "sheet" || it.kind === "schedule"){
+    const title = document.createElement("div");
+    title.className = "leaf-title";
+    title.textContent = it.title || "(no title)";
+    row.appendChild(title);
+
+    const kind = it.kind || "item";
+    const tag = document.createElement("span");
+    tag.className = "tag";
+    tag.textContent = kind;
+    row.appendChild(tag);
+
+    // Render Exact for view/sheet/schedule
+    if(kind === "view" || kind === "sheet" || kind === "schedule"){
       const btn = document.createElement("button");
-      btn.textContent = "Open in Revit";
-      btn.onclick = () => sendOpen(it.revit?.uniqueId);
+      btn.textContent = "Render Exact";
+      btn.onclick = () => renderExact(projectId, it.revit?.uniqueId, it.title);
       row.appendChild(btn);
+
+      // Open 3D if this node is 3D view
+      const vt = (it.meta && it.meta.viewType) ? String(it.meta.viewType) : "";
+      if(vt === "ThreeD"){
+        const btn3 = document.createElement("button");
+        btn3.textContent = "Open 3D";
+        btn3.onclick = () => openLatest3D(); // simplest MVP: open latest glb for project
+        row.appendChild(btn3);
+      }
     }
+
     wrap.appendChild(row);
   }
 
   return wrap;
 }
 
-async function sendOpen(uniqueId){
-  if(!uniqueId){ alert("Missing uniqueId"); return; }
+async function openLatest3D(){
+  const projectId = document.getElementById("projectId").value.trim() || "P001";
+  setStatus("Getting latest GLB for project...");
 
-  await fetch(`/api/projects/${projectId}/commands`, {
+  const res = await fetch(`/api/projects/${encodeURIComponent(projectId)}/models/latest-glb`);
+  if(!res.ok){
+    setStatus("No latest GLB set. Upload GLB with form field projectId=P001 (or set meta on server).");
+    alert("Chưa có latest GLB cho project. Bạn cần upload GLB kèm projectId để server nhớ latest.");
+    return;
+  }
+  const data = await res.json();
+  const glbFile = data.latestGlbFile;
+  window.open(`/viewer_glb?file=${encodeURIComponent(glbFile)}`, "_blank");
+}
+
+async function renderExact(projectId, uniqueId, title){
+  if(!uniqueId){
+    alert("Missing uniqueId");
+    return;
+  }
+
+  setStatus("Sending render command to Revit...");
+  const res = await fetch(`/api/projects/${encodeURIComponent(projectId)}/commands`, {
     method:"POST",
     headers:{ "Content-Type":"application/json" },
     body: JSON.stringify({
-      action: "activate_view",
-      targetUniqueId: uniqueId
+      action: "render_view_png",
+      targetUniqueId: uniqueId,
+      pixelSize: 4000
     })
   });
+
+  if(!res.ok){
+    const t = await res.text();
+    setStatus("POST failed");
+    alert("POST render command failed: " + t);
+    return;
+  }
+
+  const obj = await res.json();
+  const cmdId = obj.id;
+  if(!cmdId){
+    setStatus("Missing command id");
+    alert("Server did not return command id");
+    return;
+  }
+
+  setStatus(`Waiting render result... cmdId=${cmdId}`);
+  await waitForResult(projectId, cmdId, title);
 }
 
-load();
+async function waitForResult(projectId, cmdId, title){
+  const maxMs = 180000; // 3 minutes
+  const start = Date.now();
+
+  while(Date.now() - start < maxMs){
+    const res = await fetch(`/api/projects/${encodeURIComponent(projectId)}/command-results/${encodeURIComponent(cmdId)}`);
+    const data = await res.json();
+
+    if(data.status === "done" && data.imageUrl){
+      setStatus("Render done.");
+      showPreview(data.imageUrl, title, data.viewUniqueId || "");
+      // also open in new tab
+      window.open(data.imageUrl, "_blank");
+      return;
+    }
+
+    if(data.status === "error"){
+      setStatus("Render failed.");
+      alert("Render failed: " + (data.message || ""));
+      return;
+    }
+
+    await sleep(800);
+  }
+
+  setStatus("Timeout waiting render.");
+  alert("Timeout waiting render result");
+}
+
+function showPreview(url, title, uniqueId){
+  const wrap = document.getElementById("imgwrap");
+  const img = document.getElementById("img");
+  const meta = document.getElementById("imgmeta");
+
+  img.src = url;
+  wrap.style.display = "block";
+  meta.textContent = `View: ${title || ""} | UniqueId: ${uniqueId || ""}`;
+}
+
+function setStatus(s){
+  document.getElementById("status").textContent = s;
+}
+
+function sleep(ms){
+  return new Promise(r => setTimeout(r, ms));
+}
+
+// initial load
+document.getElementById("q").addEventListener("keyup", (e)=>{
+  if(e.key === "Enter") loadIndex();
+});
+loadIndex();
 </script>
 </body>
 </html>
