@@ -4,18 +4,25 @@ namespace RevitToGISsupport.DataTree
 {
     public static class ActivateRequest
     {
-        public static ElementId PendingElementId { get; private set; } = ElementId.InvalidElementId;
+        private static readonly object _lock = new object();
+        private static ElementId _pendingElementId = ElementId.InvalidElementId;
 
         public static void Set(ElementId id)
         {
-            PendingElementId = id ?? ElementId.InvalidElementId;
+            lock (_lock)
+            {
+                _pendingElementId = id ?? ElementId.InvalidElementId;
+            }
         }
 
         public static ElementId Consume()
         {
-            var id = PendingElementId;
-            PendingElementId = ElementId.InvalidElementId;
-            return id;
+            lock (_lock)
+            {
+                var id = _pendingElementId;
+                _pendingElementId = ElementId.InvalidElementId;
+                return id;
+            }
         }
     }
 }

@@ -1,5 +1,6 @@
 ﻿using Autodesk.Revit.DB;
 using Autodesk.Revit.UI;
+using System;
 using System.Collections.Generic;
 
 namespace RevitToGISsupport.DataTree
@@ -20,7 +21,7 @@ namespace RevitToGISsupport.DataTree
 
             // Nếu là View (bao gồm Sheet/Schedule) thì activate  
             if (elem is View v && !v.IsTemplate)
-            {   
+            {
                 try
                 {
                     uidoc.ActiveView = v;
@@ -38,8 +39,11 @@ namespace RevitToGISsupport.DataTree
                 uidoc.Selection.SetElementIds(new List<ElementId> { id });
                 uidoc.ShowElements(id);
             }
-            catch
+            catch (Exception ex)
             {
+                System.Diagnostics.Debug.WriteLine($"Selection error: {ex.Message}");
+                // Có thể bỏ comment dòng dưới nếu muốn thông báo cho user
+                // TaskDialog.Show("Selection", $"Không thể chọn element: {ex.Message}");
             }
         }
 

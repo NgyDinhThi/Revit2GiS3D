@@ -8,14 +8,29 @@ namespace RevitToGISsupport
     [Transaction(TransactionMode.Manual)]
     public class CmdOpenBrowser : IExternalCommand
     {
-        private static ExternalEvent _activateEvent;
-        private static ActivateItemHandler _activateHandler;
-        private static BrowserWindow _window;
+        private static BrowserManager _manager;
 
         public Result Execute(ExternalCommandData commandData, ref string message, Autodesk.Revit.DB.ElementSet elements)
         {
-            var uiapp = commandData.Application;
+            if (_manager == null)
+                _manager = new BrowserManager();
 
+            _manager.ShowWindow(commandData.Application);
+            return Result.Succeeded;
+        }
+    }
+
+    /// <summary>
+    /// Quản lý singleton cho BrowserWindow để tránh memory leak
+    /// </summary>
+    internal class BrowserManager
+    {
+        private ExternalEvent _activateEvent;
+        private ActivateItemHandler _activateHandler;
+        private BrowserWindow _window;
+
+        public void ShowWindow(UIApplication uiapp)
+        {
             if (_activateHandler == null)
             {
                 _activateHandler = new ActivateItemHandler();
@@ -31,8 +46,6 @@ namespace RevitToGISsupport
             {
                 _window.Activate();
             }
-
-            return Result.Succeeded;
         }
     }
 }

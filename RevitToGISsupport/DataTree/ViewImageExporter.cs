@@ -12,10 +12,11 @@ namespace RevitToGISsupport.RemoteControl
         {
             Directory.CreateDirectory(folder);
 
-            var prefix = "snap_" + Guid.NewGuid().ToString("N");
-            var basePath = Path.Combine(folder, prefix);
-
-            var before = Directory.GetFiles(folder, "*.png").ToHashSet(StringComparer.OrdinalIgnoreCase);
+            // Dùng timestamp và tên view để tạo filename dự đoán được
+            var timestamp = DateTime.Now.ToString("yyyyMMdd_HHmmss");
+            var viewName = SanitizeFileName(view.Name);
+            var fileName = $"{viewName}_{timestamp}";
+            var basePath = Path.Combine(folder, fileName);
 
             var opt = new ImageExportOptions
             {
@@ -30,11 +31,29 @@ namespace RevitToGISsupport.RemoteControl
             opt.SetViewsAndSheets(new List<ElementId> { view.Id });
             doc.ExportImage(opt);
 
-            var after = Directory.GetFiles(folder, "*.png");
-            var created = after.Where(f => !before.Contains(f)).OrderByDescending(File.GetLastWriteTime).FirstOrDefault();
-            if (created != null) return created;
+            // Revit có thể thêm số vào cuối filename
+            var expectedPattern = $"{fileName}*.png";
+            var exportedFile = Directory.GetFiles(folder, expectedPattern)
+                .OrderByDescending(File.GetLastWriteTime)
+                .FirstOrDefault();
 
-            return after.OrderByDescending(File.GetLastWriteTime).FirstOrDefault();
+            return exportedFile;
+        }
+
+        /// <summary>
+        /// Loại bỏ ký tự không hợp lệ khỏi tên file
+        /// </summary>
+        private static string SanitizeFileName(string name)
+        {
+            if (string.IsNullOrWhiteSpace(name))
+                return "view";
+
+            var invalid = Path.GetInvalidFileNameChars();
+            var sanitized = string.Join("_", name.Split(invalid, StringSplitOptions.RemoveEmptyEntries));
+
+            // Giới hạn độ dài và loại bỏ dấu chấm cuối
+            sanitized = sanitized.TrimEnd('.');
+            return sanitized.Substring(0, Math.Min(50, sanitized.Length));
         }
     }
 }

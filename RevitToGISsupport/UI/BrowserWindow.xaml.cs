@@ -9,7 +9,7 @@ using System.Linq;
 using System.Net.Http;
 using System.Reflection;
 using System.Text;
-using System.Threading.Tasks;
+using System.Threading;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -23,11 +23,25 @@ namespace RevitToGISsupport.UI
         private readonly ExternalEvent _activateEvent;
 
         private BrowserNode _root;
-        private HttpClient _http;
 
+        // FIXED: Dùng static HttpClient để tránh socket exhaustion
+        private static readonly HttpClient SharedHttpClient = new HttpClient
+        {
+            Timeout = TimeSpan.FromSeconds(15)
+        };
+
+        // FIXED: Thêm cancellation token cho async operations
+        private CancellationTokenSource _publishCts;
+
+        // Remote (Web -> Revit)
         private static RemoteCommandHandler _remoteHandler;
         private static ExternalEvent _remoteEvent;
         private RemoteCommandPoller _poller;
+
+        // Poller config guard
+        private string _pollerServer;
+        private string _pollerProjectId;
+        private string _pollerClientId;
 
         public BrowserWindow(UIApplication uiapp, ExternalEvent activateEvent)
         {
@@ -37,7 +51,7 @@ namespace RevitToGISsupport.UI
             _doc = uiapp?.ActiveUIDocument?.Document;
             _activateEvent = activateEvent;
 
-            _http = new HttpClient { Timeout = TimeSpan.FromSeconds(10) };
+            // FIXED: Không tạo HttpClient mới nữa
 
             Loaded += BrowserWindow_Loaded;
             Closed += BrowserWindow_Closed;
@@ -52,27 +66,39 @@ namespace RevitToGISsupport.UI
                 return;
             }
 
+            // Default server/projectId để poller có thể start ngay
+            if (string.IsNullOrWhiteSpace(tbServer.Text))
+                tbServer.Text = "http://127.0.0.1:5000";
+            if (string.IsNullOrWhiteSpace(tbProjectId.Text))
+                tbProjectId.Text = "P001";
+
             BuildRootTree();
             BindTree();
 
-            StartOrRestartPoller();
+            StartOrRestartPoller(force: true);
+
             lblStatus.Text = "Ready.";
         }
 
         private void BrowserWindow_Closed(object sender, EventArgs e)
         {
-            try { _poller?.Dispose(); } catch { }
-            _poller = null;
+            // FIXED: Cancel và dispose cancellation token
+            _publishCts?.Cancel();
+            _publishCts?.Dispose();
 
-            try { _http?.Dispose(); } catch { }
-            _http = null;
+            StopPoller();
+
+            // FIXED: Không dispose SharedHttpClient vì nó là static
         }
+
+        // =========================
+        // UI EVENTS
+        // =========================
 
         private void btnRefresh_Click(object sender, RoutedEventArgs e)
         {
             BuildRootTree();
             ApplySearch();
-            StartOrRestartPoller();
             lblStatus.Text = "Refreshed.";
         }
 
@@ -81,14 +107,30 @@ namespace RevitToGISsupport.UI
             ApplySearch();
         }
 
+        private void Tree_MouseDoubleClick(object sender, MouseButtonEventArgs e)
+        {
+            var node = tvRoot?.SelectedItem as BrowserNode;
+            if (node == null) return;
+            if (!node.IsLeaf) return;
+            if (node.ElementId == null || node.ElementId == ElementId.InvalidElementId) return;
+
+            ActivateRequest.Set(node.ElementId);
+            _activateEvent?.Raise();
+        }
+
         private async void btnPublish_Click(object sender, RoutedEventArgs e)
         {
             try
             {
+                // FIXED: Cancel previous operation và tạo token mới
+                _publishCts?.Cancel();
+                _publishCts = new CancellationTokenSource();
+
                 btnPublish.IsEnabled = false;
                 lblStatus.Text = "Publishing browser index...";
 
-                StartOrRestartPoller();
+                // Nếu user vừa đổi server/projectId (textbox) thì restart poller đúng config
+                StartOrRestartPoller(force: false);
 
                 var server = (tbServer.Text ?? "").Trim().TrimEnd('/');
                 var projectId = (tbProjectId.Text ?? "").Trim();
@@ -103,11 +145,22 @@ namespace RevitToGISsupport.UI
                 var url = $"{server}/api/projects/{Uri.EscapeDataString(projectId)}/browser-index";
                 var json = JsonConvert.SerializeObject(index);
 
-                var res = await _http.PostAsync(
-                    url,
-                    new StringContent(json, Encoding.UTF8, "application/json"));
+                // --- SỬA ĐOẠN NÀY ĐỂ THÊM API KEY ---
+
+                var request = new HttpRequestMessage(HttpMethod.Post, url);
+                request.Content = new StringContent(json, Encoding.UTF8, "application/json");
+
+                // Thêm API Key vào Header (Khớp với giá trị mặc định trong app.py)
+                // Trong thực tế, bạn nên lưu key này vào Settings thay vì hardcode
+                request.Headers.Add("X-API-Key", "CHANGE-ME-IN-PRODUCTION");
+
+                // Gửi request bằng SendAsync thay vì PostAsync
+                var res = await SharedHttpClient.SendAsync(request, _publishCts.Token);
+
+                // ------------------------------------
 
                 var body = await res.Content.ReadAsStringAsync();
+
                 if (!res.IsSuccessStatusCode)
                 {
                     MessageBox.Show($"Publish failed ({(int)res.StatusCode}): {body}", "Publish", MessageBoxButton.OK, MessageBoxImage.Error);
@@ -116,6 +169,10 @@ namespace RevitToGISsupport.UI
                 }
 
                 lblStatus.Text = "Published successfully.";
+            }
+            catch (OperationCanceledException)
+            {
+                lblStatus.Text = "Publish cancelled.";
             }
             catch (Exception ex)
             {
@@ -128,16 +185,63 @@ namespace RevitToGISsupport.UI
             }
         }
 
-        private void Tree_MouseDoubleClick(object sender, MouseButtonEventArgs e)
-        {
-            var node = tvRoot?.SelectedItem as BrowserNode;
-            if (node == null) return;
-            if (!node.IsLeaf) return;
-            if (node.ElementId == null || node.ElementId == ElementId.InvalidElementId) return;
+        // =========================
+        // POLLER (WEB -> REVIT)
+        // =========================
 
-            ActivateRequest.Set(node.ElementId);
-            _activateEvent?.Raise();
+        private void StartOrRestartPoller(bool force)
+        {
+            var server = (tbServer.Text ?? "").Trim().TrimEnd('/');
+            var projectId = (tbProjectId.Text ?? "").Trim();
+            var clientId = Environment.MachineName;
+
+            RemoteSettings.ServerBaseUrl = server;
+            RemoteSettings.ProjectId = projectId;
+
+            if (string.IsNullOrWhiteSpace(server) || string.IsNullOrWhiteSpace(projectId))
+                return;
+
+            if (_remoteHandler == null)
+            {
+                _remoteHandler = new RemoteCommandHandler();
+                _remoteEvent = ExternalEvent.Create(_remoteHandler);
+            }
+
+            if (!force &&
+                _poller != null &&
+                string.Equals(server, _pollerServer, StringComparison.OrdinalIgnoreCase) &&
+                string.Equals(projectId, _pollerProjectId, StringComparison.OrdinalIgnoreCase) &&
+                string.Equals(clientId, _pollerClientId, StringComparison.OrdinalIgnoreCase))
+            {
+                return; // không đổi config => khỏi restart
+            }
+
+            StopPoller();
+
+            _pollerServer = server;
+            _pollerProjectId = projectId;
+            _pollerClientId = clientId;
+
+            _poller = new RemoteCommandPoller(server, projectId, clientId, _remoteEvent);
         }
+
+        private void StopPoller()
+        {
+            // FIXED: Thêm proper error handling
+            try
+            {
+                _poller?.Dispose();
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error disposing poller: {ex.Message}");
+            }
+            _poller = null;
+        }
+
+        // =========================
+        // TREE BINDING / SEARCH
+        // =========================
 
         private void BindTree()
         {
@@ -178,33 +282,10 @@ namespace RevitToGISsupport.UI
             return copy.Children.Count > 0 ? copy : null;
         }
 
-        private void StartOrRestartPoller()
-        {
-            var server = (tbServer.Text ?? "").Trim().TrimEnd('/');
-            var projectId = (tbProjectId.Text ?? "").Trim();
-            RemoteSettings.ServerBaseUrl = server;
-            RemoteSettings.ProjectId = projectId;
-
-            if (string.IsNullOrWhiteSpace(server) || string.IsNullOrWhiteSpace(projectId))
-                return;
-
-            if (_remoteHandler == null)
-            {
-                _remoteHandler = new RemoteCommandHandler();
-                _remoteEvent = ExternalEvent.Create(_remoteHandler);
-            }
-
-            try { _poller?.Dispose(); } catch { }
-            _poller = null;
-
-            var clientId = Environment.MachineName;
-
-            _poller = new RemoteCommandPoller(server, projectId, clientId, _remoteEvent);
-        }
-
         // =========================
-        // Build Root Tree (Project Browser)
+        // BUILD ROOT TREE
         // =========================
+
         private void BuildRootTree()
         {
             _root = new BrowserNode
@@ -232,12 +313,7 @@ namespace RevitToGISsupport.UI
                 .Cast<Element>()
                 .ToList();
 
-            return BrowserTreeBuilder.BuildTree(
-                doc,
-                "Views",
-                views,
-                org,
-                e => (e as View)?.Name ?? e.Name);
+            return BrowserTreeBuilder.BuildTree(doc, "Views", views, org, e => (e as View)?.Name ?? e.Name);
         }
 
         private BrowserNode BuildSheetsTree(Document doc)
@@ -250,17 +326,12 @@ namespace RevitToGISsupport.UI
                 .Cast<Element>()
                 .ToList();
 
-            return BrowserTreeBuilder.BuildTree(
-                doc,
-                "Sheets",
-                sheets,
-                org,
-                e =>
-                {
-                    var s = e as ViewSheet;
-                    if (s == null) return e.Name;
-                    return $"{s.SheetNumber} - {s.Name}";
-                });
+            return BrowserTreeBuilder.BuildTree(doc, "Sheets", sheets, org, e =>
+            {
+                var s = e as ViewSheet;
+                if (s == null) return e.Name;
+                return $"{s.SheetNumber} - {s.Name}";
+            });
         }
 
         private BrowserNode BuildSchedulesTree(Document doc)
@@ -273,12 +344,7 @@ namespace RevitToGISsupport.UI
                 .Cast<Element>()
                 .ToList();
 
-            var root = BrowserTreeBuilder.BuildTree(
-                doc,
-                "Schedules/Quantities",
-                schedules,
-                org,
-                e => (e as ViewSchedule)?.Name ?? e.Name);
+            var root = BrowserTreeBuilder.BuildTree(doc, "Schedules/Quantities", schedules, org, e => (e as ViewSchedule)?.Name ?? e.Name);
 
             TryAppendPanelSchedules(doc, root);
             return root;
@@ -307,17 +373,13 @@ namespace RevitToGISsupport.UI
 
                 if (panels.Count == 0) return;
 
-                var subTree = BrowserTreeBuilder.BuildTree(
-                    doc,
-                    "Panel Schedules",
-                    panels,
-                    org,
-                    e => (e as View)?.Name ?? e.Name);
-
+                var subTree = BrowserTreeBuilder.BuildTree(doc, "Panel Schedules", panels, org, e => (e as View)?.Name ?? e.Name);
                 schedulesRoot.Children.Add(subTree);
             }
-            catch
+            catch (Exception ex)
             {
+                // FIXED: Log error thay vì catch rỗng
+                System.Diagnostics.Debug.WriteLine($"Panel schedules not available: {ex.Message}");
             }
         }
 
@@ -478,8 +540,9 @@ namespace RevitToGISsupport.UI
         }
 
         // =========================
-        // Build Browser Index JSON
+        // BUILD BROWSER INDEX JSON
         // =========================
+
         private object BuildBrowserIndex(string projectId)
         {
             var nodes = new List<object>();
@@ -490,7 +553,15 @@ namespace RevitToGISsupport.UI
             }
 
             var modelTitle = "";
-            try { modelTitle = _doc?.Title ?? ""; } catch { }
+            try
+            {
+                modelTitle = _doc?.Title ?? "";
+            }
+            catch (Exception ex)
+            {
+                // FIXED: Log error thay vì catch rỗng
+                System.Diagnostics.Debug.WriteLine($"Could not get document title: {ex.Message}");
+            }
 
             return new Dictionary<string, object>
             {
@@ -545,7 +616,7 @@ namespace RevitToGISsupport.UI
             }
 
             output.Add(new Dictionary<string, object>
-            {   
+            {
                 ["nodeId"] = string.Join("|", path.Concat(new[] { node.Title })),
                 ["kind"] = kind,
                 ["title"] = node.Title,

@@ -1,4 +1,5 @@
 ﻿using System.Collections.Concurrent;
+using System.Collections.Generic; 
 
 namespace RevitToGISsupport.RemoteControl
 {
@@ -8,6 +9,8 @@ namespace RevitToGISsupport.RemoteControl
         public string action { get; set; }
         public string targetUniqueId { get; set; }
         public int pixelSize { get; set; } = 4000;
+
+        public Dictionary<string, string> parameters { get; set; }
     }
 
     public static class RemoteCommandQueue
