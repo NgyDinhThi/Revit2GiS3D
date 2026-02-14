@@ -1,0 +1,24 @@
+# --- Thư mục lưu trữ (Yêu cầu chính của bạn) ---
+uploads/
+static/models/
+static/geojson/
+
+# --- Môi trường ảo (Rất quan trọng để tránh đẩy hàng nghìn file rác) ---
+.venv/
+venv/
+env/
+ENV/
+
+# --- Python rác ---
+__pycache__/
+*.py[cod]
+*$py.class
+
+# --- File Log và Tạm thời ---
+*.log
+upload_log.txt
+.DS_Store
+Thumbs.db
+
+# --- Cấu hình VS Code (Nếu bạn không muốn chia sẻ cài đặt cá nhân) ---
+.vscode/

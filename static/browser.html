@@ -5,98 +5,144 @@
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
   <title>BIM Sync Manager</title>
   <style>
-    /* ... (Giữ nguyên các style cũ của bạn) ... */
-    
     body { font-family: 'Segoe UI', sans-serif; margin: 0; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
-    .header { padding: 10px; background: #f5f5f5; border-bottom: 1px solid #ddd; display: flex; gap: 10px; align-items: center; }
-    input { height: 28px; padding: 0 8px; border: 1px solid #ccc; border-radius: 4px; }
-    button { height: 30px; padding: 0 12px; cursor: pointer; background: #0078d4; color: white; border: none; border-radius: 4px; }
-    button.secondary { background: #e0e0e0; color: #333; }
-    .main { display: flex; flex: 1; overflow: hidden; }
-    .col-tree { width: 350px; border-right: 1px solid #ddd; overflow-y: auto; padding: 10px; }
-    .col-props { width: 300px; border-right: 1px solid #ddd; padding: 15px; background: #fafafa; overflow-y: auto; }
     
-    /* SỬA LẠI CSS CHO PREVIEW */
-    .col-preview { flex: 1; padding: 20px; background: #fff; overflow-y: auto; display: flex; flex-direction: column; align-items: center; }
-    .img-container { border: 1px solid #eee; padding: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); max-width: 95%; background: white; margin-top: 10px; }
-    img { max-width: 100%; height: auto; display: block; }
+    /* Header Styles */
+    .header { padding: 10px; background: #f5f5f5; border-bottom: 1px solid #ddd; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+    input { height: 28px; padding: 0 8px; border: 1px solid #ccc; border-radius: 4px; }
+    button { height: 30px; padding: 0 15px; cursor: pointer; background: #0078d4; color: white; border: none; border-radius: 4px; font-weight: 500; }
+    button:hover { background: #106ebe; }
+    button:disabled { opacity: 0.6; cursor: not-allowed; }
+    button.secondary { background: #28a745; color: white; } /* Màu xanh lá cho nút Open 3D */
+    button.secondary:hover { background: #218838; }
 
-    /* ... (Giữ nguyên các style khác) ... */
-    #loading { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.8); z-index: 999; justify-content: center; align-items: center; }
-    .spinner { width: 30px; height: 30px; border: 3px solid #f3f3f3; border-top: 3px solid #0078d4; border-radius: 50%; animation: spin 1s linear infinite; }
+    /* Layout */
+    .main { display: flex; flex: 1; overflow: hidden; }
+    .col-tree { width: 400px; border-right: 1px solid #ddd; overflow-y: auto; padding: 10px; background: #fff; }
+    .col-props { width: 320px; border-right: 1px solid #ddd; padding: 15px; background: #fafafa; overflow-y: auto; }
+    .col-preview { flex: 1; padding: 20px; background: #fff; overflow-y: auto; display: flex; flex-direction: column; align-items: center; }
+    
+    /* Preview Image */
+    .img-container { border: 1px solid #eee; padding: 10px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); max-width: 90%; background: white; margin-top: 15px; border-radius: 4px; }
+    img { max-width: 100%; height: auto; display: block; }
+    
+    /* Loading Overlay */
+    #loading { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.85); z-index: 1000; justify-content: center; align-items: center; flex-direction: column; }
+    .spinner { width: 40px; height: 40px; border: 4px solid #f3f3f3; border-top: 4px solid #0078d4; border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 10px; }
     @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     
-    /* Tree styles */
-    details > summary { cursor: pointer; list-style: none; padding: 4px 0; }
-    .leaf { display: flex; align-items: center; padding: 4px 8px; cursor: pointer; }
+    /* Tree Nodes */
+    details > summary { cursor: pointer; list-style: none; padding: 6px 0; font-weight: 600; color: #333; }
+    details > summary::-webkit-details-marker { display: none; }
+    details > summary::before { content: '▸'; display: inline-block; width: 20px; color: #999; }
+    details[open] > summary::before { content: '▾'; }
+    .node { margin-left: 18px; border-left: 1px solid #eee; }
+    .leaf { display: flex; align-items: center; padding: 5px 8px; margin: 2px 0; border-radius: 4px; cursor: pointer; transition: background 0.1s; }
     .leaf:hover { background: #f0f0f0; }
-    .leaf.selected { background: #cce8ff; border: 1px solid #99d1ff; }
-    .tag { font-size: 10px; background: #eee; padding: 2px 6px; border-radius: 4px; margin-left: auto; }
+    .leaf.selected { background: #e3f2fd; border: 1px solid #bbdefb; color: #0078d4; }
+    
+    .leaf-title { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 13px; }
+    .tag { font-size: 10px; background: #eee; padding: 2px 6px; border-radius: 10px; color: #666; margin-left: 8px; }
+    
+    /* Leaf Action Buttons */
+    .leaf-actions button { height: 20px; padding: 0 6px; font-size: 10px; margin-left: 5px; background: #6c757d; }
+    
+    /* Status Bar */
+    #statusBar { padding: 8px 12px; font-size: 12px; border-top: 1px solid #ddd; background: #f8f9fa; color: #333; display: flex; justify-content: space-between; }
+    .status.error { color: #d32f2f; font-weight: bold; }
+    .status.success { color: #28a745; font-weight: bold; }
   </style>
 </head>
 <body>
 
-<div id="loading"><div class="spinner"></div></div>
+<div id="loading">
+    <div class="spinner"></div>
+    <div id="loadingText" style="color:#555; font-weight:500">Processing...</div>
+</div>
 
 <div class="header">
-  <input id="projectId" placeholder="Project ID" value="P001" style="width:80px">
-  <input id="apiKey" type="password" placeholder="API Key" style="width:120px" value="CHANGE-ME-IN-PRODUCTION">
-  <button onclick="loadIndex()">Refresh Tree</button>
+  <div style="font-weight:bold; margin-right:10px; color:#0078d4">BIM Sync</div>
+  <input id="projectId" placeholder="Project ID" value="P001" style="width:70px" title="Project ID">
+  <input id="apiKey" type="password" placeholder="API Key" style="width:140px" value="CHANGE-ME-IN-PRODUCTION" title="API Key">
+  
+  <input id="q" placeholder="Search tree..." style="width:160px">
+  <button onclick="loadIndex()" title="Load cấu trúc từ Server">🔄 Refresh Tree</button>
+  
   <div style="flex:1"></div>
-  <button class="secondary" onclick="openLatest3D()">Open 3D Viewer</button>
+  <button class="secondary" onclick="openLatest3D()">👁️ Open 3D Viewer</button>
 </div>
 
 <div class="main">
-  <div class="col-tree" id="treeRoot"></div>
+  <div class="col-tree" id="treeRoot">
+    <div style="color:#888; text-align:center; margin-top:40px">
+      <p>1. Nhấn <b>"Publish to Web"</b> trong Revit.</p>
+      <p>2. Nhấn <b>"Refresh Tree"</b> ở trên để xem dữ liệu.</p>
+    </div>
+  </div>
 
   <div class="col-props">
-    <h3>Properties</h3>
-    <div id="propMsg" style="color:#888; font-size:13px">Select an item to edit</div>
+    <h3 style="margin-top:0">Properties</h3>
+    <div id="propMsg" style="color:#888; font-size:13px; font-style:italic">Select an item to view properties</div>
+    
     <div id="propForm" style="display:none">
-      <div style="margin-bottom:10px">
-        <label style="display:block;font-size:12px;color:#666">Selected Item</label>
-        <input id="p_name" disabled style="width:100%;background:#eee">
+      <div style="margin-bottom:15px">
+        <label style="display:block; margin-bottom:5px; font-weight:600; font-size:12px; color:#555">Item Name</label>
+        <input id="p_name" disabled style="width:100%; background:#e9ecef; border:1px solid #ced4da; padding:5px">
       </div>
-      <div style="margin-bottom:10px">
-        <label style="display:block;font-size:12px;color:#666">UniqueId</label>
-        <input id="p_uid" disabled style="width:100%;background:#eee;font-family:monospace;font-size:11px">
+      <div style="margin-bottom:15px">
+        <label style="display:block; margin-bottom:5px; font-weight:600; font-size:12px; color:#555">UniqueId</label>
+        <input id="p_uid" disabled style="width:100%; background:#e9ecef; border:1px solid #ced4da; padding:5px; font-family:monospace; font-size:11px">
       </div>
-      <hr style="border:0;border-top:1px solid #eee;margin:15px 0">
-      <div style="margin-bottom:10px">
-        <label style="display:block;font-size:12px;color:#666">Update Parameter</label>
-        <select id="p_param_name" style="width:100%;height:30px;margin-bottom:5px">
+      
+      <hr style="border:0; border-top:1px solid #eee; margin:20px 0">
+      
+      <div style="margin-bottom:15px">
+        <label style="display:block; margin-bottom:5px; font-weight:600; font-size:12px; color:#0078d4">Update Revit Parameter</label>
+        <select id="p_param_name" style="width:100%; height:30px; margin-bottom:8px">
           <option value="Comments">Comments (Biến chú)</option>
+          <option value="Mark">Mark (Ký hiệu)</option>
           <option value="Sheet Name">Sheet Name (Tên bản vẽ)</option>
+          <option value="Sheet Number">Sheet Number (Số hiệu)</option>
         </select>
-        <input id="p_param_val" placeholder="New Value..." style="width:100%">
+        <input id="p_param_val" placeholder="Enter new value..." style="width:100%; height:30px">
       </div>
+
       <button onclick="sendUpdate()" style="width:100%">Update to Revit</button>
     </div>
   </div>
 
   <div class="col-preview">
-    <div id="previewActions" style="display:none; text-align:center; margin-bottom:10px; width:100%">
-        <button onclick="requestRender()" style="background:#2b88d8; padding: 5px 20px;">📸 Render View Exact</button>
+    <div id="previewActions" style="display:none; text-align:center; width:100%">
+        <button onclick="requestRender()" style="background:#6c757d; padding: 6px 20px;">📸 Render 2D Image</button>
+        <p style="font-size:11px; color:#888; margin-top:5px">Render view hiện tại trong Revit và gửi ảnh về đây.</p>
     </div>
 
-    <div id="previewMsg" style="color:#888; margin-top:20px">Select a View to see preview</div>
+    <div id="previewMsg" style="color:#888; margin-top:40px; text-align:center">
+      Select a View to see actions
+    </div>
     
     <div class="img-container" id="imgWrap" style="display:none">
       <img id="previewImg" alt="View Preview">
-      <div style="text-align:center; margin-top:5px; font-size:11px; color:#999">
-         Image from Revit
-      </div>
+      <div style="text-align:center; margin-top:8px; font-size:11px; color:#999">Image from Revit</div>
     </div>
   </div>
 </div>
 
-<div style="padding:5px; background:#f9f9f9; border-top:1px solid #ddd; font-size:12px" id="statusBar">Ready.</div>
+<div id="statusBar">
+    <span id="statusText">Ready.</span>
+    <span style="color:#999">Socket: <span id="socketStatus">Disconnected</span></span>
+</div>
 
+<script src="/socket.io/socket.io.js"></script>
 <script>
-// --- CONFIG & UTILS ---
-const CONFIG = { POLL_MS: 1000, TIMEOUT_MS: 30000 };
+// --- CONFIG ---
+const CONFIG = { RENDER_TIMEOUT: 180000 };
 let selectedNode = null;
+let socket = null;
+let currentProjectId = null;
+const pendingCmds = new Map();
 
+// --- SETUP ---
 if(localStorage.getItem("apiKey")) document.getElementById("apiKey").value = localStorage.getItem("apiKey");
 
 function getHeaders() {
@@ -104,155 +150,270 @@ function getHeaders() {
   localStorage.setItem("apiKey", key);
   return { "Content-Type": "application/json", "X-API-Key": key };
 }
-function setStatus(msg, type='') { 
-    const el = document.getElementById("statusBar"); 
-    el.textContent = msg; 
-    el.style.color = type==='error'?'red':(type==='success'?'green':'black'); 
-}
-function showLoading(show) { document.getElementById("loading").style.display = show ? "flex" : "none"; }
 
-// --- LOGIC ---
+function setStatus(msg, type='') {
+  const el = document.getElementById("statusText");
+  el.textContent = msg;
+  el.className = type === 'error' ? 'status error' : (type === 'success' ? 'status success' : '');
+}
+
+function showLoading(show, text="Processing...") {
+  document.getElementById("loadingText").textContent = text;
+  document.getElementById("loading").style.display = show ? "flex" : "none";
+}
+
+// --- SOCKET.IO ---
+function initSocket(pid) {
+    if(socket && currentProjectId === pid) return;
+    
+    if(!window.io) return;
+    socket = io({ transports: ['websocket'] });
+    currentProjectId = pid;
+
+    socket.on('connect', () => {
+        document.getElementById("socketStatus").textContent = "Connected";
+        document.getElementById("socketStatus").style.color = "green";
+        socket.emit('subscribe', { projectId: pid });
+    });
+
+    socket.on('disconnect', () => {
+        document.getElementById("socketStatus").textContent = "Disconnected";
+        document.getElementById("socketStatus").style.color = "red";
+    });
+
+    socket.on('command_result', (data) => {
+        if(!data || !data.id) return;
+        const task = pendingCmds.get(data.id);
+        if(!task) return;
+
+        if(data.status === 'done') {
+            setStatus("Command Completed!", "success");
+            if(data.imageUrl) {
+                // Render success
+                const img = document.getElementById("previewImg");
+                img.src = data.imageUrl;
+                document.getElementById("imgWrap").style.display = "block";
+                document.getElementById("previewMsg").style.display = "none";
+            } else {
+                // Update/Export success
+                alert(data.message || "Command completed successfully!");
+            }
+            task.resolve(true);
+        } else if(data.status === 'error') {
+            setStatus("Error: " + data.message, "error");
+            alert("Revit Error: " + data.message);
+            task.resolve(false);
+        }
+        pendingCmds.delete(data.id);
+    });
+}
+
+function waitForResult(cmdId) {
+    return new Promise((resolve) => {
+        const t = setTimeout(() => {
+            if(pendingCmds.has(cmdId)) {
+                pendingCmds.delete(cmdId);
+                setStatus("Timeout: Revit did not respond.", "error");
+                alert("Timeout waiting for Revit.");
+                resolve(false);
+            }
+        }, CONFIG.RENDER_TIMEOUT);
+        
+        pendingCmds.set(cmdId, { resolve: (res) => { clearTimeout(t); resolve(res); } });
+    });
+}
+
+// --- ACTIONS ---
+
+// 1. Load Tree
 async function loadIndex() {
   const pid = document.getElementById("projectId").value;
-  showLoading(true);
+  const q = document.getElementById("q").value.toLowerCase();
+  
+  showLoading(true, "Loading Tree...");
+  initSocket(pid);
+
   try {
-    const res = await fetch(`/api/projects/${pid}/browser-index/latest`);
-    if(!res.ok) throw new Error("No index found. Please 'Publish' from Revit first.");
+    const res = await fetch(`/api/projects/${pid}/browser-index/latest`, { headers: getHeaders() });
+    
+    if(res.status === 401) throw new Error("Unauthorized. Please check API Key.");
+    if(res.status === 404) throw new Error("No data found. Click 'Publish to Web' in Revit first.");
+    if(!res.ok) throw new Error(res.statusText);
+
     const data = await res.json();
-    renderTree(data.nodes || []);
-    setStatus("Tree loaded.", "success");
+    renderTree(data.nodes || [], q);
+    setStatus("Tree loaded successfully.", "success");
   } catch(e) {
     setStatus(e.message, "error");
+    alert("Load Failed: " + e.message);
   } finally {
     showLoading(false);
   }
 }
 
-function renderTree(nodes) {
-  const root = document.getElementById("treeRoot");
-  root.innerHTML = "";
-  // Simple flat list renderer for demo (Group logic omitted for brevity, using flat list)
-  // Bạn có thể dùng lại hàm createDomTree cũ nếu muốn hiển thị cây đẹp hơn
-  const ul = document.createElement("div");
-  nodes.forEach(n => {
-     const row = document.createElement("div");
-     row.className = "leaf";
-     // Thêm padding dựa vào độ dài path để giả lập cây
-     const depth = (n.path || []).length;
-     row.style.paddingLeft = (depth * 15 + 10) + "px";
-     
-     row.innerHTML = `<span>${n.title}</span> <span class="tag">${n.kind}</span>`;
-     row.onclick = () => selectItem(row, n);
-     ul.appendChild(row);
-  });
-  root.appendChild(ul);
+// 2. Open 3D (Logic mới: Lấy file từ nút Publish)
+async function openLatest3D() {
+    const pid = document.getElementById("projectId").value;
+    showLoading(true, "Checking for 3D model...");
+    
+    try {
+        const res = await fetch(`/api/projects/${pid}/models/latest-glb`, { headers: getHeaders() });
+        if(res.status === 404) throw new Error("Chưa có mô hình 3D. Hãy nhấn 'Publish to Web' trong Revit để tự động upload.");
+        
+        const data = await res.json();
+        if(!data.latestGlbFile) throw new Error("File GLB null.");
+        
+        // Mở tab mới với viewer
+        window.open(`/viewer_glb?file=${data.latestGlbFile}`, "_blank");
+        setStatus("Opening 3D Viewer...", "success");
+    } catch(e) {
+        setStatus(e.message, "error");
+        alert(e.message);
+    } finally {
+        showLoading(false);
+    }
 }
 
-// --- SỬA HÀM SELECT ITEM ĐỂ HIỆN NÚT RENDER ---
+// 3. Render Image
+async function requestRender() {
+    if(!selectedNode) return;
+    await sendCommand("render_view_png", {
+        targetUniqueId: selectedNode.revit.uniqueId,
+        pixelSize: 2000
+    });
+}
+
+// 4. Update Parameter
+async function sendUpdate() {
+    if(!selectedNode) return;
+    const val = document.getElementById("p_param_val").value;
+    if(!val) return alert("Please enter value");
+    
+    await sendCommand("update_parameter", {
+        targetUniqueId: selectedNode.revit.uniqueId,
+        parameters: { [document.getElementById("p_param_name").value]: val }
+    });
+}
+
+// Helper: Send Command
+async function sendCommand(action, payload) {
+    const pid = document.getElementById("projectId").value;
+    showLoading(true, "Sending command to Revit...");
+    setStatus("Sending command...");
+
+    try {
+        const res = await fetch(`/api/projects/${pid}/commands`, {
+            method: 'POST',
+            headers: getHeaders(),
+            body: JSON.stringify({ action, ...payload })
+        });
+
+        if(!res.ok) {
+            if(res.status === 401) throw new Error("Unauthorized. Check API Key.");
+            throw new Error("Send failed");
+        }
+
+        const data = await res.json();
+        setStatus("Waiting for Revit response...");
+        await waitForResult(data.id);
+        
+    } catch(e) {
+        setStatus(e.message, "error");
+        alert("Command Failed: " + e.message);
+    } finally {
+        showLoading(false);
+    }
+}
+
+// --- UI RENDERING ---
+
+function renderTree(nodes, query) {
+  const root = document.getElementById("treeRoot");
+  root.innerHTML = "";
+  
+  const tree = {};
+  nodes.forEach(n => {
+    if(query && !n.title.toLowerCase().includes(query)) return;
+    
+    let current = tree;
+    (n.path || []).forEach(folder => {
+      if(!current[folder]) current[folder] = { __type: 'folder', children: {} };
+      current = current[folder].children;
+    });
+    current[n.title + n.revit?.uniqueId] = { __type: 'item', data: n };
+  });
+
+  root.appendChild(createDomTree(tree));
+}
+
+function createDomTree(obj) {
+  const ul = document.createElement("div");
+  Object.keys(obj).forEach(key => {
+    const node = obj[key];
+    if(node.__type === 'folder') {
+      const details = document.createElement("details");
+      details.open = true;
+      const sum = document.createElement("summary");
+      sum.textContent = key;
+      details.appendChild(sum);
+      
+      const children = createDomTree(node.children);
+      children.className = "node";
+      details.appendChild(children);
+      ul.appendChild(details);
+    } else {
+      const row = document.createElement("div");
+      row.className = "leaf";
+      
+      const title = document.createElement("div");
+      title.className = "leaf-title";
+      title.textContent = node.data.title;
+      
+      const tag = document.createElement("span");
+      tag.className = "tag";
+      tag.textContent = node.data.kind;
+      
+      row.appendChild(title);
+      row.appendChild(tag);
+      
+      // Export 3D Button (Optional - cho view lẻ)
+      if(node.data.meta?.viewType === "ThreeD") {
+          const btnEx = document.createElement("button");
+          btnEx.textContent = "Ex 3D";
+          btnEx.title = "Export specific view (Optional)";
+          btnEx.className = "leaf-actions";
+          btnEx.onclick = (e) => {
+              e.stopPropagation();
+              sendCommand("export_view_glb", { targetUniqueId: node.data.revit.uniqueId });
+          };
+          row.appendChild(btnEx);
+      }
+
+      row.onclick = () => selectItem(row, node.data);
+      ul.appendChild(row);
+    }
+  });
+  return ul;
+}
+
 function selectItem(el, data) {
   document.querySelectorAll(".leaf").forEach(x => x.classList.remove("selected"));
   el.classList.add("selected");
-  
   selectedNode = data;
   
-  // Fill Properties
   document.getElementById("propMsg").style.display = "none";
   document.getElementById("propForm").style.display = "block";
   document.getElementById("p_name").value = data.title;
   document.getElementById("p_uid").value = data.revit?.uniqueId || "";
+  document.getElementById("p_param_val").value = "";
   
-  // Setup Preview Area
-  const kind = data.kind || "";
-  const isView = kind === 'view' || kind === 'sheet' || kind === 'schedule';
-  
-  const btnArea = document.getElementById("previewActions");
-  const msg = document.getElementById("previewMsg");
-  const imgWrap = document.getElementById("imgWrap");
-
-  imgWrap.style.display = "none"; // Ẩn ảnh cũ
-
-  if (isView) {
-      btnArea.style.display = "block"; // HIỆN NÚT RENDER
-      msg.style.display = "block";
-      msg.textContent = "Click button above to render this view.";
-  } else {
-      btnArea.style.display = "none"; // Ẩn nút nếu không phải View
-      msg.style.display = "block";
-      msg.textContent = "Preview not available for this item type.";
-  }
+  const isView = ['view','sheet','schedule'].includes(data.kind);
+  document.getElementById("previewActions").style.display = isView ? "block" : "none";
+  document.getElementById("previewMsg").style.display = isView ? "block" : "none";
+  document.getElementById("imgWrap").style.display = "none";
 }
 
-async function sendUpdate() {
-  if(!selectedNode) return;
-  const val = document.getElementById("p_param_val").value;
-  if(!val) return alert("Enter a value");
-  
-  showLoading(true);
-  try {
-     const pid = document.getElementById("projectId").value;
-     const res = await fetch(`/api/projects/${pid}/commands`, {
-        method: 'POST', headers: getHeaders(),
-        body: JSON.stringify({
-           action: "update_parameter",
-           targetUniqueId: selectedNode.revit.uniqueId,
-           parameters: { [document.getElementById("p_param_name").value]: val }
-        })
-     });
-     const json = await res.json();
-     if(json.error) throw new Error(json.error);
-     await pollResult(pid, json.id);
-  } catch(e) { setStatus(e.message, "error"); }
-  finally { showLoading(false); }
-}
-
-async function requestRender() {
-  if(!selectedNode) return;
-  showLoading(true);
-  setStatus("Requesting render...");
-  try {
-     const pid = document.getElementById("projectId").value;
-     const res = await fetch(`/api/projects/${pid}/commands`, {
-        method: 'POST', headers: getHeaders(),
-        body: JSON.stringify({
-           action: "render_view_png",
-           targetUniqueId: selectedNode.revit.uniqueId,
-           pixelSize: 1500
-        })
-     });
-     const json = await res.json();
-     await pollResult(pid, json.id);
-  } catch(e) { setStatus(e.message, "error"); }
-  finally { showLoading(false); }
-}
-
-async function pollResult(pid, cmdId) {
-  const start = Date.now();
-  while(Date.now() - start < CONFIG.TIMEOUT_MS) {
-    try {
-        const res = await fetch(`/api/projects/${pid}/command-results/${cmdId}`);
-        const data = await res.json();
-        if(data.status === "done") {
-            setStatus("Success!", "success");
-            if(data.imageUrl) {
-                document.getElementById("previewImg").src = data.imageUrl;
-                document.getElementById("imgWrap").style.display = "block"; // Hiện ảnh khi đã xong
-                document.getElementById("previewMsg").style.display = "none";
-            } else {
-                alert("Update Success!");
-            }
-            return;
-        }
-        if(data.status === "error") throw new Error(data.message);
-    } catch(e) {}
-    await new Promise(r => setTimeout(r, 1000));
-  }
-  throw new Error("Timeout waiting for Revit.");
-}
-
-function openLatest3D() {
-    const pid = document.getElementById("projectId").value;
-    window.open(`/api/projects/${pid}/models/latest-glb`);
-}
+document.getElementById("q").addEventListener("keyup", e => { if(e.key==="Enter") loadIndex(); });
 </script>
 </body>
 </html>

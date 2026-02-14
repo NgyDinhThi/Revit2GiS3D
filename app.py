@@ -2,41 +2,47 @@ import os
 import json
 import uuid
 import time
-import threading
+import re
 import logging
+import threading 
 from datetime import datetime
 from functools import wraps
 from flask import Flask, request, jsonify, send_from_directory, url_for
 from flask_socketio import SocketIO, join_room, emit
+from dotenv import load_dotenv
+
+# Load biến môi trường
+load_dotenv()
 
 # --- CẤU HÌNH ---
+logging.basicConfig(level=logging.INFO, format='%(asctime)s %(levelname)s: %(message)s')
+logger = logging.getLogger(__name__)
+
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 UPLOAD_FOLDER = os.path.join(BASE_DIR, "uploads")
 STATIC_FOLDER = os.path.join(BASE_DIR, "static")
 TEMPLATES_FOLDER = os.path.join(BASE_DIR, "templates")
 
-os.makedirs(UPLOAD_FOLDER, exist_ok=True)
-os.makedirs(STATIC_FOLDER, exist_ok=True)
-os.makedirs(TEMPLATES_FOLDER, exist_ok=True)
-
-# Cấu hình API Key (Phải khớp với file C# RemoteCommandHandler.cs)
-API_KEY = os.environ.get("API_KEY", "CHANGE-ME-IN-PRODUCTION")
-
-# Setup Logging
-logging.basicConfig(level=logging.INFO, format='%(asctime)s %(levelname)s: %(message)s')
-logger = logging.getLogger(__name__)
+for folder in [UPLOAD_FOLDER, STATIC_FOLDER, TEMPLATES_FOLDER]:
+    os.makedirs(folder, exist_ok=True)
 
 app = Flask(__name__, static_folder=STATIC_FOLDER, static_url_path="/static", template_folder=TEMPLATES_FOLDER)
-app.config['MAX_CONTENT_LENGTH'] = 500 * 1024 * 1024  # 500MB Limit
+app.config['MAX_CONTENT_LENGTH'] = 1000 * 1024 * 1024  # 1GB Limit
+
+# Cấu hình API Key
+API_KEY = os.getenv("API_KEY", "CHANGE-ME-IN-PRODUCTION")
 
 socketio = SocketIO(app, cors_allowed_origins='*')
-_lock = threading.Lock()
+_lock = threading.Lock()  # Bây giờ dòng này sẽ chạy OK
 
-# --- HELPER: BẢO MẬT ---
+# --- HELPER ---
+def _safe(s):
+    if not s: return "unknown"
+    return re.sub(r'[^\w\-]', '_', s)[:100]
+
 def require_api_key(f):
     @wraps(f)
     def decorated(*args, **kwargs):
-        # Lấy key từ Header
         key = request.headers.get('X-API-Key')
         if key != API_KEY:
             logger.warning(f"Unauthorized access from {request.remote_addr}")
@@ -44,7 +50,6 @@ def require_api_key(f):
         return f(*args, **kwargs)
     return decorated
 
-# --- HELPER: JSON & FILE ---
 def _read_json(path, default):
     if not os.path.exists(path): return default
     try:
@@ -55,8 +60,6 @@ def _atomic_write_json(path, data):
     tmp = path + ".tmp"
     with open(tmp, "w", encoding="utf-8") as f: json.dump(data, f, ensure_ascii=False, indent=2)
     os.replace(tmp, path)
-
-def _safe(s): return (s or "").replace("\\", "_").replace("/", "_").replace(":", "_").strip()
 
 # Paths
 def _meta(pid): return os.path.join(UPLOAD_FOLDER, f"project_{_safe(pid)}_meta.json")
@@ -70,13 +73,13 @@ def _room(pid): return f"proj:{_safe(pid)}"
 @app.after_request
 def add_cors(resp):
     resp.headers["Access-Control-Allow-Origin"] = "*"
-    resp.headers["Access-Control-Allow-Headers"] = "Content-Type, X-API-Key" # Cho phép gửi Key qua header
+    resp.headers["Access-Control-Allow-Headers"] = "Content-Type, X-API-Key"
     resp.headers["Access-Control-Allow-Methods"] = "GET, POST, OPTIONS"
     return resp
 
 @app.route("/")
 def home():
-    return jsonify({"status": "running", "mode": "secure"})
+    return jsonify({"status": "running", "mode": "secure", "api_key_hint": "Check C# settings"})
 
 @app.route("/browser")
 def browser_page():
@@ -84,40 +87,59 @@ def browser_page():
         return send_from_directory(STATIC_FOLDER, "browser.html")
     return "browser.html missing", 404
 
-# --- API: UPLOAD (Cần Key) ---
+@app.route("/viewer_glb")
+def viewer_glb():
+    if os.path.exists(os.path.join(STATIC_FOLDER, "viewer_glb.html")):
+        return send_from_directory(STATIC_FOLDER, "viewer_glb.html")
+    if os.path.exists(os.path.join(TEMPLATES_FOLDER, "viewer_glb.html")):
+        return send_from_directory(TEMPLATES_FOLDER, "viewer_glb.html")
+    return "viewer_glb.html missing", 404
+
+# --- UPLOAD API ---
 @app.route("/upload", methods=["POST"])
 @require_api_key
 def upload():
     files = request.files.getlist("file")
-    pid = request.form.get("projectId", "").strip()
+    project_id = request.form.get("projectId", "").strip()
+    
     saved = []
     for f in files:
         if f and f.filename:
             ext = os.path.splitext(f.filename)[1].lower()
             name = f"model_{uuid.uuid4().hex}{ext}"
-            f.save(os.path.join(UPLOAD_FOLDER, name))
+            save_path = os.path.join(UPLOAD_FOLDER, name)
+            f.save(save_path)
             saved.append(name)
-            if pid and ext == ".glb":
+            
+            if project_id and ext == ".glb":
                 with _lock:
-                    meta = _read_json(_meta(pid), {})
+                    meta = _read_json(_meta(project_id), {})
                     meta["latestGlbFile"] = name
-                    _atomic_write_json(_meta(pid), meta)
-    
+                    meta["updatedAt"] = datetime.utcnow().isoformat() + "Z"
+                    _atomic_write_json(_meta(project_id), meta)
+                logger.info(f"Updated latest GLB for project {project_id}: {name}")
+
     return jsonify({"ok": True, "uploaded": saved})
 
 @app.route("/api/projects/<pid>/models/latest-glb")
 def get_latest_glb(pid):
     meta = _read_json(_meta(pid), {})
-    return jsonify({"latestGlbFile": meta.get("latestGlbFile")})
+    glb = meta.get("latestGlbFile")
+    if not glb:
+        return jsonify({"error": "No model found. Please 'Publish' from Revit."}), 404
+    
+    return jsonify({
+        "latestGlbFile": glb,
+        "url": url_for("serve_uploads", filename=glb, _external=True)
+    })
 
-# --- API: BROWSER INDEX (Cần Key) ---
+# --- BROWSER INDEX ---
 @app.route("/api/projects/<pid>/browser-index", methods=["POST"])
 @require_api_key
 def push_index(pid):
     data = request.get_json(force=True)
-    data["serverReceivedAt"] = datetime.utcnow().isoformat() + "Z"
+    data.setdefault("projectId", pid)
     with _lock: _atomic_write_json(_browser(pid), data)
-    logger.info(f"Index updated for {pid}")
     return jsonify({"ok": True})
 
 @app.route("/api/projects/<pid>/browser-index/latest")
@@ -125,7 +147,7 @@ def get_index(pid):
     data = _read_json(_browser(pid), None)
     return jsonify(data) if data else ("Not found", 404)
 
-# --- API: COMMANDS (Web -> Revit) (Cần Key) ---
+# --- COMMANDS ---
 @app.route("/api/projects/<pid>/commands", methods=["POST"])
 @require_api_key
 def push_cmd(pid):
@@ -136,12 +158,10 @@ def push_cmd(pid):
         cmds.append(cmd)
         _atomic_write_json(_cmds(pid), cmds)
     socketio.emit("command", cmd, room=_room(pid))
-    logger.info(f"Command pushed: {cmd['id']}")
     return jsonify({"ok": True, "id": cmd["id"]})
 
 @app.route("/api/projects/<pid>/commands/pull")
 def pull_cmds(pid):
-    # Pull thường xuyên gọi, để public hoặc thêm key ở Client nếu muốn
     return jsonify({"commands": _read_json(_cmds(pid), [])})
 
 @app.route("/api/projects/<pid>/commands/ack", methods=["POST"])
@@ -155,7 +175,7 @@ def ack_cmds(pid):
         _atomic_write_json(_cmds(pid), cmds)
     return jsonify({"ok": True})
 
-# --- API: RESULTS (Revit -> Web) (Cần Key) ---
+# --- RESULTS ---
 @app.route("/api/projects/<pid>/command-results", methods=["POST"])
 @require_api_key
 def post_res(pid):
@@ -170,16 +190,17 @@ def post_res(pid):
 def get_res(pid, cid):
     return jsonify(_read_json(_res(pid, cid), {"status": "pending"}))
 
-# --- API: SNAPSHOTS (Cần Key) ---
+# --- SNAPSHOTS ---
 @app.route("/api/projects/<pid>/snapshots/upload", methods=["POST"])
 @require_api_key
 def up_snap(pid):
-    f = request.files.get("file")
+    if "file" not in request.files: return "No file", 400
+    f = request.files["file"]
     if f:
         name = f"snap_{uuid.uuid4().hex}.png"
         f.save(os.path.join(UPLOAD_FOLDER, name))
         return jsonify({"ok": True, "url": url_for("serve_uploads", filename=name, _external=True)})
-    return "No file", 400
+    return "Error", 400
 
 @app.route("/uploads/<path:filename>")
 def serve_uploads(filename):
@@ -191,7 +212,6 @@ def on_sub(data):
     if pid: join_room(_room(pid))
 
 if __name__ == "__main__":
-    # In ra Key để dễ debug
-    print(f"--- SERVER STARTED ---")
+    print(f"--- SERVER STARTED on 5000 ---")
     print(f"API KEY: {API_KEY}") 
     socketio.run(app, host="127.0.0.1", port=5000, debug=True, use_reloader=False)
