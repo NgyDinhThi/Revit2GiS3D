@@ -1,51 +1,34 @@
 ﻿using Autodesk.Revit.Attributes;
+using Autodesk.Revit.DB;
 using Autodesk.Revit.UI;
-using RevitToGISsupport.DataTree;
-using RevitToGISsupport.UI;
+using RevitToGISsupport.UI; // Namespace chứa BrowserWindow
 
 namespace RevitToGISsupport
 {
     [Transaction(TransactionMode.Manual)]
     public class CmdOpenBrowser : IExternalCommand
     {
-        private static BrowserManager _manager;
+        // Khai báo quản lý cửa sổ (chống rò rỉ bộ nhớ)
+        private static BrowserWindow _browserWindow;
 
-        public Result Execute(ExternalCommandData commandData, ref string message, Autodesk.Revit.DB.ElementSet elements)
+        public Result Execute(ExternalCommandData commandData, ref string message, ElementSet elements)
         {
-            if (_manager == null)
-                _manager = new BrowserManager();
+            // 1. KHỞI TẠO CÔNG TẮC BÓC TÁCH SIÊU TỐC
+            OpenUI.Initialize();
+            OpenUI.SetContext(commandData.Application);
 
-            _manager.ShowWindow(commandData.Application);
+            // 2. MỞ CỬA SỔ
+            if (_browserWindow == null)
+            {
+                var activateHandler = new DataTree.ActivateItemHandler();
+                var activateEvent = ExternalEvent.Create(activateHandler);
+
+                _browserWindow = new BrowserWindow(commandData.Application, activateEvent);
+                _browserWindow.Closed += (s, e) => _browserWindow = null;
+            }
+
+            _browserWindow.Show();
             return Result.Succeeded;
-        }
-    }
-
-    /// <summary>
-    /// Quản lý singleton cho BrowserWindow để tránh memory leak
-    /// </summary>
-    internal class BrowserManager
-    {
-        private ExternalEvent _activateEvent;
-        private ActivateItemHandler _activateHandler;
-        private BrowserWindow _window;
-
-        public void ShowWindow(UIApplication uiapp)
-        {
-            if (_activateHandler == null)
-            {
-                _activateHandler = new ActivateItemHandler();
-                _activateEvent = ExternalEvent.Create(_activateHandler);
-            }
-
-            if (_window == null || !_window.IsVisible)
-            {
-                _window = new BrowserWindow(uiapp, _activateEvent);
-                _window.Show();
-            }
-            else
-            {
-                _window.Activate();
-            }
         }
     }
 }

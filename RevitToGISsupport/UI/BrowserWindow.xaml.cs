@@ -2,14 +2,18 @@
 using Autodesk.Revit.UI;
 using Newtonsoft.Json;
 using RevitToGISsupport.DataTree;
+using RevitToGISsupport.Models;    
+using RevitToGISsupport.Services; 
 using RevitToGISsupport.RemoteControl;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Net.Http;
-using System.Reflection;
+using System.Net.Http.Headers;
 using System.Text;
 using System.Threading;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -24,21 +28,21 @@ namespace RevitToGISsupport.UI
 
         private BrowserNode _root;
 
-        // FIXED: Dùng static HttpClient để tránh socket exhaustion
+        // API Key (Phải khớp với Server app.py)
+        private const string API_KEY = "CHANGE-ME-IN-PRODUCTION";
+
         private static readonly HttpClient SharedHttpClient = new HttpClient
         {
-            Timeout = TimeSpan.FromSeconds(15)
+            Timeout = TimeSpan.FromMinutes(10)
         };
 
-        // FIXED: Thêm cancellation token cho async operations
         private CancellationTokenSource _publishCts;
 
-        // Remote (Web -> Revit)
+        // Remote Control
         private static RemoteCommandHandler _remoteHandler;
         private static ExternalEvent _remoteEvent;
         private RemoteCommandPoller _poller;
 
-        // Poller config guard
         private string _pollerServer;
         private string _pollerProjectId;
         private string _pollerClientId;
@@ -50,8 +54,6 @@ namespace RevitToGISsupport.UI
             _uiapp = uiapp;
             _doc = uiapp?.ActiveUIDocument?.Document;
             _activateEvent = activateEvent;
-
-            // FIXED: Không tạo HttpClient mới nữa
 
             Loaded += BrowserWindow_Loaded;
             Closed += BrowserWindow_Closed;
@@ -66,7 +68,6 @@ namespace RevitToGISsupport.UI
                 return;
             }
 
-            // Default server/projectId để poller có thể start ngay
             if (string.IsNullOrWhiteSpace(tbServer.Text))
                 tbServer.Text = "http://127.0.0.1:5000";
             if (string.IsNullOrWhiteSpace(tbProjectId.Text))
@@ -82,18 +83,10 @@ namespace RevitToGISsupport.UI
 
         private void BrowserWindow_Closed(object sender, EventArgs e)
         {
-            // FIXED: Cancel và dispose cancellation token
             _publishCts?.Cancel();
             _publishCts?.Dispose();
-
             StopPoller();
-
-            // FIXED: Không dispose SharedHttpClient vì nó là static
         }
-
-        // =========================
-        // UI EVENTS
-        // =========================
 
         private void btnRefresh_Click(object sender, RoutedEventArgs e)
         {
@@ -110,65 +103,97 @@ namespace RevitToGISsupport.UI
         private void Tree_MouseDoubleClick(object sender, MouseButtonEventArgs e)
         {
             var node = tvRoot?.SelectedItem as BrowserNode;
-            if (node == null) return;
-            if (!node.IsLeaf) return;
+            if (node == null || !node.IsLeaf) return;
             if (node.ElementId == null || node.ElementId == ElementId.InvalidElementId) return;
 
             ActivateRequest.Set(node.ElementId);
             _activateEvent?.Raise();
         }
 
+        // ==========================================================
+        // QUY TRÌNH PUBLISH (INDEX -> EXPORT GLB SIÊU TỐC -> UPLOAD)
+        // ==========================================================
         private async void btnPublish_Click(object sender, RoutedEventArgs e)
         {
             try
             {
-                // FIXED: Cancel previous operation và tạo token mới
                 _publishCts?.Cancel();
                 _publishCts = new CancellationTokenSource();
 
                 btnPublish.IsEnabled = false;
-                lblStatus.Text = "Publishing browser index...";
 
-                // Nếu user vừa đổi server/projectId (textbox) thì restart poller đúng config
                 StartOrRestartPoller(force: false);
-
                 var server = (tbServer.Text ?? "").Trim().TrimEnd('/');
                 var projectId = (tbProjectId.Text ?? "").Trim();
 
                 if (string.IsNullOrWhiteSpace(server) || string.IsNullOrWhiteSpace(projectId))
                 {
-                    MessageBox.Show("Server/ProjectId không hợp lệ.", "Publish", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    MessageBox.Show("Server hoặc ProjectId không hợp lệ.", "Publish", MessageBoxButton.OK, MessageBoxImage.Warning);
                     return;
                 }
 
+                // --- BƯỚC 1: PUBLISH INDEX ---
+                lblStatus.Text = "Step 1/3: Publishing Browser Index...";
                 var index = BuildBrowserIndex(projectId);
-                var url = $"{server}/api/projects/{Uri.EscapeDataString(projectId)}/browser-index";
-                var json = JsonConvert.SerializeObject(index);
+                var urlIndex = $"{server}/api/projects/{Uri.EscapeDataString(projectId)}/browser-index";
+                var jsonIndex = JsonConvert.SerializeObject(index);
 
-                // --- SỬA ĐOẠN NÀY ĐỂ THÊM API KEY ---
+                var reqIndex = new HttpRequestMessage(HttpMethod.Post, urlIndex);
+                reqIndex.Headers.Add("X-API-Key", API_KEY);
+                reqIndex.Content = new StringContent(jsonIndex, Encoding.UTF8, "application/json");
 
-                var request = new HttpRequestMessage(HttpMethod.Post, url);
-                request.Content = new StringContent(json, Encoding.UTF8, "application/json");
-
-                // Thêm API Key vào Header (Khớp với giá trị mặc định trong app.py)
-                // Trong thực tế, bạn nên lưu key này vào Settings thay vì hardcode
-                request.Headers.Add("X-API-Key", "CHANGE-ME-IN-PRODUCTION");
-
-                // Gửi request bằng SendAsync thay vì PostAsync
-                var res = await SharedHttpClient.SendAsync(request, _publishCts.Token);
-
-                // ------------------------------------
-
-                var body = await res.Content.ReadAsStringAsync();
-
-                if (!res.IsSuccessStatusCode)
+                var resIndex = await SharedHttpClient.SendAsync(reqIndex, _publishCts.Token);
+                if (!resIndex.IsSuccessStatusCode)
                 {
-                    MessageBox.Show($"Publish failed ({(int)res.StatusCode}): {body}", "Publish", MessageBoxButton.OK, MessageBoxImage.Error);
-                    lblStatus.Text = "Publish failed.";
-                    return;
+                    var err = await resIndex.Content.ReadAsStringAsync();
+                    throw new Exception($"Lỗi gửi Index: {resIndex.StatusCode} - {err}");
                 }
 
-                lblStatus.Text = "Published successfully.";
+                // --- BƯỚC 2: EXPORT GLB SIÊU TỐC (Dùng OpenUI) ---
+                lblStatus.Text = "Step 2/3: Exporting 3D Model (GLB) Fast mode...";
+
+                string tempFolder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "RevitExports", "TempUpload");
+                Directory.CreateDirectory(tempFolder);
+                string glbPath = Path.Combine(tempFolder, $"revit_project_{Guid.NewGuid():N}.glb");
+
+                // Đặt View = null để lấy toàn bộ dự án
+                ViewExportContext.SelectedViewId = null;
+
+                // Kích hoạt External Event để bóc tách hình học
+                OpenUI.CollectTcs = new TaskCompletionSource<bool>();
+                OpenUI.CollectEvent?.Raise();
+
+                // Đợi Revit chạy xong (Timeout 10 phút)
+                var completed = await Task.WhenAny(OpenUI.CollectTcs.Task, Task.Delay(TimeSpan.FromMinutes(10)));
+                if (completed != OpenUI.CollectTcs.Task)
+                {
+                    throw new Exception("Hết thời gian chờ bóc tách dữ liệu từ Revit.");
+                }
+
+                // Lấy kết quả Stream
+                var stream = OpenUI.LastStream;
+                if (stream == null || stream.objects == null || stream.objects.Count == 0)
+                {
+                    throw new Exception("Không có dữ liệu hình học để xuất.");
+                }
+
+                // Ghi ra file GLB bằng luồng phụ để không đơ UI
+                await Task.Run(() =>
+                {
+                    GLBExporter.ExportToGLB(stream, glbPath);
+                });
+
+                if (!File.Exists(glbPath)) throw new Exception("Không tìm thấy file GLB sau khi export.");
+
+                // --- BƯỚC 3: UPLOAD GLB LÊN SERVER ---
+                lblStatus.Text = "Step 3/3: Uploading 3D Model...";
+                await UploadGlbAsync(server, projectId, glbPath, _publishCts.Token);
+
+                // Dọn dẹp file tạm
+                try { File.Delete(glbPath); } catch { }
+
+                lblStatus.Text = "All Done! Web Viewer is ready.";
+                MessageBox.Show("Đồng bộ hoàn tất!\n\nMô hình 3D đã được tải lên.\nBây giờ bạn có thể nhấn 'Open 3D Viewer' trên web.", "Success");
             }
             catch (OperationCanceledException)
             {
@@ -176,7 +201,7 @@ namespace RevitToGISsupport.UI
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Publish error: {ex.Message}", "Publish", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show($"Lỗi: {ex.Message}", "Publish Error", MessageBoxButton.OK, MessageBoxImage.Error);
                 lblStatus.Text = "Publish error.";
             }
             finally
@@ -185,10 +210,38 @@ namespace RevitToGISsupport.UI
             }
         }
 
-        // =========================
-        // POLLER (WEB -> REVIT)
-        // =========================
+        private async Task UploadGlbAsync(string serverUrl, string projectId, string filePath, CancellationToken token)
+        {
+            var url = $"{serverUrl}/upload";
 
+            using (var content = new MultipartFormDataContent())
+            {
+                content.Add(new StringContent(projectId), "projectId");
+
+                using (var fileStream = File.OpenRead(filePath))
+                {
+                    var fileContent = new StreamContent(fileStream);
+                    fileContent.Headers.ContentType = new MediaTypeHeaderValue("application/octet-stream");
+                    content.Add(fileContent, "file", Path.GetFileName(filePath));
+
+                    var request = new HttpRequestMessage(HttpMethod.Post, url);
+                    request.Headers.Add("X-API-Key", API_KEY);
+                    request.Content = content;
+
+                    var response = await SharedHttpClient.SendAsync(request, token);
+                    var responseBody = await response.Content.ReadAsStringAsync();
+
+                    if (!response.IsSuccessStatusCode)
+                    {
+                        throw new Exception($"Upload thất bại ({response.StatusCode}): {responseBody}");
+                    }
+                }
+            }
+        }
+
+        // =================================================================
+        // POLLER VÀ TREE BUILDER (GIỮ NGUYÊN)
+        // =================================================================
         private void StartOrRestartPoller(bool force)
         {
             var server = (tbServer.Text ?? "").Trim().TrimEnd('/');
@@ -198,8 +251,7 @@ namespace RevitToGISsupport.UI
             RemoteSettings.ServerBaseUrl = server;
             RemoteSettings.ProjectId = projectId;
 
-            if (string.IsNullOrWhiteSpace(server) || string.IsNullOrWhiteSpace(projectId))
-                return;
+            if (string.IsNullOrWhiteSpace(server) || string.IsNullOrWhiteSpace(projectId)) return;
 
             if (_remoteHandler == null)
             {
@@ -207,13 +259,11 @@ namespace RevitToGISsupport.UI
                 _remoteEvent = ExternalEvent.Create(_remoteHandler);
             }
 
-            if (!force &&
-                _poller != null &&
+            if (!force && _poller != null &&
                 string.Equals(server, _pollerServer, StringComparison.OrdinalIgnoreCase) &&
-                string.Equals(projectId, _pollerProjectId, StringComparison.OrdinalIgnoreCase) &&
-                string.Equals(clientId, _pollerClientId, StringComparison.OrdinalIgnoreCase))
+                string.Equals(projectId, _pollerProjectId, StringComparison.OrdinalIgnoreCase))
             {
-                return; // không đổi config => khỏi restart
+                return;
             }
 
             StopPoller();
@@ -227,36 +277,16 @@ namespace RevitToGISsupport.UI
 
         private void StopPoller()
         {
-            // FIXED: Thêm proper error handling
-            try
-            {
-                _poller?.Dispose();
-            }
-            catch (Exception ex)
-            {
-                System.Diagnostics.Debug.WriteLine($"Error disposing poller: {ex.Message}");
-            }
+            try { _poller?.Dispose(); } catch { }
             _poller = null;
         }
 
-        // =========================
-        // TREE BINDING / SEARCH
-        // =========================
-
-        private void BindTree()
-        {
-            tvRoot.ItemsSource = new[] { _root };
-        }
+        private void BindTree() => tvRoot.ItemsSource = new[] { _root };
 
         private void ApplySearch()
         {
             var q = (tbSearch.Text ?? "").Trim();
-            if (string.IsNullOrWhiteSpace(q))
-            {
-                BindTree();
-                return;
-            }
-
+            if (string.IsNullOrWhiteSpace(q)) { BindTree(); return; }
             var filtered = FilterTree(_root, q);
             tvRoot.ItemsSource = filtered != null ? new[] { filtered } : Array.Empty<BrowserNode>();
         }
@@ -264,37 +294,23 @@ namespace RevitToGISsupport.UI
         private BrowserNode FilterTree(BrowserNode node, string q)
         {
             if (node == null) return null;
-
             if (node.IsLeaf)
             {
-                if ((node.Title ?? "").IndexOf(q, StringComparison.CurrentCultureIgnoreCase) >= 0)
-                    return node;
+                if ((node.Title ?? "").IndexOf(q, StringComparison.CurrentCultureIgnoreCase) >= 0) return node;
                 return null;
             }
-
             var copy = new BrowserNode { Title = node.Title, Type = node.Type, ElementId = node.ElementId };
             foreach (var c in node.Children)
             {
                 var fc = FilterTree(c, q);
                 if (fc != null) copy.Children.Add(fc);
             }
-
             return copy.Children.Count > 0 ? copy : null;
         }
 
-        // =========================
-        // BUILD ROOT TREE
-        // =========================
-
         private void BuildRootTree()
         {
-            _root = new BrowserNode
-            {
-                Title = "Project Browser",
-                Type = BrowserNodeType.Folder,
-                ElementId = ElementId.InvalidElementId
-            };
-
+            _root = new BrowserNode { Title = "Project Browser", Type = BrowserNodeType.Folder };
             _root.Children.Add(BuildViewsTree(_doc));
             _root.Children.Add(BuildSheetsTree(_doc));
             _root.Children.Add(BuildSchedulesTree(_doc));
@@ -306,268 +322,101 @@ namespace RevitToGISsupport.UI
         private BrowserNode BuildViewsTree(Document doc)
         {
             var org = BrowserOrganization.GetCurrentBrowserOrganizationForViews(doc);
-            var views = new FilteredElementCollector(doc)
-                .OfClass(typeof(View))
-                .Cast<View>()
-                .Where(v => !v.IsTemplate)
-                .Cast<Element>()
-                .ToList();
-
-            return BrowserTreeBuilder.BuildTree(doc, "Views", views, org, e => (e as View)?.Name ?? e.Name);
+            var views = new FilteredElementCollector(doc).OfClass(typeof(View)).Cast<View>().Where(v => !v.IsTemplate).Cast<Element>().ToList();
+            return BrowserTreeBuilder.BuildTree(doc, "Views", views, org, e => e.Name);
         }
-
         private BrowserNode BuildSheetsTree(Document doc)
         {
             var org = BrowserOrganization.GetCurrentBrowserOrganizationForSheets(doc);
-            var sheets = new FilteredElementCollector(doc)
-                .OfClass(typeof(ViewSheet))
-                .Cast<ViewSheet>()
-                .Where(s => !s.IsTemplate)
-                .Cast<Element>()
-                .ToList();
-
-            return BrowserTreeBuilder.BuildTree(doc, "Sheets", sheets, org, e =>
-            {
-                var s = e as ViewSheet;
-                if (s == null) return e.Name;
-                return $"{s.SheetNumber} - {s.Name}";
-            });
+            var sheets = new FilteredElementCollector(doc).OfClass(typeof(ViewSheet)).Cast<ViewSheet>().Where(s => !s.IsTemplate).Cast<Element>().ToList();
+            return BrowserTreeBuilder.BuildTree(doc, "Sheets", sheets, org, e => { var s = e as ViewSheet; return s == null ? e.Name : $"{s.SheetNumber} - {s.Name}"; });
         }
-
         private BrowserNode BuildSchedulesTree(Document doc)
         {
             var org = BrowserOrganization.GetCurrentBrowserOrganizationForSchedules(doc);
-            var schedules = new FilteredElementCollector(doc)
-                .OfClass(typeof(ViewSchedule))
-                .Cast<ViewSchedule>()
-                .Where(v => !v.IsTemplate)
-                .Cast<Element>()
-                .ToList();
-
-            var root = BrowserTreeBuilder.BuildTree(doc, "Schedules/Quantities", schedules, org, e => (e as ViewSchedule)?.Name ?? e.Name);
-
+            var schedules = new FilteredElementCollector(doc).OfClass(typeof(ViewSchedule)).Cast<ViewSchedule>().Where(v => !v.IsTemplate).Cast<Element>().ToList();
+            var root = BrowserTreeBuilder.BuildTree(doc, "Schedules/Quantities", schedules, org, e => e.Name);
             TryAppendPanelSchedules(doc, root);
             return root;
         }
-
-        private void TryAppendPanelSchedules(Document doc, BrowserNode schedulesRoot)
+        private void TryAppendPanelSchedules(Document doc, BrowserNode root)
         {
             try
             {
-                var panelScheduleType = Type.GetType("Autodesk.Revit.DB.Electrical.PanelScheduleView, RevitAPI");
-                if (panelScheduleType == null) return;
-
-                var mi = typeof(BrowserOrganization).GetMethod(
-                    "GetCurrentBrowserOrganizationForPanelSchedules",
-                    BindingFlags.Public | BindingFlags.Static);
-
-                if (mi == null) return;
-
-                var org = mi.Invoke(null, new object[] { doc }) as BrowserOrganization;
+                var type = Type.GetType("Autodesk.Revit.DB.Electrical.PanelScheduleView, RevitAPI");
+                if (type == null) return;
+                var mi = typeof(BrowserOrganization).GetMethod("GetCurrentBrowserOrganizationForPanelSchedules", System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static);
+                var org = mi?.Invoke(null, new object[] { doc }) as BrowserOrganization;
                 if (org == null) return;
-
-                var panels = new FilteredElementCollector(doc)
-                    .OfClass(panelScheduleType)
-                    .Cast<Element>()
-                    .ToList();
-
-                if (panels.Count == 0) return;
-
-                var subTree = BrowserTreeBuilder.BuildTree(doc, "Panel Schedules", panels, org, e => (e as View)?.Name ?? e.Name);
-                schedulesRoot.Children.Add(subTree);
+                var panels = new FilteredElementCollector(doc).OfClass(type).Cast<Element>().ToList();
+                if (panels.Any()) root.Children.Add(BrowserTreeBuilder.BuildTree(doc, "Panel Schedules", panels, org, e => e.Name));
             }
-            catch (Exception ex)
-            {
-                // FIXED: Log error thay vì catch rỗng
-                System.Diagnostics.Debug.WriteLine($"Panel schedules not available: {ex.Message}");
-            }
+            catch { }
         }
-
         private BrowserNode BuildFamiliesTree(Document doc)
         {
-            var root = new BrowserNode
-            {
-                Title = "Families",
-                Type = BrowserNodeType.Folder,
-                ElementId = ElementId.InvalidElementId
-            };
-
-            var symbols = new FilteredElementCollector(doc)
-                .OfClass(typeof(FamilySymbol))
-                .Cast<FamilySymbol>()
-                .ToList();
-
-            var byCategory = symbols
-                .GroupBy(s => s.Category?.Name ?? "Unknown")
-                .OrderBy(g => g.Key, StringComparer.CurrentCultureIgnoreCase);
-
+            var root = new BrowserNode { Title = "Families", Type = BrowserNodeType.Folder };
+            var symbols = new FilteredElementCollector(doc).OfClass(typeof(FamilySymbol)).Cast<FamilySymbol>().ToList();
+            var byCategory = symbols.GroupBy(s => s.Category?.Name ?? "Unknown").OrderBy(g => g.Key);
             foreach (var catGroup in byCategory)
             {
-                var catNode = new BrowserNode
-                {
-                    Title = catGroup.Key,
-                    Type = BrowserNodeType.Folder,
-                    ElementId = ElementId.InvalidElementId
-                };
-
-                var byFamily = catGroup
-                    .GroupBy(s => s.Family?.Name ?? "(No Family)")
-                    .OrderBy(g => g.Key, StringComparer.CurrentCultureIgnoreCase);
-
+                var catNode = new BrowserNode { Title = catGroup.Key, Type = BrowserNodeType.Folder };
+                var byFamily = catGroup.GroupBy(s => s.Family?.Name ?? "(No Family)").OrderBy(g => g.Key);
                 foreach (var famGroup in byFamily)
                 {
-                    var famNode = new BrowserNode
-                    {
-                        Title = famGroup.Key,
-                        Type = BrowserNodeType.Folder,
-                        ElementId = ElementId.InvalidElementId
-                    };
-
-                    foreach (var sym in famGroup.OrderBy(x => x.Name, StringComparer.CurrentCultureIgnoreCase))
-                    {
-                        famNode.Children.Add(new BrowserNode
-                        {
-                            Title = sym.Name,
-                            Type = BrowserNodeType.Item,
-                            ElementId = sym.Id
-                        });
-                    }
-
-                    if (famNode.Children.Count > 0)
-                        catNode.Children.Add(famNode);
+                    var famNode = new BrowserNode { Title = famGroup.Key, Type = BrowserNodeType.Folder };
+                    foreach (var sym in famGroup.OrderBy(x => x.Name))
+                        famNode.Children.Add(new BrowserNode { Title = sym.Name, Type = BrowserNodeType.Item, ElementId = sym.Id });
+                    if (famNode.Children.Count > 0) catNode.Children.Add(famNode);
                 }
-
-                if (catNode.Children.Count > 0)
-                    root.Children.Add(catNode);
+                if (catNode.Children.Count > 0) root.Children.Add(catNode);
             }
-
             return root;
         }
-
         private BrowserNode BuildGroupsTree(Document doc)
         {
-            var root = new BrowserNode
-            {
-                Title = "Groups",
-                Type = BrowserNodeType.Folder,
-                ElementId = ElementId.InvalidElementId
-            };
-
-            var groupTypes = new FilteredElementCollector(doc)
-                .OfClass(typeof(GroupType))
-                .Cast<GroupType>()
-                .ToList();
-
-            var byCat = groupTypes
-                .GroupBy(gt => gt.Category?.Name ?? "Unknown")
-                .OrderBy(g => g.Key, StringComparer.CurrentCultureIgnoreCase);
-
+            var root = new BrowserNode { Title = "Groups", Type = BrowserNodeType.Folder };
+            var groupTypes = new FilteredElementCollector(doc).OfClass(typeof(GroupType)).Cast<GroupType>().ToList();
+            var byCat = groupTypes.GroupBy(gt => gt.Category?.Name ?? "Unknown").OrderBy(g => g.Key);
             foreach (var catGroup in byCat)
             {
-                var catNode = new BrowserNode
-                {
-                    Title = catGroup.Key,
-                    Type = BrowserNodeType.Folder,
-                    ElementId = ElementId.InvalidElementId
-                };
-
-                foreach (var gt in catGroup.OrderBy(x => x.Name, StringComparer.CurrentCultureIgnoreCase))
-                {
-                    catNode.Children.Add(new BrowserNode
-                    {
-                        Title = gt.Name,
-                        Type = BrowserNodeType.Item,
-                        ElementId = gt.Id
-                    });
-                }
-
-                if (catNode.Children.Count > 0)
-                    root.Children.Add(catNode);
+                var catNode = new BrowserNode { Title = catGroup.Key, Type = BrowserNodeType.Folder };
+                foreach (var gt in catGroup.OrderBy(x => x.Name))
+                    catNode.Children.Add(new BrowserNode { Title = gt.Name, Type = BrowserNodeType.Item, ElementId = gt.Id });
+                if (catNode.Children.Count > 0) root.Children.Add(catNode);
             }
-
             return root;
         }
-
         private BrowserNode BuildRevitLinksTree(Document doc)
         {
-            var root = new BrowserNode
+            var root = new BrowserNode { Title = "Revit Links", Type = BrowserNodeType.Folder };
+            var linkTypes = new FilteredElementCollector(doc).OfClass(typeof(RevitLinkType)).Cast<RevitLinkType>().ToList();
+            var linkInstances = new FilteredElementCollector(doc).OfClass(typeof(RevitLinkInstance)).Cast<RevitLinkInstance>().ToList();
+            var instByType = linkInstances.GroupBy(i => i.GetTypeId()).ToDictionary(g => g.Key, g => g.ToList());
+            foreach (var lt in linkTypes.OrderBy(x => x.Name))
             {
-                Title = "Revit Links",
-                Type = BrowserNodeType.Folder,
-                ElementId = ElementId.InvalidElementId
-            };
-
-            var linkTypes = new FilteredElementCollector(doc)
-                .OfClass(typeof(RevitLinkType))
-                .Cast<RevitLinkType>()
-                .ToList();
-
-            var linkInstances = new FilteredElementCollector(doc)
-                .OfClass(typeof(RevitLinkInstance))
-                .Cast<RevitLinkInstance>()
-                .ToList();
-
-            var instByType = linkInstances
-                .GroupBy(i => i.GetTypeId())
-                .ToDictionary(g => g.Key, g => g.ToList());
-
-            foreach (var lt in linkTypes.OrderBy(x => x.Name, StringComparer.CurrentCultureIgnoreCase))
-            {
-                var typeNode = new BrowserNode
-                {
-                    Title = lt.Name,
-                    Type = BrowserNodeType.Folder,
-                    ElementId = lt.Id
-                };
-
+                var typeNode = new BrowserNode { Title = lt.Name, Type = BrowserNodeType.Folder, ElementId = lt.Id };
                 if (instByType.TryGetValue(lt.Id, out var insts))
-                {
-                    foreach (var inst in insts.OrderBy(x => x.Name, StringComparer.CurrentCultureIgnoreCase))
-                    {
-                        typeNode.Children.Add(new BrowserNode
-                        {
-                            Title = inst.Name,
-                            Type = BrowserNodeType.Item,
-                            ElementId = inst.Id
-                        });
-                    }
-                }
-
+                    foreach (var inst in insts.OrderBy(x => x.Name))
+                        typeNode.Children.Add(new BrowserNode { Title = inst.Name, Type = BrowserNodeType.Item, ElementId = inst.Id });
                 root.Children.Add(typeNode);
             }
-
             return root;
         }
-
-        // =========================
-        // BUILD BROWSER INDEX JSON
-        // =========================
 
         private object BuildBrowserIndex(string projectId)
         {
             var nodes = new List<object>();
+            foreach (var branch in _root.Children) TraverseLeaf(branch, new List<string>(), nodes);
 
-            foreach (var branch in _root.Children)
-            {
-                TraverseLeaf(branch, new List<string>(), nodes);
-            }
-
-            var modelTitle = "";
-            try
-            {
-                modelTitle = _doc?.Title ?? "";
-            }
-            catch (Exception ex)
-            {
-                // FIXED: Log error thay vì catch rỗng
-                System.Diagnostics.Debug.WriteLine($"Could not get document title: {ex.Message}");
-            }
+            string title = "";
+            try { title = _doc?.Title ?? ""; } catch { }
 
             return new Dictionary<string, object>
             {
                 ["projectId"] = projectId,
                 ["generatedAt"] = DateTimeOffset.Now.ToString("o"),
-                ["revitModelTitle"] = modelTitle,
+                ["revitModelTitle"] = title,
                 ["nodes"] = nodes
             };
         }
@@ -575,57 +424,35 @@ namespace RevitToGISsupport.UI
         private void TraverseLeaf(BrowserNode node, List<string> path, List<object> output)
         {
             if (node == null) return;
-
             if (node.Type == BrowserNodeType.Folder)
             {
                 path.Add(node.Title);
-
-                foreach (var c in node.Children)
-                    TraverseLeaf(c, path, output);
-
+                foreach (var c in node.Children) TraverseLeaf(c, path, output);
                 path.RemoveAt(path.Count - 1);
                 return;
             }
 
             var id = node.ElementId;
-            if (id == null || id == ElementId.InvalidElementId) return;
-
+            if (id == ElementId.InvalidElementId) return;
             var elem = _doc.GetElement(id);
             if (elem == null) return;
 
-            var kind = "item";
-            if (elem is View v)
-            {
-                if (v is ViewSheet) kind = "sheet";
-                else if (v is ViewSchedule) kind = "schedule";
-                else kind = "view";
-            }
+            string kind = "item";
+            if (elem is View v) kind = v is ViewSheet ? "sheet" : (v is ViewSchedule ? "schedule" : "view");
             else if (elem is FamilySymbol) kind = "family_type";
             else if (elem is GroupType) kind = "group_type";
             else if (elem is RevitLinkInstance) kind = "revit_link_instance";
             else if (elem is RevitLinkType) kind = "revit_link_type";
 
-            var uniqueId = "";
-            try { uniqueId = elem.UniqueId; } catch { }
-
             var meta = new Dictionary<string, object>();
-            if (elem is View vv)
-            {
-                try { meta["viewType"] = vv.ViewType.ToString(); } catch { }
-                try { meta["discipline"] = vv.Discipline.ToString(); } catch { }
-            }
+            if (elem is View vv) { try { meta["viewType"] = vv.ViewType.ToString(); } catch { } }
 
             output.Add(new Dictionary<string, object>
             {
-                ["nodeId"] = string.Join("|", path.Concat(new[] { node.Title })),
-                ["kind"] = kind,
                 ["title"] = node.Title,
+                ["kind"] = kind,
                 ["path"] = path.ToArray(),
-                ["revit"] = new Dictionary<string, object>
-                {
-                    ["elementId"] = id.IntegerValue,
-                    ["uniqueId"] = uniqueId
-                },
+                ["revit"] = new Dictionary<string, object> { ["uniqueId"] = elem.UniqueId },
                 ["meta"] = meta
             });
         }
