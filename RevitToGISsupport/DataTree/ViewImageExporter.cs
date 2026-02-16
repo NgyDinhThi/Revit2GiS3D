@@ -10,13 +10,22 @@ namespace RevitToGISsupport.RemoteControl
     {
         public static string ExportPng(Document doc, View view, string folder, int pixelSize)
         {
+            if (view is ViewSchedule)
+                throw new Exception("Không thể chụp ảnh cho Bảng thống kê (Schedule). Vui lòng chọn View hoặc Sheet.");
+
             Directory.CreateDirectory(folder);
 
-            // Dùng timestamp và tên view để tạo filename dự đoán được
-            var timestamp = DateTime.Now.ToString("yyyyMMdd_HHmmss");
-            var viewName = SanitizeFileName(view.Name);
-            var fileName = $"{viewName}_{timestamp}";
-            var basePath = Path.Combine(folder, fileName);
+            // Dọn sạch các file ảnh cũ bị kẹt lại
+            try
+            {
+                foreach (var f in Directory.GetFiles(folder, "*.png"))
+                {
+                    File.Delete(f);
+                }
+            }
+            catch { }
+
+            var basePath = Path.Combine(folder, "temp_render");
 
             var opt = new ImageExportOptions
             {
@@ -31,29 +40,15 @@ namespace RevitToGISsupport.RemoteControl
             opt.SetViewsAndSheets(new List<ElementId> { view.Id });
             doc.ExportImage(opt);
 
-            // Revit có thể thêm số vào cuối filename
-            var expectedPattern = $"{fileName}*.png";
-            var exportedFile = Directory.GetFiles(folder, expectedPattern)
+            // Tóm chính xác file PNG vừa tạo ra
+            var exportedFile = Directory.GetFiles(folder, "*.png")
                 .OrderByDescending(File.GetLastWriteTime)
                 .FirstOrDefault();
 
+            if (string.IsNullOrWhiteSpace(exportedFile))
+                throw new Exception("Revit không tạo được file ảnh.");
+
             return exportedFile;
-        }
-
-        /// <summary>
-        /// Loại bỏ ký tự không hợp lệ khỏi tên file
-        /// </summary>
-        private static string SanitizeFileName(string name)
-        {
-            if (string.IsNullOrWhiteSpace(name))
-                return "view";
-
-            var invalid = Path.GetInvalidFileNameChars();
-            var sanitized = string.Join("_", name.Split(invalid, StringSplitOptions.RemoveEmptyEntries));
-
-            // Giới hạn độ dài và loại bỏ dấu chấm cuối
-            sanitized = sanitized.TrimEnd('.');
-            return sanitized.Substring(0, Math.Min(50, sanitized.Length));
         }
     }
 }
