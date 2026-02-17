@@ -4,8 +4,100 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         mc:Ignorable="d"
-        Title="Project Browser (Clone)" Height="680" Width="520"
-        WindowStartupLocation="CenterScreen">
+        Title="BIM Sync - Project Browser" Height="680" Width="560"
+        WindowStartupLocation="CenterScreen"
+        FontFamily="Segoe UI, Tahoma, sans-serif"
+        Background="#F3F2F1">
+
+    <Window.Resources>
+        <Style TargetType="TextBlock">
+            <Setter Property="Foreground" Value="#323130"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+        </Style>
+
+        <Style TargetType="TextBox">
+            <Setter Property="Padding" Value="6,0"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+            <Setter Property="BorderBrush" Value="#8A8886"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Foreground" Value="#323130"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="TextBox">
+                        <Border Background="White" 
+                                BorderBrush="{TemplateBinding BorderBrush}" 
+                                BorderThickness="{TemplateBinding BorderThickness}" 
+                                CornerRadius="4">
+                            <ScrollViewer x:Name="PART_ContentHost" Margin="{TemplateBinding Padding}"/>
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+            <Style.Triggers>
+                <Trigger Property="IsKeyboardFocused" Value="True">
+                    <Setter Property="BorderBrush" Value="#0078D4"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+
+        <Style x:Key="PrimaryButton" TargetType="Button">
+            <Setter Property="Background" Value="#0078D4"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}" CornerRadius="4">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Background" Value="#106EBE"/>
+                </Trigger>
+                <Trigger Property="IsPressed" Value="True">
+                    <Setter Property="Background" Value="#005A9E"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+
+        <Style x:Key="SecondaryButton" TargetType="Button">
+            <Setter Property="Background" Value="#FFFFFF"/>
+            <Setter Property="Foreground" Value="#323130"/>
+            <Setter Property="BorderBrush" Value="#8A8886"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}" 
+                                BorderBrush="{TemplateBinding BorderBrush}" 
+                                BorderThickness="{TemplateBinding BorderThickness}" 
+                                CornerRadius="4">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Background" Value="#F3F2F1"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+
+        <Style TargetType="TreeView">
+            <Setter Property="Background" Value="White"/>
+            <Setter Property="BorderBrush" Value="#EDEBE9"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Padding" Value="5"/>
+        </Style>
+    </Window.Resources>
 
     <Grid>
         <Grid.RowDefinitions>
@@ -15,62 +107,70 @@
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
-        <DockPanel Grid.Row="0" Margin="8">
-            <TextBox x:Name="tbSearch"
-                     Width="260" Height="26"
-                     Margin="0,0,8,0"
-                     VerticalContentAlignment="Center"
-                     TextChanged="tbSearch_TextChanged"
-                     ToolTip="Search (lọc theo tên leaf)"/>
-            <Button x:Name="btnRefresh"
-                    Width="90" Height="26"
-                    Margin="0,0,8,0"
-                    Content="Refresh"
-                    Click="btnRefresh_Click"/>
-            <Button x:Name="btnPublish"
-                    Width="120" Height="26"
-                    Content="Publish to Web"
-                    Click="btnPublish_Click"/>
-        </DockPanel>
+        <Border Grid.Row="0" Background="White" BorderBrush="#EDEBE9" BorderThickness="0,0,0,1" Padding="15,12">
+            <DockPanel>
+                <TextBox x:Name="tbSearch"
+                         Width="240" Height="32"
+                         Margin="0,0,10,0"
+                         TextChanged="tbSearch_TextChanged"
+                         ToolTip="Nhập tên để lọc (Search)"/>
 
-        <Grid Grid.Row="1" Margin="8,0,8,8">
+                <Button x:Name="btnRefresh"
+                        Style="{StaticResource SecondaryButton}"
+                        Width="90" Height="32"
+                        Margin="0,0,10,0"
+                        Content="Refresh"
+                        Click="btnRefresh_Click"/>
+
+                <Button x:Name="btnPublish"
+                        Style="{StaticResource PrimaryButton}"
+                        Width="140" Height="32"
+                        HorizontalAlignment="Right"
+                        Content="Publish to Web"
+                        Click="btnPublish_Click"/>
+            </DockPanel>
+        </Border>
+
+        <Grid Grid.Row="1" Margin="15,12,15,5">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="Auto"/>
                 <ColumnDefinition Width="*"/>
                 <ColumnDefinition Width="Auto"/>
-                <ColumnDefinition Width="140"/>
+                <ColumnDefinition Width="100"/>
             </Grid.ColumnDefinitions>
 
-            <TextBlock Grid.Column="0" Text="Server:" VerticalAlignment="Center" Margin="0,0,6,0"/>
+            <TextBlock Grid.Column="0" Text="Server URL:" Margin="0,0,8,0" FontWeight="SemiBold" Foreground="#605E5C"/>
             <TextBox x:Name="tbServer"
-                     Grid.Column="1"
-                     Height="26"
-                     VerticalContentAlignment="Center"
+                     Grid.Column="1" Height="28"
                      Text="http://127.0.0.1:5000"/>
 
-            <TextBlock Grid.Column="2" Text="ProjectId:" VerticalAlignment="Center" Margin="10,0,6,0"/>
+            <TextBlock Grid.Column="2" Text="Project ID:" Margin="15,0,8,0" FontWeight="SemiBold" Foreground="#605E5C"/>
             <TextBox x:Name="tbProjectId"
-                     Grid.Column="3"
-                     Height="26"
-                     VerticalContentAlignment="Center"
+                     Grid.Column="3" Height="28"
                      Text="P001"/>
         </Grid>
 
-        <TreeView x:Name="tvRoot"
-                  Grid.Row="2"
-                  Margin="8"
-                  MouseDoubleClick="Tree_MouseDoubleClick">
-            <TreeView.ItemTemplate>
-                <HierarchicalDataTemplate ItemsSource="{Binding Children}">
-                    <TextBlock Text="{Binding Title}"/>
-                </HierarchicalDataTemplate>
-            </TreeView.ItemTemplate>
-        </TreeView>
+        <Border Grid.Row="2" Margin="15,10,15,10" CornerRadius="4" Background="White">
+            <TreeView x:Name="tvRoot"
+                      MouseDoubleClick="Tree_MouseDoubleClick"
+                      BorderThickness="0">
+                <TreeView.ItemTemplate>
+                    <HierarchicalDataTemplate ItemsSource="{Binding Children}">
+                        <StackPanel Orientation="Horizontal" Margin="0,3">
+                            <TextBlock Text="{Binding Title}" FontSize="13" Foreground="#323130"/>
+                        </StackPanel>
+                    </HierarchicalDataTemplate>
+                </TreeView.ItemTemplate>
+            </TreeView>
+        </Border>
 
-        <TextBlock x:Name="lblStatus"
-                   Grid.Row="3"
-                   Margin="8"
-                   Text="Ready."
-                   TextWrapping="Wrap"/>
+        <Border Grid.Row="3" Background="White" BorderBrush="#EDEBE9" BorderThickness="0,1,0,0" Padding="15,8">
+            <TextBlock x:Name="lblStatus"
+                       Text="Ready."
+                       FontSize="12"
+                       Foreground="#0078D4"
+                       FontWeight="SemiBold"
+                       TextWrapping="Wrap"/>
+        </Border>
     </Grid>
 </Window>
