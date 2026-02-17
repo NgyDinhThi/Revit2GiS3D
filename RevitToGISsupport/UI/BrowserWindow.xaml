@@ -1,33 +1,31 @@
 ﻿<Window x:Class="RevitToGISsupport.UI.BrowserWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        mc:Ignorable="d"
-        Title="BIM Sync - Project Browser" Height="680" Width="560"
+        Title="BIM Sync - Control Panel" Height="420" Width="380"
         WindowStartupLocation="CenterScreen"
         FontFamily="Segoe UI, Tahoma, sans-serif"
-        Background="#F3F2F1">
+        Background="#F3F2F1"
+        ResizeMode="NoResize">
 
     <Window.Resources>
         <Style TargetType="TextBlock">
             <Setter Property="Foreground" Value="#323130"/>
-            <Setter Property="VerticalAlignment" Value="Center"/>
         </Style>
 
         <Style TargetType="TextBox">
-            <Setter Property="Padding" Value="6,0"/>
+            <Setter Property="Padding" Value="10,0"/>
             <Setter Property="VerticalContentAlignment" Value="Center"/>
             <Setter Property="BorderBrush" Value="#8A8886"/>
             <Setter Property="BorderThickness" Value="1"/>
             <Setter Property="Foreground" Value="#323130"/>
+            <Setter Property="FontSize" Value="14"/>
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="TextBox">
                         <Border Background="White" 
                                 BorderBrush="{TemplateBinding BorderBrush}" 
                                 BorderThickness="{TemplateBinding BorderThickness}" 
-                                CornerRadius="4">
+                                CornerRadius="6">
                             <ScrollViewer x:Name="PART_ContentHost" Margin="{TemplateBinding Padding}"/>
                         </Border>
                     </ControlTemplate>
@@ -36,6 +34,7 @@
             <Style.Triggers>
                 <Trigger Property="IsKeyboardFocused" Value="True">
                     <Setter Property="BorderBrush" Value="#0078D4"/>
+                    <Setter Property="BorderThickness" Value="2"/>
                 </Trigger>
             </Style.Triggers>
         </Style>
@@ -43,13 +42,14 @@
         <Style x:Key="PrimaryButton" TargetType="Button">
             <Setter Property="Background" Value="#0078D4"/>
             <Setter Property="Foreground" Value="White"/>
-            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="FontSize" Value="15"/>
             <Setter Property="BorderThickness" Value="0"/>
             <Setter Property="Cursor" Value="Hand"/>
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
-                        <Border Background="{TemplateBinding Background}" CornerRadius="4">
+                        <Border Background="{TemplateBinding Background}" CornerRadius="6">
                             <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
                         </Border>
                     </ControlTemplate>
@@ -62,115 +62,50 @@
                 <Trigger Property="IsPressed" Value="True">
                     <Setter Property="Background" Value="#005A9E"/>
                 </Trigger>
-            </Style.Triggers>
-        </Style>
-
-        <Style x:Key="SecondaryButton" TargetType="Button">
-            <Setter Property="Background" Value="#FFFFFF"/>
-            <Setter Property="Foreground" Value="#323130"/>
-            <Setter Property="BorderBrush" Value="#8A8886"/>
-            <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="FontWeight" Value="SemiBold"/>
-            <Setter Property="Cursor" Value="Hand"/>
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="Button">
-                        <Border Background="{TemplateBinding Background}" 
-                                BorderBrush="{TemplateBinding BorderBrush}" 
-                                BorderThickness="{TemplateBinding BorderThickness}" 
-                                CornerRadius="4">
-                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                        </Border>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-            <Style.Triggers>
-                <Trigger Property="IsMouseOver" Value="True">
-                    <Setter Property="Background" Value="#F3F2F1"/>
+                <Trigger Property="IsEnabled" Value="False">
+                    <Setter Property="Background" Value="#C8C6C4"/>
+                    <Setter Property="Foreground" Value="#605E5C"/>
                 </Trigger>
             </Style.Triggers>
-        </Style>
-
-        <Style TargetType="TreeView">
-            <Setter Property="Background" Value="White"/>
-            <Setter Property="BorderBrush" Value="#EDEBE9"/>
-            <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="Padding" Value="5"/>
         </Style>
     </Window.Resources>
 
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
-        <Border Grid.Row="0" Background="White" BorderBrush="#EDEBE9" BorderThickness="0,0,0,1" Padding="15,12">
+        <Border Grid.Row="0" Background="White" Padding="25,20" BorderBrush="#EDEBE9" BorderThickness="0,0,0,1">
+            <StackPanel>
+                <TextBlock Text="BIM Sync Agent" FontSize="22" FontWeight="Bold" Foreground="#0078D4"/>
+                <TextBlock Text="Trạm kết nối dữ liệu giữa Revit và Web" FontSize="13" Foreground="#605E5C" Margin="0,5,0,0"/>
+            </StackPanel>
+        </Border>
+
+        <StackPanel Grid.Row="1" Margin="25,20">
+            <TextBlock Text="ĐỊA CHỈ MÁY CHỦ (SERVER URL)" FontWeight="SemiBold" FontSize="11" Foreground="#605E5C" Margin="0,0,0,6"/>
+            <TextBox x:Name="tbServer" Height="38" Text="http://127.0.0.1:5000" Margin="0,0,0,20"/>
+
+            <TextBlock Text="MÃ DỰ ÁN (PROJECT ID)" FontWeight="SemiBold" FontSize="11" Foreground="#605E5C" Margin="0,0,0,6"/>
+            <TextBox x:Name="tbProjectId" Height="38" Text="P001" Margin="0,0,0,30"/>
+
+            <Button x:Name="btnPublish" 
+                    Style="{StaticResource PrimaryButton}" 
+                    Height="45" 
+                    Content="ĐỒNG BỘ LÊN WEB" 
+                    Click="btnPublish_Click"/>
+
+            <TextBlock Text="Lưu ý: Không tắt cửa sổ này để Revit có thể nhận lệnh (đổi tên, chụp ảnh) từ Web gửi về." 
+                       Foreground="#A19F9D" FontSize="12" Margin="0,15,0,0" TextWrapping="Wrap" TextAlignment="Center" FontStyle="Italic"/>
+        </StackPanel>
+
+        <Border Grid.Row="2" Background="White" BorderBrush="#EDEBE9" BorderThickness="0,1,0,0" Padding="15,10">
             <DockPanel>
-                <TextBox x:Name="tbSearch"
-                         Width="240" Height="32"
-                         Margin="0,0,10,0"
-                         TextChanged="tbSearch_TextChanged"
-                         ToolTip="Nhập tên để lọc (Search)"/>
-
-                <Button x:Name="btnRefresh"
-                        Style="{StaticResource SecondaryButton}"
-                        Width="90" Height="32"
-                        Margin="0,0,10,0"
-                        Content="Refresh"
-                        Click="btnRefresh_Click"/>
-
-                <Button x:Name="btnPublish"
-                        Style="{StaticResource PrimaryButton}"
-                        Width="140" Height="32"
-                        HorizontalAlignment="Right"
-                        Content="Publish to Web"
-                        Click="btnPublish_Click"/>
+                <TextBlock Text="Status:" Foreground="#605E5C" Margin="0,0,5,0" FontWeight="SemiBold"/>
+                <TextBlock x:Name="lblStatus" Text="Ready." Foreground="#28A745" FontWeight="SemiBold"/>
             </DockPanel>
-        </Border>
-
-        <Grid Grid.Row="1" Margin="15,12,15,5">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="Auto"/>
-                <ColumnDefinition Width="*"/>
-                <ColumnDefinition Width="Auto"/>
-                <ColumnDefinition Width="100"/>
-            </Grid.ColumnDefinitions>
-
-            <TextBlock Grid.Column="0" Text="Server URL:" Margin="0,0,8,0" FontWeight="SemiBold" Foreground="#605E5C"/>
-            <TextBox x:Name="tbServer"
-                     Grid.Column="1" Height="28"
-                     Text="http://127.0.0.1:5000"/>
-
-            <TextBlock Grid.Column="2" Text="Project ID:" Margin="15,0,8,0" FontWeight="SemiBold" Foreground="#605E5C"/>
-            <TextBox x:Name="tbProjectId"
-                     Grid.Column="3" Height="28"
-                     Text="P001"/>
-        </Grid>
-
-        <Border Grid.Row="2" Margin="15,10,15,10" CornerRadius="4" Background="White">
-            <TreeView x:Name="tvRoot"
-                      MouseDoubleClick="Tree_MouseDoubleClick"
-                      BorderThickness="0">
-                <TreeView.ItemTemplate>
-                    <HierarchicalDataTemplate ItemsSource="{Binding Children}">
-                        <StackPanel Orientation="Horizontal" Margin="0,3">
-                            <TextBlock Text="{Binding Title}" FontSize="13" Foreground="#323130"/>
-                        </StackPanel>
-                    </HierarchicalDataTemplate>
-                </TreeView.ItemTemplate>
-            </TreeView>
-        </Border>
-
-        <Border Grid.Row="3" Background="White" BorderBrush="#EDEBE9" BorderThickness="0,1,0,0" Padding="15,8">
-            <TextBlock x:Name="lblStatus"
-                       Text="Ready."
-                       FontSize="12"
-                       Foreground="#0078D4"
-                       FontWeight="SemiBold"
-                       TextWrapping="Wrap"/>
         </Border>
     </Grid>
 </Window>

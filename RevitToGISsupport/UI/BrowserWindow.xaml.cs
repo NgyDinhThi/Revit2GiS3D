@@ -2,8 +2,8 @@
 using Autodesk.Revit.UI;
 using Newtonsoft.Json;
 using RevitToGISsupport.DataTree;
-using RevitToGISsupport.Models;    
-using RevitToGISsupport.Services; 
+using RevitToGISsupport.Models;
+using RevitToGISsupport.Services;
 using RevitToGISsupport.RemoteControl;
 using System;
 using System.Collections.Generic;
@@ -15,8 +15,6 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Input;
 
 namespace RevitToGISsupport.UI
 {
@@ -26,6 +24,7 @@ namespace RevitToGISsupport.UI
         private readonly Document _doc;
         private readonly ExternalEvent _activateEvent;
 
+        // Lưu trữ cây dữ liệu ngầm (Không hiển thị ra giao diện nữa)
         private BrowserNode _root;
 
         // API Key (Phải khớp với Server app.py)
@@ -63,7 +62,7 @@ namespace RevitToGISsupport.UI
         {
             if (_doc == null)
             {
-                MessageBox.Show("Không lấy được Document.", "Browser", MessageBoxButton.OK, MessageBoxImage.Warning);
+                MessageBox.Show("Không lấy được Document.", "Lỗi", MessageBoxButton.OK, MessageBoxImage.Warning);
                 Close();
                 return;
             }
@@ -73,12 +72,11 @@ namespace RevitToGISsupport.UI
             if (string.IsNullOrWhiteSpace(tbProjectId.Text))
                 tbProjectId.Text = "P001";
 
-            BuildRootTree();
-            BindTree();
-
+            // Khởi động lắng nghe Web -> Revit
             StartOrRestartPoller(force: true);
 
-            lblStatus.Text = "Ready.";
+            lblStatus.Text = "Sẵn sàng hoạt động.";
+            lblStatus.Foreground = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(40, 167, 69)); // Xanh lá
         }
 
         private void BrowserWindow_Closed(object sender, EventArgs e)
@@ -88,30 +86,8 @@ namespace RevitToGISsupport.UI
             StopPoller();
         }
 
-        private void btnRefresh_Click(object sender, RoutedEventArgs e)
-        {
-            BuildRootTree();
-            ApplySearch();
-            lblStatus.Text = "Refreshed.";
-        }
-
-        private void tbSearch_TextChanged(object sender, TextChangedEventArgs e)
-        {
-            ApplySearch();
-        }
-
-        private void Tree_MouseDoubleClick(object sender, MouseButtonEventArgs e)
-        {
-            var node = tvRoot?.SelectedItem as BrowserNode;
-            if (node == null || !node.IsLeaf) return;
-            if (node.ElementId == null || node.ElementId == ElementId.InvalidElementId) return;
-
-            ActivateRequest.Set(node.ElementId);
-            _activateEvent?.Raise();
-        }
-
         // ==========================================================
-        // QUY TRÌNH PUBLISH (INDEX -> EXPORT GLB SIÊU TỐC -> UPLOAD)
+        // QUY TRÌNH PUBLISH (TẠO INDEX NGẦM -> GLB -> UPLOAD)
         // ==========================================================
         private async void btnPublish_Click(object sender, RoutedEventArgs e)
         {
@@ -121,6 +97,7 @@ namespace RevitToGISsupport.UI
                 _publishCts = new CancellationTokenSource();
 
                 btnPublish.IsEnabled = false;
+                lblStatus.Foreground = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(0, 120, 212)); // Xanh dương
 
                 StartOrRestartPoller(force: false);
                 var server = (tbServer.Text ?? "").Trim().TrimEnd('/');
@@ -132,9 +109,13 @@ namespace RevitToGISsupport.UI
                     return;
                 }
 
-                // --- BƯỚC 1: PUBLISH INDEX ---
-                lblStatus.Text = "Step 1/3: Publishing Browser Index...";
+                // --- BƯỚC 1: TỰ ĐỘNG THU THẬP & PUBLISH INDEX NGẦM ---
+                lblStatus.Text = "Bước 1/3: Đang thu thập dữ liệu cây thư mục...";
+
+                // Thu thập cấu trúc mới nhất ngầm bên trong bộ nhớ
+                BuildRootTree();
                 var index = BuildBrowserIndex(projectId);
+
                 var urlIndex = $"{server}/api/projects/{Uri.EscapeDataString(projectId)}/browser-index";
                 var jsonIndex = JsonConvert.SerializeObject(index);
 
@@ -150,34 +131,29 @@ namespace RevitToGISsupport.UI
                 }
 
                 // --- BƯỚC 2: EXPORT GLB SIÊU TỐC (Dùng OpenUI) ---
-                lblStatus.Text = "Step 2/3: Exporting 3D Model (GLB) Fast mode...";
+                lblStatus.Text = "Bước 2/3: Đang trích xuất mô hình 3D (GLB)...";
 
                 string tempFolder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "RevitExports", "TempUpload");
                 Directory.CreateDirectory(tempFolder);
                 string glbPath = Path.Combine(tempFolder, $"revit_project_{Guid.NewGuid():N}.glb");
 
-                // Đặt View = null để lấy toàn bộ dự án
                 ViewExportContext.SelectedViewId = null;
 
-                // Kích hoạt External Event để bóc tách hình học
                 OpenUI.CollectTcs = new TaskCompletionSource<bool>();
                 OpenUI.CollectEvent?.Raise();
 
-                // Đợi Revit chạy xong (Timeout 10 phút)
                 var completed = await Task.WhenAny(OpenUI.CollectTcs.Task, Task.Delay(TimeSpan.FromMinutes(10)));
                 if (completed != OpenUI.CollectTcs.Task)
                 {
                     throw new Exception("Hết thời gian chờ bóc tách dữ liệu từ Revit.");
                 }
 
-                // Lấy kết quả Stream
                 var stream = OpenUI.LastStream;
                 if (stream == null || stream.objects == null || stream.objects.Count == 0)
                 {
                     throw new Exception("Không có dữ liệu hình học để xuất.");
                 }
 
-                // Ghi ra file GLB bằng luồng phụ để không đơ UI
                 await Task.Run(() =>
                 {
                     GLBExporter.ExportToGLB(stream, glbPath);
@@ -186,23 +162,25 @@ namespace RevitToGISsupport.UI
                 if (!File.Exists(glbPath)) throw new Exception("Không tìm thấy file GLB sau khi export.");
 
                 // --- BƯỚC 3: UPLOAD GLB LÊN SERVER ---
-                lblStatus.Text = "Step 3/3: Uploading 3D Model...";
+                lblStatus.Text = "Bước 3/3: Đang tải dữ liệu lên Server...";
                 await UploadGlbAsync(server, projectId, glbPath, _publishCts.Token);
 
-                // Dọn dẹp file tạm
                 try { File.Delete(glbPath); } catch { }
 
-                lblStatus.Text = "All Done! Web Viewer is ready.";
-                MessageBox.Show("Đồng bộ hoàn tất!\n\nMô hình 3D đã được tải lên.\nBây giờ bạn có thể nhấn 'Open 3D Viewer' trên web.", "Success");
+                lblStatus.Text = "Đồng bộ thành công! Có thể xem trên Web.";
+                lblStatus.Foreground = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(40, 167, 69)); // Xanh lá
+                MessageBox.Show("Đồng bộ hoàn tất!\n\nMô hình 3D và Dữ liệu đã được tải lên Server.", "Thành công", MessageBoxButton.OK, MessageBoxImage.Information);
             }
             catch (OperationCanceledException)
             {
-                lblStatus.Text = "Publish cancelled.";
+                lblStatus.Text = "Đã hủy tiến trình.";
+                lblStatus.Foreground = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(209, 52, 56)); // Đỏ
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Lỗi: {ex.Message}", "Publish Error", MessageBoxButton.OK, MessageBoxImage.Error);
-                lblStatus.Text = "Publish error.";
+                MessageBox.Show($"Lỗi: {ex.Message}", "Lỗi đồng bộ", MessageBoxButton.OK, MessageBoxImage.Error);
+                lblStatus.Text = "Lỗi trong quá trình đồng bộ.";
+                lblStatus.Foreground = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(209, 52, 56)); // Đỏ
             }
             finally
             {
@@ -240,7 +218,7 @@ namespace RevitToGISsupport.UI
         }
 
         // =================================================================
-        // POLLER VÀ TREE BUILDER (GIỮ NGUYÊN)
+        // HỆ THỐNG POLLER (Lắng nghe web) VÀ BUILDER (Chạy ngầm)
         // =================================================================
         private void StartOrRestartPoller(bool force)
         {
@@ -281,33 +259,7 @@ namespace RevitToGISsupport.UI
             _poller = null;
         }
 
-        private void BindTree() => tvRoot.ItemsSource = new[] { _root };
-
-        private void ApplySearch()
-        {
-            var q = (tbSearch.Text ?? "").Trim();
-            if (string.IsNullOrWhiteSpace(q)) { BindTree(); return; }
-            var filtered = FilterTree(_root, q);
-            tvRoot.ItemsSource = filtered != null ? new[] { filtered } : Array.Empty<BrowserNode>();
-        }
-
-        private BrowserNode FilterTree(BrowserNode node, string q)
-        {
-            if (node == null) return null;
-            if (node.IsLeaf)
-            {
-                if ((node.Title ?? "").IndexOf(q, StringComparison.CurrentCultureIgnoreCase) >= 0) return node;
-                return null;
-            }
-            var copy = new BrowserNode { Title = node.Title, Type = node.Type, ElementId = node.ElementId };
-            foreach (var c in node.Children)
-            {
-                var fc = FilterTree(c, q);
-                if (fc != null) copy.Children.Add(fc);
-            }
-            return copy.Children.Count > 0 ? copy : null;
-        }
-
+        // CÁC HÀM XÂY DỰNG CẤU TRÚC NGẦM ĐỂ XUẤT RA JSON
         private void BuildRootTree()
         {
             _root = new BrowserNode { Title = "Project Browser", Type = BrowserNodeType.Folder };
