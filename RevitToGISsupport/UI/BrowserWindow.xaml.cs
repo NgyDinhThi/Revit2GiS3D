@@ -1,6 +1,7 @@
 ﻿using Autodesk.Revit.DB;
 using Autodesk.Revit.UI;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using RevitToGISsupport.DataTree;
 using RevitToGISsupport.Models;
 using RevitToGISsupport.Services;
@@ -24,10 +25,10 @@ namespace RevitToGISsupport.UI
         private readonly Document _doc;
         private readonly ExternalEvent _activateEvent;
 
-        // Lưu trữ cây dữ liệu ngầm (Không hiển thị ra giao diện nữa)
+        // Lưu trữ cây dữ liệu ngầm
         private BrowserNode _root;
 
-        // API Key (Phải khớp với Server app.py)
+        // API Key
         private const string API_KEY = "CHANGE-ME-IN-PRODUCTION";
 
         private static readonly HttpClient SharedHttpClient = new HttpClient
@@ -45,6 +46,11 @@ namespace RevitToGISsupport.UI
         private string _pollerServer;
         private string _pollerProjectId;
         private string _pollerClientId;
+
+        // --- CÁC BIẾN CHO TÍNH NĂNG SHARE LINK ---
+        private const string INTERNAL_SERVER_URL = "http://127.0.0.1:5000";
+        private string _baseShareUrl = "http://127.0.0.1:5000";
+        private bool _isPublished = false; // Biến kiểm tra xem đã đồng bộ chưa
 
         public BrowserWindow(UIApplication uiapp, ExternalEvent activateEvent)
         {
@@ -67,16 +73,27 @@ namespace RevitToGISsupport.UI
                 return;
             }
 
-            if (string.IsNullOrWhiteSpace(tbServer.Text))
-                tbServer.Text = "http://127.0.0.1:5000";
             if (string.IsNullOrWhiteSpace(tbProjectId.Text))
                 tbProjectId.Text = "P001";
 
-            // Khởi động lắng nghe Web -> Revit
-            StartOrRestartPoller(force: true);
+            lblStatus.Text = "Đang tìm địa chỉ kết nối...";
+            lblStatus.Foreground = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(0, 120, 212));
 
-            lblStatus.Text = "Sẵn sàng hoạt động.";
-            lblStatus.Foreground = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(40, 167, 69)); // Xanh lá
+            Task.Run(async () =>
+            {
+                string url = await DetectPublicUrlAsyncSafe();
+
+                Dispatcher.Invoke(() =>
+                {
+                    _baseShareUrl = url;
+                    UpdateShareLink();
+
+                    StartOrRestartPoller(force: true);
+
+                    lblStatus.Text = "Sẵn sàng hoạt động. Vui lòng Đồng bộ lên Web!";
+                    lblStatus.Foreground = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(40, 167, 69));
+                });
+            });
         }
 
         private void BrowserWindow_Closed(object sender, EventArgs e)
@@ -84,6 +101,100 @@ namespace RevitToGISsupport.UI
             _publishCts?.Cancel();
             _publishCts?.Dispose();
             StopPoller();
+        }
+
+        // ==========================================================
+        // CÁC HÀM XỬ LÝ GIAO DIỆN (SHARE LINK & COPY)
+        // ==========================================================
+        private void tbProjectId_TextChanged(object sender, System.Windows.Controls.TextChangedEventArgs e)
+        {
+            UpdateShareLink();
+        }
+
+        private void UpdateShareLink()
+        {
+            if (tbShareLink != null && panelShare != null)
+            {
+                if (_isPublished)
+                {
+                    panelShare.Visibility = System.Windows.Visibility.Visible;
+                    var pid = tbProjectId?.Text?.Trim() ?? "P001";
+                    tbShareLink.Text = $"{_baseShareUrl}/browser?projectId={pid}";
+                }
+                else
+                {
+                    panelShare.Visibility = System.Windows.Visibility.Collapsed;
+                }
+            }
+        }
+
+        private async void btnCopy_Click(object sender, RoutedEventArgs e)
+        {
+            if (_isPublished && !string.IsNullOrWhiteSpace(tbShareLink.Text))
+            {
+                Clipboard.SetText(tbShareLink.Text);
+
+                // Đổi chữ trên nút để báo hiệu, KHÔNG DÙNG MESSAGEBOX (Bảng thông báo)
+                string oldText = btnCopy.Content.ToString();
+                btnCopy.Content = "Đã Copy!";
+                btnCopy.Background = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(223, 246, 221)); // Nền xanh nhạt
+                btnCopy.Foreground = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(40, 167, 69)); // Chữ xanh lá
+
+                lblStatus.Text = "Đã copy link vào khay nhớ tạm.";
+                lblStatus.Foreground = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(40, 167, 69));
+
+                await Task.Delay(2000); // Đợi 2 giây
+
+                // Trả lại trạng thái nút bình thường
+                btnCopy.Content = oldText;
+                btnCopy.Background = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(255, 255, 255));
+                btnCopy.Foreground = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(50, 49, 48));
+            }
+        }
+
+        // --- Hàm Tự động tìm Link Ngrok hoặc IP LAN ---
+        private async Task<string> DetectPublicUrlAsyncSafe()
+        {
+            try
+            {
+                using (var client = new HttpClient { Timeout = TimeSpan.FromSeconds(2) })
+                {
+                    var res = await client.GetAsync("http://127.0.0.1:4040/api/tunnels");
+                    if (res.IsSuccessStatusCode)
+                    {
+                        var json = await res.Content.ReadAsStringAsync();
+                        var data = JObject.Parse(json);
+                        var tunnels = data["tunnels"];
+                        if (tunnels != null)
+                        {
+                            foreach (var t in tunnels)
+                            {
+                                if (t["proto"]?.ToString() == "https")
+                                    return t["public_url"]?.ToString();
+                            }
+                        }
+                    }
+                }
+            }
+            catch { }
+
+            try
+            {
+                string localIP = "127.0.0.1";
+                var host = System.Net.Dns.GetHostEntry(System.Net.Dns.GetHostName());
+                foreach (var ip in host.AddressList)
+                {
+                    if (ip.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork)
+                    {
+                        localIP = ip.ToString();
+                        break;
+                    }
+                }
+                return $"http://{localIP}:5000";
+            }
+            catch { }
+
+            return "http://127.0.0.1:5000";
         }
 
         // ==========================================================
@@ -96,29 +207,30 @@ namespace RevitToGISsupport.UI
                 _publishCts?.Cancel();
                 _publishCts = new CancellationTokenSource();
 
+                // Ẩn link đi khi bắt đầu tiến trình đồng bộ mới
+                _isPublished = false;
+                UpdateShareLink();
+
                 btnPublish.IsEnabled = false;
-                lblStatus.Foreground = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(0, 120, 212)); // Xanh dương
+                lblStatus.Foreground = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(0, 120, 212));
 
                 StartOrRestartPoller(force: false);
-                var server = (tbServer.Text ?? "").Trim().TrimEnd('/');
+
+                var server = INTERNAL_SERVER_URL;
                 var projectId = (tbProjectId.Text ?? "").Trim();
 
                 if (string.IsNullOrWhiteSpace(server) || string.IsNullOrWhiteSpace(projectId))
                 {
-                    MessageBox.Show("Server hoặc ProjectId không hợp lệ.", "Publish", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    MessageBox.Show("ProjectId không hợp lệ.", "Publish", MessageBoxButton.OK, MessageBoxImage.Warning);
                     return;
                 }
 
-                // --- BƯỚC 1: TỰ ĐỘNG THU THẬP & PUBLISH INDEX NGẦM ---
                 lblStatus.Text = "Bước 1/3: Đang thu thập dữ liệu cây thư mục...";
-
-                // Thu thập cấu trúc mới nhất ngầm bên trong bộ nhớ
                 BuildRootTree();
                 var index = BuildBrowserIndex(projectId);
 
                 var urlIndex = $"{server}/api/projects/{Uri.EscapeDataString(projectId)}/browser-index";
                 var jsonIndex = JsonConvert.SerializeObject(index);
-
                 var reqIndex = new HttpRequestMessage(HttpMethod.Post, urlIndex);
                 reqIndex.Headers.Add("X-API-Key", API_KEY);
                 reqIndex.Content = new StringContent(jsonIndex, Encoding.UTF8, "application/json");
@@ -130,9 +242,7 @@ namespace RevitToGISsupport.UI
                     throw new Exception($"Lỗi gửi Index: {resIndex.StatusCode} - {err}");
                 }
 
-                // --- BƯỚC 2: EXPORT GLB SIÊU TỐC (Dùng OpenUI) ---
                 lblStatus.Text = "Bước 2/3: Đang trích xuất mô hình 3D (GLB)...";
-
                 string tempFolder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "RevitExports", "TempUpload");
                 Directory.CreateDirectory(tempFolder);
                 string glbPath = Path.Combine(tempFolder, $"revit_project_{Guid.NewGuid():N}.glb");
@@ -161,15 +271,18 @@ namespace RevitToGISsupport.UI
 
                 if (!File.Exists(glbPath)) throw new Exception("Không tìm thấy file GLB sau khi export.");
 
-                // --- BƯỚC 3: UPLOAD GLB LÊN SERVER ---
                 lblStatus.Text = "Bước 3/3: Đang tải dữ liệu lên Server...";
                 await UploadGlbAsync(server, projectId, glbPath, _publishCts.Token);
 
                 try { File.Delete(glbPath); } catch { }
 
-                lblStatus.Text = "Đồng bộ thành công! Có thể xem trên Web.";
+                // HOÀN TẤT: Hiện link chia sẻ và đổi Status
+                _isPublished = true;
+                UpdateShareLink();
+
+                lblStatus.Text = "Đồng bộ thành công! Bạn có thể Copy link ngay bây giờ.";
                 lblStatus.Foreground = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(40, 167, 69)); // Xanh lá
-                MessageBox.Show("Đồng bộ hoàn tất!\n\nMô hình 3D và Dữ liệu đã được tải lên Server.", "Thành công", MessageBoxButton.OK, MessageBoxImage.Information);
+                // Đã bỏ bảng Popup MessageBox theo ý bạn
             }
             catch (OperationCanceledException)
             {
@@ -218,11 +331,11 @@ namespace RevitToGISsupport.UI
         }
 
         // =================================================================
-        // HỆ THỐNG POLLER (Lắng nghe web) VÀ BUILDER (Chạy ngầm)
+        // HỆ THỐNG POLLER (Lắng nghe lệnh từ Web gửi về)
         // =================================================================
         private void StartOrRestartPoller(bool force)
         {
-            var server = (tbServer.Text ?? "").Trim().TrimEnd('/');
+            var server = INTERNAL_SERVER_URL;
             var projectId = (tbProjectId.Text ?? "").Trim();
             var clientId = Environment.MachineName;
 
@@ -259,7 +372,9 @@ namespace RevitToGISsupport.UI
             _poller = null;
         }
 
+        // =================================================================
         // CÁC HÀM XÂY DỰNG CẤU TRÚC NGẦM ĐỂ XUẤT RA JSON
+        // =================================================================
         private void BuildRootTree()
         {
             _root = new BrowserNode { Title = "Project Browser", Type = BrowserNodeType.Folder };
