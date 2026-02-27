@@ -1,28 +1,38 @@
 ﻿using Autodesk.Revit.DB;
 using Autodesk.Revit.UI;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
+using System.Threading.Tasks;
+using System.Windows; // Sử dụng bảng thông báo gốc của Windows
 
 namespace RevitToGISsupport.RemoteControl
 {
     public sealed class RemoteCommandHandler : IExternalEventHandler
     {
-        // QUAN TRỌNG: Key này phải khớp với log server "API_KEY: DEFAULT..."
         private const string API_KEY = "CHANGE-ME-IN-PRODUCTION";
 
         public void Execute(UIApplication app)
         {
             var uidoc = app?.ActiveUIDocument;
             var doc = uidoc?.Document;
-            if (doc == null) return;
+
+            if (doc == null)
+            {
+                // Nếu Revit không nhận diện được file đang mở
+                return;
+            }
 
             while (RemoteCommandQueue.Items.TryDequeue(out var cmd))
             {
                 if (cmd == null) continue;
+
+                // [MÁY DÒ MÌN SỐ 1] - Báo cáo ngay khi chộp được lệnh
+                MessageBox.Show($"1. Đã chộp được lệnh từ Web: {cmd.action}", "BIM Sync Debug", MessageBoxButton.OK, MessageBoxImage.Information);
 
                 try
                 {
@@ -43,10 +53,15 @@ namespace RevitToGISsupport.RemoteControl
                         case "update_parameter":
                             TryUpdateParameter(doc, cmd);
                             break;
+
+                        default:
+                            MessageBox.Show($"Lệnh lạ không xác định: {cmd.action}", "Lỗi", MessageBoxButton.OK, MessageBoxImage.Error);
+                            break;
                     }
                 }
                 catch (Exception ex)
                 {
+                    MessageBox.Show($"LỖI NẶNG KHI CHẠY LỆNH {cmd.action}:\n{ex.Message}", "BIM Sync Lỗi", MessageBoxButton.OK, MessageBoxImage.Error);
                     SendError(cmd, ex.Message);
                 }
             }
@@ -66,140 +81,153 @@ namespace RevitToGISsupport.RemoteControl
         {
             var cmdId = cmd.id ?? Guid.NewGuid().ToString("N");
 
-            try
+            if (string.IsNullOrWhiteSpace(cmd.targetUniqueId))
+                throw new Exception("Missing targetUniqueId");
+
+            if (cmd.parameters == null || cmd.parameters.Count == 0)
+                throw new Exception("No parameters provided to update.");
+
+            using (Transaction t = new Transaction(doc, "Update from Web"))
             {
-                if (string.IsNullOrWhiteSpace(cmd.targetUniqueId))
-                    throw new Exception("Missing targetUniqueId");
+                t.Start();
+                var elem = doc.GetElement(cmd.targetUniqueId);
+                if (elem == null) throw new Exception("Element not found in Revit.");
 
-                if (cmd.parameters == null || cmd.parameters.Count == 0)
-                    throw new Exception("No parameters provided to update.");
-
-                using (Transaction t = new Transaction(doc, "Update from Web"))
+                foreach (var kvp in cmd.parameters)
                 {
-                    t.Start();
-                    var elem = doc.GetElement(cmd.targetUniqueId);
-                    if (elem == null) throw new Exception("Element not found in Revit.");
+                    var paramName = kvp.Key;
+                    var paramValStr = kvp.Value;
 
-                    foreach (var kvp in cmd.parameters)
+                    var param = elem.LookupParameter(paramName);
+                    if (param == null) continue;
+                    if (param.IsReadOnly) throw new Exception($"Parameter '{paramName}' is Read-Only.");
+
+                    switch (param.StorageType)
                     {
-                        var paramName = kvp.Key;
-                        var paramValStr = kvp.Value;
-
-                        var param = elem.LookupParameter(paramName);
-                        if (param == null) continue;
-                        if (param.IsReadOnly) throw new Exception($"Parameter '{paramName}' is Read-Only.");
-
-                        switch (param.StorageType)
-                        {
-                            case StorageType.String:
-                                param.Set(paramValStr);
-                                break;
-                            case StorageType.Double:
-                                if (double.TryParse(paramValStr, out double dVal)) param.Set(dVal);
-                                break;
-                            case StorageType.Integer:
-                                if (int.TryParse(paramValStr, out int iVal)) param.Set(iVal);
-                                break;
-                        }
+                        case StorageType.String:
+                            param.Set(paramValStr);
+                            break;
+                        case StorageType.Double:
+                            if (double.TryParse(paramValStr, out double dVal)) param.Set(dVal);
+                            break;
+                        case StorageType.Integer:
+                            if (int.TryParse(paramValStr, out int iVal)) param.Set(iVal);
+                            break;
                     }
-                    t.Commit();
                 }
+                t.Commit();
+            }
 
-                // Gửi báo cáo thành công về Server
-                PostCommandResult(RemoteSettings.ServerBaseUrl, RemoteSettings.ProjectId, new
+            MessageBox.Show("2. Đổi Parameter thành công! Bắt đầu gửi báo cáo về Web...", "BIM Sync Debug");
+
+            var fields = cmd.parameters.Keys.ToList();
+            Task.Run(async () =>
+            {
+                await PostCommandResultAsync(GetBaseUrl(), RemoteSettings.ProjectId, new
                 {
                     id = cmdId,
                     status = "done",
                     message = "Update successful",
-                    updatedFields = cmd.parameters.Keys.ToList()
+                    updatedFields = fields
                 });
-            }
-            catch (Exception ex)
-            {
-                SendError(cmd, ex.Message);
-            }
+            });
         }
 
         private void TryRenderViewPng(Document doc, RemoteCommand cmd)
         {
             var cmdId = cmd.id ?? Guid.NewGuid().ToString("N");
-            try
+            var targetId = cmd.targetUniqueId;
+
+            if (string.IsNullOrWhiteSpace(targetId)) throw new Exception("Missing targetUniqueId");
+            var elem = doc.GetElement(targetId);
+            if (!(elem is View v) || v.IsTemplate) throw new Exception("Khung nhìn (View) này không hợp lệ để xuất ảnh.");
+
+            var folder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "RevitExports", "Snapshots");
+            if (!Directory.Exists(folder)) Directory.CreateDirectory(folder);
+
+            var pngPath = ViewImageExporter.ExportPng(doc, v, folder, cmd.pixelSize > 0 ? cmd.pixelSize : 1000);
+
+            if (string.IsNullOrWhiteSpace(pngPath) || !File.Exists(pngPath))
+                throw new Exception($"Không thể lưu ảnh ra máy tính tại:\n{pngPath}");
+
+            // [MÁY DÒ MÌN SỐ 2]
+            MessageBox.Show($"2. Đã chụp ảnh xong!\nLưu tại: {pngPath}\nBắt đầu Upload lên Server...", "BIM Sync Debug", MessageBoxButton.OK, MessageBoxImage.Information);
+
+            var baseUrl = GetBaseUrl();
+            var projectId = RemoteSettings.ProjectId ?? "P001";
+
+            Task.Run(async () =>
             {
-                if (string.IsNullOrWhiteSpace(cmd.targetUniqueId)) throw new Exception("Missing targetUniqueId");
-                var elem = doc.GetElement(cmd.targetUniqueId);
-                if (!(elem is View v) || v.IsTemplate) throw new Exception("Target is not a valid View");
-
-                var folder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "RevitExports", "Snapshots");
-                var pngPath = ViewImageExporter.ExportPng(doc, v, folder, cmd.pixelSize);
-
-                if (string.IsNullOrWhiteSpace(pngPath) || !File.Exists(pngPath))
-                    throw new Exception("PNG export failed");
-
-                var imageUrl = UploadSnapshot(RemoteSettings.ServerBaseUrl, RemoteSettings.ProjectId, cmd.targetUniqueId, pngPath);
-
-                PostCommandResult(RemoteSettings.ServerBaseUrl, RemoteSettings.ProjectId, new
+                try
                 {
-                    id = cmdId,
-                    status = "done",
-                    imageUrl = imageUrl,
-                    viewUniqueId = cmd.targetUniqueId
-                });
-            }
-            catch (Exception ex)
-            {
-                SendError(cmd, ex.Message);
-            }
+                    var imageUrl = await UploadSnapshotAsync(baseUrl, projectId, targetId, pngPath);
+                    await PostCommandResultAsync(baseUrl, projectId, new
+                    {
+                        id = cmdId,
+                        status = "done",
+                        imageUrl = imageUrl,
+                        viewUniqueId = targetId
+                    });
+                }
+                catch (Exception ex)
+                {
+                    // Lỗi mạng sẽ được bắn vào log Server
+                    await PostCommandResultAsync(baseUrl, projectId, new { id = cmdId, status = "error", message = "Lỗi Upload: " + ex.Message });
+                }
+            });
         }
 
         private void TryExportViewGlb(Document doc, RemoteCommand cmd)
         {
             var cmdId = cmd.id ?? Guid.NewGuid().ToString("N");
-            try
+
+            if (string.IsNullOrWhiteSpace(cmd.targetUniqueId)) throw new Exception("Missing targetUniqueId");
+            var elem = doc.GetElement(cmd.targetUniqueId);
+            if (!(elem is View3D v3)) throw new Exception("Target is not a 3D View");
+
+            var folder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "RevitExports", "Glb");
+            if (!Directory.Exists(folder)) Directory.CreateDirectory(folder);
+
+            var glbPath = RemoteGlbExporter.ExportGlbForView(doc, v3, folder);
+
+            Task.Run(async () =>
             {
-                if (string.IsNullOrWhiteSpace(cmd.targetUniqueId)) throw new Exception("Missing targetUniqueId");
-                var elem = doc.GetElement(cmd.targetUniqueId);
-                if (!(elem is View3D v3)) throw new Exception("Target is not a 3D View");
-
-                var folder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "RevitExports", "Glb");
-                // Giả sử hàm ExportGlbForView đã có
-                var glbPath = RemoteGlbExporter.ExportGlbForView(doc, v3, folder);
-
-                PostCommandResult(RemoteSettings.ServerBaseUrl, RemoteSettings.ProjectId, new
+                await PostCommandResultAsync(GetBaseUrl(), RemoteSettings.ProjectId, new
                 {
                     id = cmdId,
                     status = "done",
                     message = "GLB Exported locally"
                 });
-            }
-            catch (Exception ex)
-            {
-                SendError(cmd, ex.Message);
-            }
+            });
         }
 
-        // --- HELPERS (ĐÃ THÊM API KEY) ---
+        // =========================================================
+        // HELPERS: XỬ LÝ MẠNG TÁCH BIỆT HOÀN TOÀN KHỎI REVIT
+        // =========================================================
+
+        private string GetBaseUrl()
+        {
+            var url = RemoteSettings.ServerBaseUrl;
+            return string.IsNullOrWhiteSpace(url) ? "http://127.0.0.1:5000" : url;
+        }
 
         private void SendError(RemoteCommand cmd, string msg)
         {
             var cmdId = cmd?.id ?? "unknown";
-            try
+            var baseUrl = GetBaseUrl();
+            var projectId = RemoteSettings.ProjectId ?? "P001";
+
+            Task.Run(async () =>
             {
-                PostCommandResult(RemoteSettings.ServerBaseUrl, RemoteSettings.ProjectId, new
-                {
-                    id = cmdId,
-                    status = "error",
-                    message = msg
-                });
-            }
-            catch { }
+                await PostCommandResultAsync(baseUrl, projectId, new { id = cmdId, status = "error", message = msg });
+            });
         }
 
-        private string UploadSnapshot(string baseUrl, string projectId, string viewUniqueId, string pngPath)
+        private async Task<string> UploadSnapshotAsync(string baseUrl, string projectId, string viewUniqueId, string pngPath)
         {
             using (var http = new HttpClient { Timeout = TimeSpan.FromMinutes(2) })
             using (var form = new MultipartFormDataContent())
             {
-                // [FIX] THÊM HEADER API KEY
                 http.DefaultRequestHeaders.Add("X-API-Key", API_KEY);
 
                 form.Add(new StringContent(viewUniqueId ?? ""), "viewUniqueId");
@@ -207,29 +235,30 @@ namespace RevitToGISsupport.RemoteControl
 
                 var url = $"{baseUrl.TrimEnd('/')}/api/projects/{Uri.EscapeDataString(projectId)}/snapshots/upload";
 
-                var res = http.PostAsync(url, form).GetAwaiter().GetResult();
-                var body = res.Content.ReadAsStringAsync().GetAwaiter().GetResult();
+                var res = await http.PostAsync(url, form).ConfigureAwait(false);
+                var body = await res.Content.ReadAsStringAsync().ConfigureAwait(false);
 
                 if (!res.IsSuccessStatusCode) throw new Exception("Upload failed: " + body);
 
-                dynamic obj = JsonConvert.DeserializeObject(body);
-                return (string)obj?.url;
+                var obj = JObject.Parse(body);
+                return obj["url"]?.ToString();
             }
         }
 
-        private void PostCommandResult(string baseUrl, string projectId, object payload)
+        private async Task PostCommandResultAsync(string baseUrl, string projectId, object payload)
         {
-            using (var http = new HttpClient { Timeout = TimeSpan.FromSeconds(10) })
+            try
             {
-                var url = $"{baseUrl.TrimEnd('/')}/api/projects/{Uri.EscapeDataString(projectId)}/command-results";
-                var json = JsonConvert.SerializeObject(payload);
+                using (var http = new HttpClient { Timeout = TimeSpan.FromSeconds(10) })
+                {
+                    var url = $"{baseUrl.TrimEnd('/')}/api/projects/{Uri.EscapeDataString(projectId)}/command-results";
+                    var json = JsonConvert.SerializeObject(payload);
 
-                // [FIX] THÊM HEADER API KEY
-                http.DefaultRequestHeaders.Add("X-API-Key", API_KEY);
-
-                http.PostAsync(url, new StringContent(json, System.Text.Encoding.UTF8, "application/json"))
-                    .GetAwaiter().GetResult();
+                    http.DefaultRequestHeaders.Add("X-API-Key", API_KEY);
+                    await http.PostAsync(url, new StringContent(json, System.Text.Encoding.UTF8, "application/json")).ConfigureAwait(false);
+                }
             }
+            catch { }
         }
 
         public string GetName() => "RemoteCommandHandler";

@@ -60,6 +60,13 @@ namespace RevitToGISsupport.UI
             _doc = uiapp?.ActiveUIDocument?.Document;
             _activateEvent = activateEvent;
 
+            // [SỬA LỖI TẠI ĐÂY] - KHỞI TẠO EXTERNAL EVENT TRÊN LUỒNG CHÍNH CỦA REVIT
+            if (_remoteHandler == null)
+            {
+                _remoteHandler = new RemoteCommandHandler();
+                _remoteEvent = ExternalEvent.Create(_remoteHandler);
+            }
+
             Loaded += BrowserWindow_Loaded;
             Closed += BrowserWindow_Closed;
         }
@@ -134,18 +141,16 @@ namespace RevitToGISsupport.UI
             {
                 Clipboard.SetText(tbShareLink.Text);
 
-                // Đổi chữ trên nút để báo hiệu, KHÔNG DÙNG MESSAGEBOX (Bảng thông báo)
                 string oldText = btnCopy.Content.ToString();
                 btnCopy.Content = "Đã Copy!";
-                btnCopy.Background = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(223, 246, 221)); // Nền xanh nhạt
-                btnCopy.Foreground = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(40, 167, 69)); // Chữ xanh lá
+                btnCopy.Background = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(223, 246, 221));
+                btnCopy.Foreground = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(40, 167, 69));
 
                 lblStatus.Text = "Đã copy link vào khay nhớ tạm.";
                 lblStatus.Foreground = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(40, 167, 69));
 
-                await Task.Delay(2000); // Đợi 2 giây
+                await Task.Delay(2000);
 
-                // Trả lại trạng thái nút bình thường
                 btnCopy.Content = oldText;
                 btnCopy.Background = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(255, 255, 255));
                 btnCopy.Foreground = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(50, 49, 48));
@@ -207,7 +212,6 @@ namespace RevitToGISsupport.UI
                 _publishCts?.Cancel();
                 _publishCts = new CancellationTokenSource();
 
-                // Ẩn link đi khi bắt đầu tiến trình đồng bộ mới
                 _isPublished = false;
                 UpdateShareLink();
 
@@ -276,24 +280,22 @@ namespace RevitToGISsupport.UI
 
                 try { File.Delete(glbPath); } catch { }
 
-                // HOÀN TẤT: Hiện link chia sẻ và đổi Status
                 _isPublished = true;
                 UpdateShareLink();
 
                 lblStatus.Text = "Đồng bộ thành công! Bạn có thể Copy link ngay bây giờ.";
-                lblStatus.Foreground = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(40, 167, 69)); // Xanh lá
-                // Đã bỏ bảng Popup MessageBox theo ý bạn
+                lblStatus.Foreground = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(40, 167, 69));
             }
             catch (OperationCanceledException)
             {
                 lblStatus.Text = "Đã hủy tiến trình.";
-                lblStatus.Foreground = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(209, 52, 56)); // Đỏ
+                lblStatus.Foreground = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(209, 52, 56));
             }
             catch (Exception ex)
             {
                 MessageBox.Show($"Lỗi: {ex.Message}", "Lỗi đồng bộ", MessageBoxButton.OK, MessageBoxImage.Error);
                 lblStatus.Text = "Lỗi trong quá trình đồng bộ.";
-                lblStatus.Foreground = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(209, 52, 56)); // Đỏ
+                lblStatus.Foreground = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(209, 52, 56));
             }
             finally
             {
@@ -344,11 +346,7 @@ namespace RevitToGISsupport.UI
 
             if (string.IsNullOrWhiteSpace(server) || string.IsNullOrWhiteSpace(projectId)) return;
 
-            if (_remoteHandler == null)
-            {
-                _remoteHandler = new RemoteCommandHandler();
-                _remoteEvent = ExternalEvent.Create(_remoteHandler);
-            }
+            // [ĐÃ XÓA CODE TẠO EVENT Ở ĐÂY VÌ ĐÃ CHUYỂN LÊN CONSTRUCTOR]
 
             if (!force && _poller != null &&
                 string.Equals(server, _pollerServer, StringComparison.OrdinalIgnoreCase) &&
