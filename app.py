@@ -28,6 +28,14 @@ for folder in [UPLOAD_FOLDER, STATIC_FOLDER, TEMPLATES_FOLDER]:
 
 app = Flask(__name__, static_folder=STATIC_FOLDER, static_url_path="/static", template_folder=TEMPLATES_FOLDER)
 app.config['MAX_CONTENT_LENGTH'] = 1000 * 1024 * 1024  # 1GB Limit
+class MutePullLogsFilter(logging.Filter):
+    def filter(self, record):
+        # Bỏ qua không in ra màn hình nếu log có chứa chữ "commands/pull"
+        return 'commands/pull' not in record.getMessage()
+
+# Áp dụng bộ lọc cho hệ thống log mặc định của Flask (werkzeug)
+logging.getLogger('werkzeug').addFilter(MutePullLogsFilter())
+# --------------------------------------
 
 # Cấu hình API Key
 API_KEY = os.getenv("API_KEY", "CHANGE-ME-IN-PRODUCTION")
@@ -214,4 +222,4 @@ def on_sub(data):
 if __name__ == "__main__":
     print(f"--- SERVER STARTED on 5000 ---")
     print(f"API KEY: {API_KEY}") 
-    socketio.run(app, host="127.0.0.1", port=5000, debug=True, use_reloader=False)
+    socketio.run(app, host="0.0.0.0", port=5000, debug=True, use_reloader=False)

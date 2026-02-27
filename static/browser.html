@@ -20,23 +20,23 @@
   <input id="apiKey" type="password" placeholder="API Key" style="width:140px" value="CHANGE-ME-IN-PRODUCTION" title="API Key">
   
   <input id="q" placeholder="Search tree..." style="width:160px">
-  <button onclick="loadIndex()" title="Load cấu trúc từ Server"> Refresh Tree</button>
+  <button onclick="loadIndex()" title="Load cấu trúc từ Server"> Làm mới</button>
   
   <div style="flex:1"></div>
-  <button class="secondary" onclick="openLatest3D()"> Open 3D Viewer</button>
+  <button class="secondary" onclick="openLatest3D()"> Xem mô hình 3D</button>
 </div>
 
 <div class="main">
   <div class="col-tree" id="treeRoot">
     <div style="color:var(--text-muted); text-align:center; margin-top:40px">
       <p>1. Nhấn <b>"Publish to Web"</b> trong Revit.</p>
-      <p>2. Nhấn <b>"Refresh Tree"</b> ở trên để xem dữ liệu.</p>
+      <p>2. Nhấn <b>"Làm mới"</b> ở trên để xem dữ liệu.</p>
     </div>
   </div>
 
   <div class="col-props">
-    <h3>Properties</h3>
-    <div id="propMsg" style="color:var(--text-muted); font-size:13px; font-style:italic">Select an item to view properties</div>
+    <h3>Chỉ số</h3>
+    <div id="propMsg" style="color:var(--text-muted); font-size:13px; font-style:italic">Nơi hiện chỉ số</div>
     
     <div id="propForm" style="display:none">
       <div class="prop-group">
@@ -61,18 +61,18 @@
         <input id="p_param_val" placeholder="Enter new value..." class="prop-input-active">
       </div>
 
-      <button onclick="sendUpdate()" style="width:100%; justify-content:center;">Update to Revit</button>
+      <button onclick="sendUpdate()" style="width:100%; justify-content:center;">Đẩy lên Revit</button>
     </div>
   </div>
 
   <div class="col-preview">
     <div id="previewActions" style="display:none; text-align:center; width:100%">
-        <button onclick="requestRender()" style="background:#6c757d; padding: 6px 20px; margin: 0 auto;"> Render 2D Image</button>
+        <button onclick="requestRender()" style="background:#6c757d; padding: 6px 20px; margin: 0 auto;"> Render ảnh</button>
         <p style="font-size:11px; color:var(--text-muted); margin-top:8px">Render view hiện tại trong Revit và gửi ảnh về đây.</p>
     </div>
 
     <div id="previewMsg" style="color:var(--text-muted); margin-top:40px; text-align:center">
-      Select a View to see actions
+      View hiện ảnh ở đây. 
     </div>
     
     <div class="img-container" id="imgWrap" style="display:none">
