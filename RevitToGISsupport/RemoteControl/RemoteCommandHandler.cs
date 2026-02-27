@@ -8,7 +8,6 @@ using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
-using System.Windows; // Sử dụng bảng thông báo gốc của Windows
 
 namespace RevitToGISsupport.RemoteControl
 {
@@ -21,18 +20,11 @@ namespace RevitToGISsupport.RemoteControl
             var uidoc = app?.ActiveUIDocument;
             var doc = uidoc?.Document;
 
-            if (doc == null)
-            {
-                // Nếu Revit không nhận diện được file đang mở
-                return;
-            }
+            if (doc == null) return;
 
             while (RemoteCommandQueue.Items.TryDequeue(out var cmd))
             {
                 if (cmd == null) continue;
-
-                // [MÁY DÒ MÌN SỐ 1] - Báo cáo ngay khi chộp được lệnh
-                MessageBox.Show($"1. Đã chộp được lệnh từ Web: {cmd.action}", "BIM Sync Debug", MessageBoxButton.OK, MessageBoxImage.Information);
 
                 try
                 {
@@ -53,15 +45,10 @@ namespace RevitToGISsupport.RemoteControl
                         case "update_parameter":
                             TryUpdateParameter(doc, cmd);
                             break;
-
-                        default:
-                            MessageBox.Show($"Lệnh lạ không xác định: {cmd.action}", "Lỗi", MessageBoxButton.OK, MessageBoxImage.Error);
-                            break;
                     }
                 }
                 catch (Exception ex)
                 {
-                    MessageBox.Show($"LỖI NẶNG KHI CHẠY LỆNH {cmd.action}:\n{ex.Message}", "BIM Sync Lỗi", MessageBoxButton.OK, MessageBoxImage.Error);
                     SendError(cmd, ex.Message);
                 }
             }
@@ -81,56 +68,61 @@ namespace RevitToGISsupport.RemoteControl
         {
             var cmdId = cmd.id ?? Guid.NewGuid().ToString("N");
 
-            if (string.IsNullOrWhiteSpace(cmd.targetUniqueId))
-                throw new Exception("Missing targetUniqueId");
-
-            if (cmd.parameters == null || cmd.parameters.Count == 0)
-                throw new Exception("No parameters provided to update.");
-
-            using (Transaction t = new Transaction(doc, "Update from Web"))
+            try
             {
-                t.Start();
-                var elem = doc.GetElement(cmd.targetUniqueId);
-                if (elem == null) throw new Exception("Element not found in Revit.");
+                if (string.IsNullOrWhiteSpace(cmd.targetUniqueId))
+                    throw new Exception("Missing targetUniqueId");
 
-                foreach (var kvp in cmd.parameters)
+                if (cmd.parameters == null || cmd.parameters.Count == 0)
+                    throw new Exception("No parameters provided to update.");
+
+                using (Transaction t = new Transaction(doc, "Update from Web"))
                 {
-                    var paramName = kvp.Key;
-                    var paramValStr = kvp.Value;
+                    t.Start();
+                    var elem = doc.GetElement(cmd.targetUniqueId);
+                    if (elem == null) throw new Exception("Element not found in Revit.");
 
-                    var param = elem.LookupParameter(paramName);
-                    if (param == null) continue;
-                    if (param.IsReadOnly) throw new Exception($"Parameter '{paramName}' is Read-Only.");
-
-                    switch (param.StorageType)
+                    foreach (var kvp in cmd.parameters)
                     {
-                        case StorageType.String:
-                            param.Set(paramValStr);
-                            break;
-                        case StorageType.Double:
-                            if (double.TryParse(paramValStr, out double dVal)) param.Set(dVal);
-                            break;
-                        case StorageType.Integer:
-                            if (int.TryParse(paramValStr, out int iVal)) param.Set(iVal);
-                            break;
+                        var paramName = kvp.Key;
+                        var paramValStr = kvp.Value;
+
+                        var param = elem.LookupParameter(paramName);
+                        if (param == null) continue;
+                        if (param.IsReadOnly) throw new Exception($"Parameter '{paramName}' is Read-Only.");
+
+                        switch (param.StorageType)
+                        {
+                            case StorageType.String:
+                                param.Set(paramValStr);
+                                break;
+                            case StorageType.Double:
+                                if (double.TryParse(paramValStr, out double dVal)) param.Set(dVal);
+                                break;
+                            case StorageType.Integer:
+                                if (int.TryParse(paramValStr, out int iVal)) param.Set(iVal);
+                                break;
+                        }
                     }
+                    t.Commit();
                 }
-                t.Commit();
-            }
 
-            MessageBox.Show("2. Đổi Parameter thành công! Bắt đầu gửi báo cáo về Web...", "BIM Sync Debug");
-
-            var fields = cmd.parameters.Keys.ToList();
-            Task.Run(async () =>
-            {
-                await PostCommandResultAsync(GetBaseUrl(), RemoteSettings.ProjectId, new
+                var fields = cmd.parameters.Keys.ToList();
+                Task.Run(async () =>
                 {
-                    id = cmdId,
-                    status = "done",
-                    message = "Update successful",
-                    updatedFields = fields
+                    await PostCommandResultAsync(GetBaseUrl(), RemoteSettings.ProjectId, new
+                    {
+                        id = cmdId,
+                        status = "done",
+                        message = "Update successful",
+                        updatedFields = fields
+                    });
                 });
-            });
+            }
+            catch (Exception ex)
+            {
+                SendError(cmd, ex.Message);
+            }
         }
 
         private void TryRenderViewPng(Document doc, RemoteCommand cmd)
@@ -138,67 +130,77 @@ namespace RevitToGISsupport.RemoteControl
             var cmdId = cmd.id ?? Guid.NewGuid().ToString("N");
             var targetId = cmd.targetUniqueId;
 
-            if (string.IsNullOrWhiteSpace(targetId)) throw new Exception("Missing targetUniqueId");
-            var elem = doc.GetElement(targetId);
-            if (!(elem is View v) || v.IsTemplate) throw new Exception("Khung nhìn (View) này không hợp lệ để xuất ảnh.");
-
-            var folder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "RevitExports", "Snapshots");
-            if (!Directory.Exists(folder)) Directory.CreateDirectory(folder);
-
-            var pngPath = ViewImageExporter.ExportPng(doc, v, folder, cmd.pixelSize > 0 ? cmd.pixelSize : 1000);
-
-            if (string.IsNullOrWhiteSpace(pngPath) || !File.Exists(pngPath))
-                throw new Exception($"Không thể lưu ảnh ra máy tính tại:\n{pngPath}");
-
-            // [MÁY DÒ MÌN SỐ 2]
-            MessageBox.Show($"2. Đã chụp ảnh xong!\nLưu tại: {pngPath}\nBắt đầu Upload lên Server...", "BIM Sync Debug", MessageBoxButton.OK, MessageBoxImage.Information);
-
-            var baseUrl = GetBaseUrl();
-            var projectId = RemoteSettings.ProjectId ?? "P001";
-
-            Task.Run(async () =>
+            try
             {
-                try
+                if (string.IsNullOrWhiteSpace(targetId)) throw new Exception("Missing targetUniqueId");
+                var elem = doc.GetElement(targetId);
+                if (!(elem is View v) || v.IsTemplate) throw new Exception("Khung nhìn (View) này không hợp lệ để xuất ảnh.");
+
+                var folder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "RevitExports", "Snapshots");
+                if (!Directory.Exists(folder)) Directory.CreateDirectory(folder);
+
+                var pngPath = ViewImageExporter.ExportPng(doc, v, folder, cmd.pixelSize > 0 ? cmd.pixelSize : 1000);
+
+                if (string.IsNullOrWhiteSpace(pngPath) || !File.Exists(pngPath))
+                    throw new Exception($"Không thể lưu ảnh ra máy tính tại:\n{pngPath}");
+
+                var baseUrl = GetBaseUrl();
+                var projectId = RemoteSettings.ProjectId ?? "P001";
+
+                Task.Run(async () =>
                 {
-                    var imageUrl = await UploadSnapshotAsync(baseUrl, projectId, targetId, pngPath);
-                    await PostCommandResultAsync(baseUrl, projectId, new
+                    try
                     {
-                        id = cmdId,
-                        status = "done",
-                        imageUrl = imageUrl,
-                        viewUniqueId = targetId
-                    });
-                }
-                catch (Exception ex)
-                {
-                    // Lỗi mạng sẽ được bắn vào log Server
-                    await PostCommandResultAsync(baseUrl, projectId, new { id = cmdId, status = "error", message = "Lỗi Upload: " + ex.Message });
-                }
-            });
+                        var imageUrl = await UploadSnapshotAsync(baseUrl, projectId, targetId, pngPath);
+                        await PostCommandResultAsync(baseUrl, projectId, new
+                        {
+                            id = cmdId,
+                            status = "done",
+                            imageUrl = imageUrl,
+                            viewUniqueId = targetId
+                        });
+                    }
+                    catch (Exception ex)
+                    {
+                        await PostCommandResultAsync(baseUrl, projectId, new { id = cmdId, status = "error", message = "Lỗi Upload: " + ex.Message });
+                    }
+                });
+            }
+            catch (Exception ex)
+            {
+                SendError(cmd, ex.Message);
+            }
         }
 
         private void TryExportViewGlb(Document doc, RemoteCommand cmd)
         {
             var cmdId = cmd.id ?? Guid.NewGuid().ToString("N");
 
-            if (string.IsNullOrWhiteSpace(cmd.targetUniqueId)) throw new Exception("Missing targetUniqueId");
-            var elem = doc.GetElement(cmd.targetUniqueId);
-            if (!(elem is View3D v3)) throw new Exception("Target is not a 3D View");
-
-            var folder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "RevitExports", "Glb");
-            if (!Directory.Exists(folder)) Directory.CreateDirectory(folder);
-
-            var glbPath = RemoteGlbExporter.ExportGlbForView(doc, v3, folder);
-
-            Task.Run(async () =>
+            try
             {
-                await PostCommandResultAsync(GetBaseUrl(), RemoteSettings.ProjectId, new
+                if (string.IsNullOrWhiteSpace(cmd.targetUniqueId)) throw new Exception("Missing targetUniqueId");
+                var elem = doc.GetElement(cmd.targetUniqueId);
+                if (!(elem is View3D v3)) throw new Exception("Target is not a 3D View");
+
+                var folder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "RevitExports", "Glb");
+                if (!Directory.Exists(folder)) Directory.CreateDirectory(folder);
+
+                var glbPath = RemoteGlbExporter.ExportGlbForView(doc, v3, folder);
+
+                Task.Run(async () =>
                 {
-                    id = cmdId,
-                    status = "done",
-                    message = "GLB Exported locally"
+                    await PostCommandResultAsync(GetBaseUrl(), RemoteSettings.ProjectId, new
+                    {
+                        id = cmdId,
+                        status = "done",
+                        message = "GLB Exported locally"
+                    });
                 });
-            });
+            }
+            catch (Exception ex)
+            {
+                SendError(cmd, ex.Message);
+            }
         }
 
         // =========================================================
