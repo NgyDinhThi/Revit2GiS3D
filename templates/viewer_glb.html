@@ -36,19 +36,21 @@
                   camera-controls 
                   auto-rotate 
                   shadow-intensity="1" 
-                  exposure="1">
+                  exposure="1"
+                  environment-image="neutral">
     </model-viewer>
 
     <script>
-        // Lấy tên file từ thanh địa chỉ URL (ví dụ: ?file=model_xxx.glb)
+        // Lấy đường dẫn API file từ thanh địa chỉ URL (ví dụ: ?file=/api/projects/P001/models/model.glb)
         const urlParams = new URLSearchParams(window.location.search);
-        const fileName = urlParams.get('file');
+        const fileUrl = urlParams.get('file');
 
-        if (fileName) {
-            // Nối tên file với API lấy file của Server Flask
+        if (fileUrl) {
+            // Lấy trực tiếp đường dẫn truyền sang từ RAM, KHÔNG ghép thêm '/uploads/' 
             const viewer = document.getElementById('viewer');
-            viewer.src = '/uploads/' + fileName;
+            viewer.src = fileUrl;
         } else {
+            // Hiện thông báo lỗi nếu không có link file truyền sang
             document.getElementById('error-msg').style.display = 'block';
             document.getElementById('viewer').style.display = 'none';
         }
