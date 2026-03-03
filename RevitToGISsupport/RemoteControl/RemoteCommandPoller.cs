@@ -11,17 +11,26 @@ namespace RevitToGISsupport.RemoteControl
 {
     public sealed class RemoteCommandPoller : IDisposable
     {
-        // Key này phải khớp với app.py
         private const string API_KEY = "CHANGE-ME-IN-PRODUCTION";
 
         private readonly string _baseUrl;
         private readonly string _projectId;
         private readonly string _clientId;
         private readonly ExternalEvent _evt;
-        private readonly Timer _timer;
         private readonly HttpClient _http;
+        private readonly CancellationTokenSource _cts;
 
-        private int _ticking = 0;
+        // Bộ nhớ lưu lại thời điểm cuối cùng nhận được lệnh từ Web
+        private DateTime _lastActivityTime;
+
+        // "Trí nhớ ngắn hạn" lưu ID các lệnh đã chạy trong phiên làm việc
+        private static readonly HashSet<string> _executedCmds = new HashSet<string>();
+
+        // [THÊM MỚI]: Hàm ép Plugin xóa trí nhớ, quên hết các lệnh đã làm
+        public static void ClearMemory()
+        {
+            _executedCmds.Clear();
+        }
 
         public RemoteCommandPoller(string baseUrl, string projectId, string clientId, ExternalEvent evt)
         {
@@ -31,69 +40,99 @@ namespace RevitToGISsupport.RemoteControl
             _evt = evt;
 
             _http = new HttpClient { Timeout = TimeSpan.FromSeconds(10) };
-
-            // [FIX QUAN TRỌNG] Thêm API Key vào Header mặc định cho Poller
-            // Mọi request (Pull và Ack) từ Poller sẽ tự động có Key này
             _http.DefaultRequestHeaders.Add("X-API-Key", API_KEY);
 
-            _timer = new Timer(async _ => await Tick(), null, TimeSpan.FromSeconds(1), TimeSpan.FromSeconds(2));
+            _cts = new CancellationTokenSource();
+            _lastActivityTime = DateTime.Now;
+
+            // Khởi động luồng tuần tra ngầm
+            Task.Run(() => PollingLoop(_cts.Token));
         }
 
-        private async Task Tick()
+        private async Task PollingLoop(CancellationToken token)
         {
-            // ✅ chống chồng tick
-            if (Interlocked.Exchange(ref _ticking, 1) == 1) return;
-
-            try
+            while (!token.IsCancellationRequested)
             {
-                var url = $"{_baseUrl}/api/projects/{_projectId}/commands/pull?clientId={Uri.EscapeDataString(_clientId)}";
-                var json = await _http.GetStringAsync(url);
-
-                var payload = JsonConvert.DeserializeObject<PullResponse>(json);
-                var cmds = payload?.commands ?? new List<RemoteCommand>();
-                if (cmds.Count == 0) return;
-
-                var ackIds = new List<string>();
-
-                foreach (var c in cmds)
-                {
-                    if (c == null) continue;
-                    RemoteCommandQueue.Items.Enqueue(c);
-                    if (!string.IsNullOrWhiteSpace(c.id)) ackIds.Add(c.id);
-                }
-
-                _evt?.Raise();
-
-                // Gửi ACK để báo Server biết là đã nhận lệnh
-                // Request này giờ đã có Header X-API-Key nhờ constructor ở trên
-                var ackUrl = $"{_baseUrl}/api/projects/{_projectId}/commands/ack";
-                var content = new StringContent(
-                    JsonConvert.SerializeObject(new { ids = ackIds }),
-                    System.Text.Encoding.UTF8,
-                    "application/json"
-                );
-
-                await _http.PostAsync(ackUrl, content);
-            }
-            catch (Exception ex)
-            {
-                // Chỉ log lỗi vào file local để debug, tránh spam server
                 try
                 {
-                    var logPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "revit_poller.log");
-                    File.AppendAllText(logPath, $"{DateTime.Now:o} | Error: {ex.Message}{Environment.NewLine}");
+                    var url = $"{_baseUrl}/api/projects/{_projectId}/commands/pull?clientId={Uri.EscapeDataString(_clientId)}";
+                    var json = await _http.GetStringAsync(url);
+
+                    var payload = JsonConvert.DeserializeObject<PullResponse>(json);
+                    var cmds = payload?.commands ?? new List<RemoteCommand>();
+
+                    if (cmds.Count > 0)
+                    {
+                        _lastActivityTime = DateTime.Now;
+                        var ackIds = new List<string>();
+                        bool hasNewCmd = false;
+
+                        foreach (var c in cmds)
+                        {
+                            if (c == null) continue;
+
+                            // Chỉ đưa lệnh vào hàng đợi NẾU NÓ CHƯA TỪNG ĐƯỢC CHẠY
+                            if (!_executedCmds.Contains(c.id))
+                            {
+                                RemoteCommandQueue.Items.Enqueue(c);
+                                _executedCmds.Add(c.id); // Khắc sâu vào trí nhớ là đã chạy rồi
+                                hasNewCmd = true;
+                            }
+
+                            if (!string.IsNullOrWhiteSpace(c.id)) ackIds.Add(c.id);
+                        }
+
+                        // Chỉ đánh thức Revit dậy nếu thực sự có lệnh mới
+                        if (hasNewCmd)
+                        {
+                            _evt?.Raise();
+                        }
+
+                        // Gửi báo cáo đã nhận cho Server
+                        var ackUrl = $"{_baseUrl}/api/projects/{_projectId}/commands/ack";
+                        var content = new StringContent(
+                            JsonConvert.SerializeObject(new { ids = ackIds }),
+                            System.Text.Encoding.UTF8,
+                            "application/json"
+                        );
+                        await _http.PostAsync(ackUrl, content);
+                    }
                 }
-                catch { }
+                catch (Exception ex)
+                {
+                    try
+                    {
+                        var logPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "revit_poller.log");
+                        File.AppendAllText(logPath, $"{DateTime.Now:o} | Error: {ex.Message}{Environment.NewLine}");
+                    }
+                    catch { }
+                }
+
+                int delayMs = CalculateAdaptiveDelay();
+
+                try
+                {
+                    await Task.Delay(delayMs, token);
+                }
+                catch (TaskCanceledException)
+                {
+                    break;
+                }
             }
-            finally
-            {
-                Interlocked.Exchange(ref _ticking, 0);
-            }
+        }
+
+        private int CalculateAdaptiveDelay()
+        {
+            var idleTime = DateTime.Now - _lastActivityTime;
+            if (idleTime.TotalSeconds < 30) return 500;
+            else if (idleTime.TotalMinutes < 5) return 2000;
+            else return 5000;
         }
 
         public void Dispose()
         {
-            _timer?.Dispose();
+            _cts?.Cancel();
+            _cts?.Dispose();
             _http?.Dispose();
         }
 

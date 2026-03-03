@@ -1,7 +1,6 @@
 ﻿using Autodesk.Revit.DB;
 using Autodesk.Revit.UI;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -11,16 +10,65 @@ using System.Threading.Tasks;
 
 namespace RevitToGISsupport.RemoteControl
 {
+    // =================================================================================
+    // LỚP "ỐNG GIẢM THANH" - CHẶN MỌI BẢNG CẢNH BÁO LỖI (POPUP) CỦA REVIT XUẤT HIỆN
+    // =================================================================================
+    public class IgnoreFailuresPreprocessor : IFailuresPreprocessor
+    {
+        public FailureProcessingResult PreprocessFailures(FailuresAccessor failuresAccessor)
+        {
+            IList<FailureMessageAccessor> failures = failuresAccessor.GetFailureMessages();
+            if (failures.Count == 0) return FailureProcessingResult.Continue;
+
+            bool hasError = false;
+            foreach (FailureMessageAccessor failure in failures)
+            {
+                if (failure.GetSeverity() == FailureSeverity.Warning)
+                {
+                    failuresAccessor.DeleteWarning(failure); // Xóa các cảnh báo vàng
+                }
+                else
+                {
+                    hasError = true; // Phát hiện lỗi đỏ (ví dụ: Trùng tên View)
+                }
+            }
+
+            if (hasError)
+            {
+                // Nếu có lỗi đỏ, âm thầm hủy lệnh đó luôn, KHÔNG ĐƯỢC HIỆN BẢNG THÔNG BÁO
+                return FailureProcessingResult.ProceedWithRollBack;
+            }
+            return FailureProcessingResult.Continue;
+        }
+    }
+
     public sealed class RemoteCommandHandler : IExternalEventHandler
     {
         private const string API_KEY = "CHANGE-ME-IN-PRODUCTION";
 
         public void Execute(UIApplication app)
         {
-            var uidoc = app?.ActiveUIDocument;
-            var doc = uidoc?.Document;
+            Document targetDoc = null;
+            if (!string.IsNullOrEmpty(RemoteSettings.TargetDocumentTitle))
+            {
+                foreach (Document d in app.Application.Documents)
+                {
+                    if (d.Title == RemoteSettings.TargetDocumentTitle)
+                    {
+                        targetDoc = d;
+                        break;
+                    }
+                }
+            }
 
-            if (doc == null) return;
+            if (targetDoc == null) targetDoc = app?.ActiveUIDocument?.Document;
+            if (targetDoc == null) return;
+
+            UIDocument targetUiDoc = null;
+            if (app.ActiveUIDocument?.Document?.Title == targetDoc.Title)
+            {
+                targetUiDoc = app.ActiveUIDocument;
+            }
 
             while (RemoteCommandQueue.Items.TryDequeue(out var cmd))
             {
@@ -31,19 +79,19 @@ namespace RevitToGISsupport.RemoteControl
                     switch (cmd.action)
                     {
                         case "activate_view":
-                            TryActivateView(uidoc, doc, cmd);
+                            TryActivateView(targetUiDoc, targetDoc, cmd);
                             break;
 
                         case "render_view_png":
-                            TryRenderViewPng(doc, cmd);
+                            TryRenderViewPng(targetDoc, cmd);
                             break;
 
                         case "export_view_glb":
-                            TryExportViewGlb(doc, cmd);
+                            TryExportViewGlb(targetDoc, cmd);
                             break;
 
                         case "update_parameter":
-                            TryUpdateParameter(doc, cmd);
+                            TryUpdateParameter(targetDoc, cmd);
                             break;
                     }
                 }
@@ -56,6 +104,8 @@ namespace RevitToGISsupport.RemoteControl
 
         private void TryActivateView(UIDocument uidoc, Document doc, RemoteCommand cmd)
         {
+            if (uidoc == null) throw new Exception("Bạn phải đưa màn hình file này lên trên cùng trong Revit để xem View!");
+
             if (string.IsNullOrWhiteSpace(cmd.targetUniqueId)) return;
             var elem = doc.GetElement(cmd.targetUniqueId);
             if (elem is View v && !v.IsTemplate)
@@ -78,9 +128,17 @@ namespace RevitToGISsupport.RemoteControl
 
                 using (Transaction t = new Transaction(doc, "Update from Web"))
                 {
+                    // [GẮN ỐNG GIẢM THANH VÀO GIAO DỊCH NÀY]
+                    FailureHandlingOptions options = t.GetFailureHandlingOptions();
+                    options.SetFailuresPreprocessor(new IgnoreFailuresPreprocessor());
+                    options.SetClearAfterRollback(true);
+                    t.SetFailureHandlingOptions(options);
+
                     t.Start();
                     var elem = doc.GetElement(cmd.targetUniqueId);
-                    if (elem == null) throw new Exception("Element not found in Revit.");
+
+                    if (elem == null)
+                        throw new Exception($"Không tìm thấy đối tượng để sửa đổi!\nBạn đang mở file '{doc.Title}'. Hãy chắc chắn đây đúng là file gốc của dự án này.");
 
                     foreach (var kvp in cmd.parameters)
                     {
@@ -91,16 +149,42 @@ namespace RevitToGISsupport.RemoteControl
                         if (param == null) continue;
                         if (param.IsReadOnly) throw new Exception($"Parameter '{paramName}' is Read-Only.");
 
+                        // Lớp phòng ngự 1: Chuẩn hóa Unicode và bỏ dấu cách thừa để check tên chính xác 100%
+                        if (paramName.Equals("View Name", StringComparison.OrdinalIgnoreCase) ||
+                            paramName.Equals("Sheet Name", StringComparison.OrdinalIgnoreCase) ||
+                            paramName.Equals("Name", StringComparison.OrdinalIgnoreCase))
+                        {
+                            string currentName = (elem.Name ?? "").Normalize().Trim();
+                            string targetName = (paramValStr ?? "").Normalize().Trim();
+                            if (currentName.Equals(targetName, StringComparison.OrdinalIgnoreCase))
+                            {
+                                continue; // Tên đã giống hệt, BỎ QUA NGAY
+                            }
+                        }
+
                         switch (param.StorageType)
                         {
                             case StorageType.String:
-                                param.Set(paramValStr);
+                                string currentStr = (param.AsString() ?? "").Normalize().Trim();
+                                string targetStr = (paramValStr ?? "").Normalize().Trim();
+                                if (!currentStr.Equals(targetStr, StringComparison.OrdinalIgnoreCase))
+                                    param.Set(paramValStr);
                                 break;
+
                             case StorageType.Double:
-                                if (double.TryParse(paramValStr, out double dVal)) param.Set(dVal);
+                                if (double.TryParse(paramValStr, out double dVal))
+                                {
+                                    if (Math.Abs(param.AsDouble() - dVal) > 0.0001)
+                                        param.Set(dVal);
+                                }
                                 break;
+
                             case StorageType.Integer:
-                                if (int.TryParse(paramValStr, out int iVal)) param.Set(iVal);
+                                if (int.TryParse(paramValStr, out int iVal))
+                                {
+                                    if (param.AsInteger() != iVal)
+                                        param.Set(iVal);
+                                }
                                 break;
                         }
                     }
@@ -151,7 +235,10 @@ namespace RevitToGISsupport.RemoteControl
                 {
                     try
                     {
-                        var imageUrl = await UploadSnapshotAsync(baseUrl, projectId, targetId, pngPath);
+                        byte[] imageBytes = File.ReadAllBytes(pngPath);
+                        string base64String = Convert.ToBase64String(imageBytes);
+                        string imageUrl = $"data:image/png;base64,{base64String}";
+
                         await PostCommandResultAsync(baseUrl, projectId, new
                         {
                             id = cmdId,
@@ -162,7 +249,11 @@ namespace RevitToGISsupport.RemoteControl
                     }
                     catch (Exception ex)
                     {
-                        await PostCommandResultAsync(baseUrl, projectId, new { id = cmdId, status = "error", message = "Lỗi Upload: " + ex.Message });
+                        await PostCommandResultAsync(baseUrl, projectId, new { id = cmdId, status = "error", message = "Lỗi xử lý ảnh: " + ex.Message });
+                    }
+                    finally
+                    {
+                        try { if (File.Exists(pngPath)) File.Delete(pngPath); } catch { }
                     }
                 });
             }
@@ -203,10 +294,6 @@ namespace RevitToGISsupport.RemoteControl
             }
         }
 
-        // =========================================================
-        // HELPERS: XỬ LÝ MẠNG TÁCH BIỆT HOÀN TOÀN KHỎI REVIT
-        // =========================================================
-
         private string GetBaseUrl()
         {
             var url = RemoteSettings.ServerBaseUrl;
@@ -223,28 +310,6 @@ namespace RevitToGISsupport.RemoteControl
             {
                 await PostCommandResultAsync(baseUrl, projectId, new { id = cmdId, status = "error", message = msg });
             });
-        }
-
-        private async Task<string> UploadSnapshotAsync(string baseUrl, string projectId, string viewUniqueId, string pngPath)
-        {
-            using (var http = new HttpClient { Timeout = TimeSpan.FromMinutes(2) })
-            using (var form = new MultipartFormDataContent())
-            {
-                http.DefaultRequestHeaders.Add("X-API-Key", API_KEY);
-
-                form.Add(new StringContent(viewUniqueId ?? ""), "viewUniqueId");
-                form.Add(new StreamContent(File.OpenRead(pngPath)), "file", Path.GetFileName(pngPath));
-
-                var url = $"{baseUrl.TrimEnd('/')}/api/projects/{Uri.EscapeDataString(projectId)}/snapshots/upload";
-
-                var res = await http.PostAsync(url, form).ConfigureAwait(false);
-                var body = await res.Content.ReadAsStringAsync().ConfigureAwait(false);
-
-                if (!res.IsSuccessStatusCode) throw new Exception("Upload failed: " + body);
-
-                var obj = JObject.Parse(body);
-                return obj["url"]?.ToString();
-            }
         }
 
         private async Task PostCommandResultAsync(string baseUrl, string projectId, object payload)

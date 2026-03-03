@@ -4,7 +4,6 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Security.Cryptography;
 using System.Text;
 
 namespace RevitToGISsupport.RemoteControl
@@ -20,7 +19,8 @@ namespace RevitToGISsupport.RemoteControl
             var collector = new FilteredElementCollector(doc, view.Id).WhereElementIsNotElementType();
             var opt = new Options { View = view, ComputeReferences = false, IncludeNonVisibleObjects = false };
 
-            ExportDirectly(collector, opt, glbPath);
+            // [ĐÃ SỬA]: Truyền thêm doc vào hàm để có thể truy xuất thông tin Vật liệu
+            ExportDirectly(doc, collector, opt, glbPath);
             return glbPath;
         }
 
@@ -33,11 +33,11 @@ namespace RevitToGISsupport.RemoteControl
             var collector = new FilteredElementCollector(doc).WhereElementIsNotElementType();
             var opt = new Options { DetailLevel = ViewDetailLevel.Fine, ComputeReferences = false, IncludeNonVisibleObjects = false };
 
-            ExportDirectly(collector, opt, glbPath);
+            ExportDirectly(doc, collector, opt, glbPath);
             return glbPath;
         }
 
-        private static void ExportDirectly(FilteredElementCollector collector, Options opt, string outputPath)
+        private static void ExportDirectly(Document doc, FilteredElementCollector collector, Options opt, string outputPath)
         {
             var triVerts = new List<float>();
             var triNormals = new List<float>();
@@ -52,10 +52,17 @@ namespace RevitToGISsupport.RemoteControl
                 try { geomElement = element.get_Geometry(opt); } catch { }
                 if (geomElement == null) continue;
 
-                var catName = element.Category?.Name ?? "Unknown";
-                var color = GetColorForCategory(catName);
+                // [MÀU MẶC ĐỊNH]: Xám nhạt, giống hệt màu của Revit khi chưa ốp vật liệu
+                (float r, float g, float b) fallbackColor = (0.85f, 0.85f, 0.85f);
 
-                ProcessGeometry(geomElement, color, triVerts, triNormals, triColors, triIndices, ref vertexOffset);
+                // Cố gắng lấy màu mặc định của Category (nếu có)
+                if (element.Category != null && element.Category.Material != null && element.Category.Material.Color.IsValid)
+                {
+                    var c = element.Category.Material.Color;
+                    fallbackColor = (c.Red / 255f, c.Green / 255f, c.Blue / 255f);
+                }
+
+                ProcessGeometry(doc, geomElement, fallbackColor, triVerts, triNormals, triColors, triIndices, ref vertexOffset);
             }
 
             if (triVerts.Count == 0)
@@ -64,7 +71,7 @@ namespace RevitToGISsupport.RemoteControl
             BuildGlb(outputPath, triVerts, triNormals, triColors, triIndices);
         }
 
-        private static void ProcessGeometry(GeometryElement geomElement, (float r, float g, float b) color,
+        private static void ProcessGeometry(Document doc, GeometryElement geomElement, (float r, float g, float b) fallbackColor,
             List<float> verts, List<float> norms, List<float> colors, List<int> indices, ref int vOffset)
         {
             foreach (GeometryObject geomObj in geomElement)
@@ -73,6 +80,17 @@ namespace RevitToGISsupport.RemoteControl
                 {
                     foreach (Face face in solid.Faces)
                     {
+                        // [THÊM MỚI QUAN TRỌNG]: Đọc màu sắc thật từ Material của Bề mặt
+                        var faceColor = fallbackColor;
+                        if (face.MaterialElementId != ElementId.InvalidElementId)
+                        {
+                            var mat = doc.GetElement(face.MaterialElementId) as Material;
+                            if (mat != null && mat.Color.IsValid)
+                            {
+                                faceColor = (mat.Color.Red / 255f, mat.Color.Green / 255f, mat.Color.Blue / 255f);
+                            }
+                        }
+
                         Mesh mesh = null;
                         try { mesh = face.Triangulate(); } catch { }
                         if (mesh == null || mesh.NumTriangles == 0) continue;
@@ -84,12 +102,10 @@ namespace RevitToGISsupport.RemoteControl
                             XYZ v1 = tri.get_Vertex(1);
                             XYZ v2 = tri.get_Vertex(2);
 
-                            // Tính Normal bề mặt
                             XYZ u = v1.Subtract(v0);
                             XYZ v = v2.Subtract(v0);
                             XYZ norm = u.CrossProduct(v);
 
-                            // Sửa lật mặt (Winding fix)
                             if (norm.Z < 0)
                             {
                                 var temp = v1;
@@ -101,14 +117,13 @@ namespace RevitToGISsupport.RemoteControl
                             norm = norm.Normalize();
                             if (norm.IsZeroLength()) norm = new XYZ(0, 0, 1);
 
-                            // Đổi trục Z-up sang Y-up cho GLTF
                             float nx = (float)norm.X;
                             float ny = (float)norm.Z;
                             float nz = (float)-norm.Y;
 
-                            AddVertex(v0, nx, ny, nz, color, verts, norms, colors);
-                            AddVertex(v1, nx, ny, nz, color, verts, norms, colors);
-                            AddVertex(v2, nx, ny, nz, color, verts, norms, colors);
+                            AddVertex(v0, nx, ny, nz, faceColor, verts, norms, colors);
+                            AddVertex(v1, nx, ny, nz, faceColor, verts, norms, colors);
+                            AddVertex(v2, nx, ny, nz, faceColor, verts, norms, colors);
 
                             indices.Add(vOffset++);
                             indices.Add(vOffset++);
@@ -120,7 +135,7 @@ namespace RevitToGISsupport.RemoteControl
                 {
                     GeometryElement instGeom = null;
                     try { instGeom = instance.GetInstanceGeometry(); } catch { }
-                    if (instGeom != null) ProcessGeometry(instGeom, color, verts, norms, colors, indices, ref vOffset);
+                    if (instGeom != null) ProcessGeometry(doc, instGeom, fallbackColor, verts, norms, colors, indices, ref vOffset);
                 }
             }
         }
@@ -132,7 +147,6 @@ namespace RevitToGISsupport.RemoteControl
             float y = (float)UnitUtils.ConvertFromInternalUnits(pt.Y, UnitTypeId.Meters);
             float z = (float)UnitUtils.ConvertFromInternalUnits(pt.Z, UnitTypeId.Meters);
 
-            // Ghi tọa độ theo trục Y-up
             verts.Add(x);
             verts.Add(z);
             verts.Add(-y);
@@ -262,37 +276,6 @@ namespace RevitToGISsupport.RemoteControl
             if (minX == double.MaxValue) minX = minY = minZ = 0;
             if (maxX == double.MinValue) maxX = maxY = maxZ = 0;
             return (new[] { minX, minY, minZ }, new[] { maxX, maxY, maxZ });
-        }
-
-        private static (float r, float g, float b) GetColorForCategory(string categoryName)
-        {
-            using (var sha1 = SHA1.Create())
-            {
-                var bytes = Encoding.UTF8.GetBytes(categoryName ?? "Unknown");
-                var hash = sha1.ComputeHash(bytes);
-                int hv = (hash[0] << 16) | (hash[1] << 8) | hash[2];
-                double hue = (hv % 360) / 360.0;
-                return HslToRgb(hue, 0.60, 0.55);
-            }
-        }
-
-        private static (float r, float g, float b) HslToRgb(double h, double s, double l)
-        {
-            if (s <= 0.0) return ((float)l, (float)l, (float)l);
-            double q = l < 0.5 ? l * (1 + s) : l + s - l * s;
-            double p = 2 * l - q;
-
-            double Hue2Rgb(double pp, double qq, double tt)
-            {
-                if (tt < 0) tt += 1;
-                if (tt > 1) tt -= 1;
-                if (tt < 1.0 / 6) return pp + (qq - pp) * 6 * tt;
-                if (tt < 1.0 / 2) return qq;
-                if (tt < 2.0 / 3) return pp + (qq - pp) * (2.0 / 3 - tt) * 6;
-                return pp;
-            }
-
-            return ((float)Hue2Rgb(p, q, h + 1.0 / 3), (float)Hue2Rgb(p, q, h), (float)Hue2Rgb(p, q, h - 1.0 / 3));
         }
     }
 }

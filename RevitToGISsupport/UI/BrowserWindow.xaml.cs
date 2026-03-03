@@ -22,13 +22,10 @@ namespace RevitToGISsupport.UI
     public partial class BrowserWindow : Window
     {
         private readonly UIApplication _uiapp;
-        private readonly Document _doc;
+        private Document _doc;
         private readonly ExternalEvent _activateEvent;
 
-        // Lưu trữ cây dữ liệu ngầm
         private BrowserNode _root;
-
-        // API Key
         private const string API_KEY = "CHANGE-ME-IN-PRODUCTION";
 
         private static readonly HttpClient SharedHttpClient = new HttpClient
@@ -38,7 +35,6 @@ namespace RevitToGISsupport.UI
 
         private CancellationTokenSource _publishCts;
 
-        // Remote Control
         private static RemoteCommandHandler _remoteHandler;
         private static ExternalEvent _remoteEvent;
         private RemoteCommandPoller _poller;
@@ -47,10 +43,9 @@ namespace RevitToGISsupport.UI
         private string _pollerProjectId;
         private string _pollerClientId;
 
-        // --- CÁC BIẾN CHO TÍNH NĂNG SHARE LINK ---
         private const string INTERNAL_SERVER_URL = "http://127.0.0.1:5000";
         private string _baseShareUrl = "http://127.0.0.1:5000";
-        private bool _isPublished = false; // Biến kiểm tra xem đã đồng bộ chưa
+        private bool _isPublished = false;
 
         public BrowserWindow(UIApplication uiapp, ExternalEvent activateEvent)
         {
@@ -60,7 +55,6 @@ namespace RevitToGISsupport.UI
             _doc = uiapp?.ActiveUIDocument?.Document;
             _activateEvent = activateEvent;
 
-            // [SỬA LỖI TẠI ĐÂY] - KHỞI TẠO EXTERNAL EVENT TRÊN LUỒNG CHÍNH CỦA REVIT
             if (_remoteHandler == null)
             {
                 _remoteHandler = new RemoteCommandHandler();
@@ -73,15 +67,38 @@ namespace RevitToGISsupport.UI
 
         private void BrowserWindow_Loaded(object sender, RoutedEventArgs e)
         {
+            if (string.IsNullOrWhiteSpace(tbProjectId.Text))
+                tbProjectId.Text = "P001";
+
+            cbDocuments.Items.Clear();
+            foreach (Document d in _uiapp.Application.Documents)
+            {
+                if (d.IsLinked) continue;
+
+                var item = new System.Windows.Controls.ComboBoxItem { Content = d.Title, Tag = d };
+                cbDocuments.Items.Add(item);
+
+                if (_uiapp.ActiveUIDocument != null && d.Title == _uiapp.ActiveUIDocument.Document.Title)
+                {
+                    cbDocuments.SelectedItem = item;
+                    _doc = d;
+                }
+            }
+
+            if (cbDocuments.SelectedIndex == -1 && cbDocuments.Items.Count > 0)
+            {
+                cbDocuments.SelectedIndex = 0;
+                _doc = (cbDocuments.Items[0] as System.Windows.Controls.ComboBoxItem).Tag as Document;
+            }
+
             if (_doc == null)
             {
-                MessageBox.Show("Không lấy được Document.", "Lỗi", MessageBoxButton.OK, MessageBoxImage.Warning);
+                MessageBox.Show("Không tìm thấy Document nào đang mở.", "Lỗi", MessageBoxButton.OK, MessageBoxImage.Warning);
                 Close();
                 return;
             }
 
-            if (string.IsNullOrWhiteSpace(tbProjectId.Text))
-                tbProjectId.Text = "P001";
+            RemoteSettings.TargetDocumentTitle = _doc.Title;
 
             lblStatus.Text = "Đang tìm địa chỉ kết nối...";
             lblStatus.Foreground = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(0, 120, 212));
@@ -94,9 +111,6 @@ namespace RevitToGISsupport.UI
                 {
                     _baseShareUrl = url;
                     UpdateShareLink();
-
-                    StartOrRestartPoller(force: true);
-
                     lblStatus.Text = "Sẵn sàng hoạt động. Vui lòng Đồng bộ lên Web!";
                     lblStatus.Foreground = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(40, 167, 69));
                 });
@@ -110,9 +124,25 @@ namespace RevitToGISsupport.UI
             StopPoller();
         }
 
-        // ==========================================================
-        // CÁC HÀM XỬ LÝ GIAO DIỆN (SHARE LINK & COPY)
-        // ==========================================================
+        private void cbDocuments_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
+        {
+            if (cbDocuments.SelectedItem is System.Windows.Controls.ComboBoxItem item)
+            {
+                _doc = item.Tag as Document;
+                if (_doc != null)
+                {
+                    RemoteSettings.TargetDocumentTitle = _doc.Title;
+
+                    _isPublished = false;
+                    UpdateShareLink();
+                    lblStatus.Text = $"Đã chuyển sang: {_doc.Title}. Vui lòng ĐỒNG BỘ LÊN WEB!";
+                    lblStatus.Foreground = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(209, 52, 56));
+
+                    StartOrRestartPoller(force: true);
+                }
+            }
+        }
+
         private void tbProjectId_TextChanged(object sender, System.Windows.Controls.TextChangedEventArgs e)
         {
             UpdateShareLink();
@@ -157,7 +187,6 @@ namespace RevitToGISsupport.UI
             }
         }
 
-        // --- Hàm Tự động tìm Link Ngrok hoặc IP LAN ---
         private async Task<string> DetectPublicUrlAsyncSafe()
         {
             try
@@ -202,13 +231,67 @@ namespace RevitToGISsupport.UI
             return "http://127.0.0.1:5000";
         }
 
-        // ==========================================================
-        // QUY TRÌNH PUBLISH (TẠO INDEX NGẦM -> GLB -> UPLOAD)
-        // ==========================================================
+        // =================================================================
+        // NÚT TẢI LỆNH TỪ WEB VỀ REVIT
+        // =================================================================
+        private void btnPull_Click(object sender, RoutedEventArgs e)
+        {
+            string inputProjectId = tbProjectId.Text.Trim();
+            if (string.IsNullOrWhiteSpace(inputProjectId))
+            {
+                MessageBox.Show("Vui lòng nhập Mã Dự Án (Project ID) để tải lệnh!", "Lỗi", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            if (cbDocuments.SelectedItem is System.Windows.Controls.ComboBoxItem item)
+            {
+                _doc = item.Tag as Document;
+                if (_doc != null)
+                {
+                    RemoteSettings.TargetDocumentTitle = _doc.Title;
+                }
+            }
+
+            if (_doc == null)
+            {
+                MessageBox.Show("Vui lòng chọn một file Revit đang mở để nhận dữ liệu!", "Lỗi", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            lblStatus.Text = $"Đang kéo dữ liệu của dự án [{inputProjectId}] về file [{_doc.Title}]...";
+            lblStatus.Foreground = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(0, 120, 212));
+
+            // Ép hệ thống đồng bộ lại với Web để kéo nhật ký về
+            RemoteSettings.ProjectId = inputProjectId;
+
+            // Bắt Plugin quên hết các lệnh cũ để ép làm lại toàn bộ
+            RemoteCommandPoller.ClearMemory();
+
+            StartOrRestartPoller(force: true);
+
+            Task.Run(async () =>
+            {
+                await Task.Delay(2000);
+                Dispatcher.Invoke(() =>
+                {
+                    lblStatus.Text = "Đã quét xong! Các thay đổi (nếu có) đã được cập nhật vào file.";
+                    lblStatus.Foreground = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(40, 167, 69));
+                });
+            });
+        }
+
         private async void btnPublish_Click(object sender, RoutedEventArgs e)
         {
             try
             {
+                string inputProjectId = tbProjectId.Text.Trim();
+                if (string.IsNullOrWhiteSpace(inputProjectId))
+                {
+                    MessageBox.Show("Vui lòng nhập Mã Dự Án!", "Lỗi", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
+                RemoteSettings.ProjectId = inputProjectId;
+
                 _publishCts?.Cancel();
                 _publishCts = new CancellationTokenSource();
 
@@ -216,18 +299,13 @@ namespace RevitToGISsupport.UI
                 UpdateShareLink();
 
                 btnPublish.IsEnabled = false;
+                btnPull.IsEnabled = false;
                 lblStatus.Foreground = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(0, 120, 212));
 
                 StartOrRestartPoller(force: false);
 
                 var server = INTERNAL_SERVER_URL;
-                var projectId = (tbProjectId.Text ?? "").Trim();
-
-                if (string.IsNullOrWhiteSpace(server) || string.IsNullOrWhiteSpace(projectId))
-                {
-                    MessageBox.Show("ProjectId không hợp lệ.", "Publish", MessageBoxButton.OK, MessageBoxImage.Warning);
-                    return;
-                }
+                var projectId = RemoteSettings.ProjectId;
 
                 lblStatus.Text = "Bước 1/3: Đang thu thập dữ liệu cây thư mục...";
                 BuildRootTree();
@@ -300,6 +378,7 @@ namespace RevitToGISsupport.UI
             finally
             {
                 btnPublish.IsEnabled = true;
+                btnPull.IsEnabled = true;
             }
         }
 
@@ -332,9 +411,6 @@ namespace RevitToGISsupport.UI
             }
         }
 
-        // =================================================================
-        // HỆ THỐNG POLLER (Lắng nghe lệnh từ Web gửi về)
-        // =================================================================
         private void StartOrRestartPoller(bool force)
         {
             var server = INTERNAL_SERVER_URL;
@@ -345,8 +421,6 @@ namespace RevitToGISsupport.UI
             RemoteSettings.ProjectId = projectId;
 
             if (string.IsNullOrWhiteSpace(server) || string.IsNullOrWhiteSpace(projectId)) return;
-
-            // [ĐÃ XÓA CODE TẠO EVENT Ở ĐÂY VÌ ĐÃ CHUYỂN LÊN CONSTRUCTOR]
 
             if (!force && _poller != null &&
                 string.Equals(server, _pollerServer, StringComparison.OrdinalIgnoreCase) &&
@@ -370,9 +444,6 @@ namespace RevitToGISsupport.UI
             _poller = null;
         }
 
-        // =================================================================
-        // CÁC HÀM XÂY DỰNG CẤU TRÚC NGẦM ĐỂ XUẤT RA JSON
-        // =================================================================
         private void BuildRootTree()
         {
             _root = new BrowserNode { Title = "Project Browser", Type = BrowserNodeType.Folder };
