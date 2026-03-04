@@ -3,6 +3,7 @@ import uuid
 import logging
 import threading 
 import io
+import urllib.parse  # <--- [MỚI] THÊM THƯ VIỆN DỊCH NGƯỢC URL
 from datetime import datetime
 from functools import wraps
 from flask import Flask, request, jsonify, send_from_directory, send_file
@@ -87,8 +88,10 @@ def push_index(pid):
     data = request.get_json(force=True)
     with _lock: get_proj(pid)["browser"] = data
     
-    # Ghi nhận: Cập nhật cây thư mục
-    user = request.headers.get("X-User-Name", "Ẩn danh")
+    # --- [ĐÃ SỬA] DỊCH NGƯỢC URL VỀ LẠI TIẾNG VIỆT CHUẨN ---
+    raw_user = request.headers.get("X-User-Name", "Ẩn danh")
+    user = urllib.parse.unquote(raw_user)
+    
     log_history(pid, user, "PUBLISH", "Đã đồng bộ dữ liệu Revit mới nhất lên Web.")
     return jsonify({"ok": True})
 
@@ -103,7 +106,6 @@ def push_cmd(pid):
     with _lock: get_proj(pid)["commands"].append(cmd)
     socketio.emit("command", cmd, room=_room(pid))
     
-    # Ghi nhận: Thao tác đổi tên trên Web
     user = cmd.get("user", "Khách trên Web")
     action = cmd.get("action", "")
     details = f"Đã ra lệnh: {action}"
@@ -120,11 +122,8 @@ def pull_cmds(pid): return jsonify({"commands": get_proj(pid)["commands"]})
 @app.route("/api/projects/<pid>/commands/ack", methods=["POST"])
 @require_api_key
 def ack_cmds(pid): 
-    # [ĐÃ SỬA]: Xóa bỏ tính năng ghi sổ đối với thao tác PULL tự động của máy tính
-    # Để bảng lịch sử chỉ hiển thị những thao tác chỉnh sửa thực sự của người dùng!
     return jsonify({"ok": True})
 
-# --- API XEM LỊCH SỬ ---
 @app.route("/api/projects/<pid>/history")
 def get_history(pid):
     return jsonify(get_proj(pid)["history"])
@@ -148,9 +147,11 @@ def post_res(pid):
 def get_image_from_ram(pid, cmd_id):
     img_obj = get_proj(pid).get("images", {}).get(cmd_id)
     return send_file(io.BytesIO(img_obj["bytes"]), mimetype=img_obj["mime"]) if img_obj else ("Not found", 404)
+
 @app.route("/history")
 def history_page():
     return send_from_directory(STATIC_FOLDER, "historyWindow.html")
+
 @socketio.on("subscribe")
 def on_sub(data):
     if data and data.get('projectId'): join_room(_room(data['projectId']))
