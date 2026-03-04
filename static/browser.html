@@ -4,25 +4,24 @@
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
   <title>BIM Sync Manager</title>
-  
   <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
 
-<div id="loading">
-    <div class="spinner"></div>
-    <div id="loadingText" style="color:#555; font-weight:600">Processing...</div>
-</div>
+<div id="loading"><div class="spinner"></div><div id="loadingText" style="color:#555; font-weight:600">Processing...</div></div>
 
 <div class="header">
   <div class="brand-title">BIM Sync</div>
-  <input id="projectId" placeholder="Project ID" value="P001" style="width:70px" title="Project ID">
-  <input id="apiKey" type="password" placeholder="API Key" style="width:140px" value="CHANGE-ME-IN-PRODUCTION" title="API Key">
+  <input id="projectId" placeholder="Project ID" value="P001" style="width:60px" title="Project ID">
+  <input id="apiKey" type="password" placeholder="API Key" style="width:100px" value="CHANGE-ME-IN-PRODUCTION" title="API Key">
+  <input id="q" placeholder="Search tree..." style="width:120px">
   
-  <input id="q" placeholder="Search tree..." style="width:160px">
-  <button onclick="loadIndex()" title="Load cấu trúc từ Server"> Làm mới</button>
+  <div style="border-left: 1px solid #ccc; height: 30px; margin: 0 10px;"></div>
+  <input id="webUser" placeholder="Tên hiển thị..." style="width:120px; border-color:#28a745" value="Web User">
+  <button onclick="showHistory()" style="background:#6c757d; padding: 0 10px;">Lịch sử</button>
   
   <div style="flex:1"></div>
+  <button onclick="loadIndex()" title="Load cấu trúc từ Server" style="margin-right: 8px;"> Làm mới</button>
   <button class="secondary" onclick="openLatest3D()"> Xem mô hình 3D</button>
 </div>
 
@@ -37,62 +36,56 @@
   <div class="col-props">
     <h3>Chỉ số</h3>
     <div id="propMsg" style="color:var(--text-muted); font-size:13px; font-style:italic">Nơi hiện chỉ số</div>
-    
     <div id="propForm" style="display:none">
-      <div class="prop-group">
-        <label class="prop-label">Item Name</label>
-        <input id="p_name" disabled class="prop-input-disabled">
-      </div>
-      <div class="prop-group">
-        <label class="prop-label">UniqueId</label>
-        <input id="p_uid" disabled class="prop-input-disabled prop-input-mono">
-      </div>
-      
+      <div class="prop-group"><label class="prop-label">Item Name</label><input id="p_name" disabled class="prop-input-disabled"></div>
+      <div class="prop-group"><label class="prop-label">UniqueId</label><input id="p_uid" disabled class="prop-input-disabled prop-input-mono"></div>
       <hr style="border:0; border-top:1px solid var(--border-color); margin:20px 0">
-      
       <div class="prop-group">
         <label class="prop-label" style="color:var(--primary-color)">Update Revit Parameter</label>
-        
         <input list="default_params" id="p_param_name" class="prop-input-active" placeholder="Chọn hoặc gõ tên Parameter..." style="margin-bottom: 8px;">
         <datalist id="default_params">
           <option value="View Name">Đổi tên View / Schedule</option>
           <option value="Title on Sheet">Tên hiển thị trên bản vẽ</option>
-          
           <option value="Sheet Name">Tên bản vẽ (Sheet)</option>
           <option value="Sheet Number">Số hiệu bản vẽ</option>
           <option value="Comments">Ghi chú</option>
-          <option value="Mark">Ký hiệu</option>
         </datalist>
-
         <input id="p_param_val" placeholder="Enter new value..." class="prop-input-active">
       </div>
-
       <button onclick="sendUpdate()" style="width:100%; justify-content:center;">Đẩy lên Revit</button>
     </div>
   </div>
 
   <div class="col-preview">
     <div id="previewActions" style="display:none; text-align:center; width:100%">
-        <button onclick="requestRender()" style="background:#6c757d; padding: 6px 20px; margin: 0 auto;"> Render ảnh</button>
-        <p style="font-size:11px; color:var(--text-muted); margin-top:8px">Render view hiện tại trong Revit và gửi ảnh về đây.</p>
+        <select id="renderQuality" style="width:auto; display:inline-block; margin-right:8px; height: 32px;">
+            <option value="500">Xem nhanh (500px)</option>
+            <option value="1000" selected>Tiêu chuẩn (1000px)</option>
+        </select>
+        <button onclick="requestRender()" style="background:#6c757d; padding: 6px 20px; display:inline-block;"> Render ảnh</button>
     </div>
-
-    <div id="previewMsg" style="color:var(--text-muted); margin-top:40px; text-align:center">
-      View hiện ảnh ở đây. 
-    </div>
-    
+    <div id="previewMsg" style="color:var(--text-muted); margin-top:40px; text-align:center">View hiện ảnh ở đây. </div>
     <div class="img-container" id="imgWrap" style="display:none">
       <img id="previewImg" alt="View Preview" onclick="openModal()" title="Nhấp để phóng to">
-      <div style="text-align:center; margin-top:10px; font-size:11px; color:var(--text-muted); font-weight: 500;">
-        Image from Revit (Nhấp vào ảnh để phóng to)
-      </div>
     </div>
   </div>
 </div>
 
 <div id="imageModal" class="modal" onclick="closeModal()">
-  <span class="close-modal">&times;</span>
-  <img class="modal-content" id="imgModalExpanded" onclick="event.stopPropagation()">
+    <span class="close-modal">&times;</span>
+    <img class="modal-content" id="imgModalExpanded" onclick="event.stopPropagation()">
+</div>
+
+<div id="historyModal" class="modal" onclick="closeHistoryModal()">
+    <div class="modal-content" style="width: 90%; max-width: 950px; height: 85vh; background: #fff; border-radius: 8px; overflow: hidden; display: flex; flex-direction: column;" onclick="event.stopPropagation()">
+        
+        <div style="padding: 12px 20px; background: #f3f2f1; border-bottom: 1px solid #ddd; display: flex; justify-content: space-between; align-items: center;">
+            <h3 style="margin: 0; color: #0078d4; font-size: 18px;">BIM Sync - Nhật ký hoạt động</h3>
+            <span onclick="closeHistoryModal()" style="font-size: 28px; cursor: pointer; color: #888; line-height: 1; transition: 0.2s;" title="Đóng cửa sổ">&times;</span>
+        </div>
+        
+        <iframe id="historyFrame" style="flex: 1; width: 100%; border: none;"></iframe>
+    </div>
 </div>
 
 <div id="statusBar">
@@ -103,14 +96,9 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.2/socket.io.min.js"></script>
 
 <script>
-// --- CONFIG ---
 const CONFIG = { RENDER_TIMEOUT: 180000 };
-let selectedNode = null;
-let socket = null;
-let currentProjectId = null;
-const pendingCmds = new Map();
+let selectedNode = null; let socket = null; let currentProjectId = null; const pendingCmds = new Map();
 
-// --- SETUP ---
 if(localStorage.getItem("apiKey")) document.getElementById("apiKey").value = localStorage.getItem("apiKey");
 
 function getHeaders() {
@@ -121,7 +109,7 @@ function getHeaders() {
 
 function setStatus(msg, type='') {
   const el = document.getElementById("statusText");
-  el.textContent = msg;
+  el.textContent = msg; el.style.color = ""; el.style.fontWeight = "";
   el.className = type === 'error' ? 'status error' : (type === 'success' ? 'status success' : '');
 }
 
@@ -130,58 +118,29 @@ function showLoading(show, text="Processing...") {
   document.getElementById("loading").style.display = show ? "flex" : "none";
 }
 
-// --- SOCKET.IO LOGIC ---
 function initSocket(pid) {
     if(socket && currentProjectId === pid) return;
-    
-    if(!window.io) {
-        setStatus("Socket.IO library not loaded!", "error");
-        return;
-    }
-    socket = io(); // Đã gỡ transports websocket để mạng ổn định hơn
-    currentProjectId = pid;
-
-    socket.on('connect', () => {
-        const el = document.getElementById("socketStatus");
-        el.textContent = "Connected";
-        el.style.color = "var(--success-color)";
-        socket.emit('subscribe', { projectId: pid });
+    if(!window.io) return;
+    socket = io(); currentProjectId = pid;
+    socket.on('connect', () => { document.getElementById("socketStatus").textContent = "Connected"; socket.emit('subscribe', { projectId: pid }); });
+    socket.on('command', (cmd) => {
+        if (cmd.action !== 'update_parameter' || pendingCmds.has(cmd.id)) return;
+        let pNames = Object.keys(cmd.parameters || {}).join(", ");
+        const el = document.getElementById("statusText");
+        el.textContent = `Vừa có người khác (${cmd.user || 'Ai đó'}) sửa [${pNames}]. Nhấn 'Làm mới' để cập nhật!`;
+        el.style.color = "#d75e04"; el.style.fontWeight = "bold";
     });
-
-    socket.on('disconnect', () => {
-        const el = document.getElementById("socketStatus");
-        el.textContent = "Disconnected";
-        el.style.color = "#d13438";
-    });
-
     socket.on('command_result', (data) => {
         if(!data || !data.id) return;
-        const task = pendingCmds.get(data.id);
-        if(!task) return;
-
-        // 1. ÉP TẮT VÒNG TRÒN LOADING NGAY LẬP TỨC
+        const task = pendingCmds.get(data.id); if(!task) return;
         showLoading(false);
-
-        // 2. Chờ 50 mili-giây để Web xóa phông mờ, sau đó mới xử lý kết quả
         setTimeout(() => {
             if(data.status === 'done') {
                 setStatus("Command Completed!", "success");
-                
-                if(data.imageUrl) {
-                    const img = document.getElementById("previewImg");
-                    img.src = data.imageUrl;
-                    document.getElementById("imgWrap").style.display = "block";
-                    document.getElementById("previewMsg").style.display = "none";
-                } else {
-                    // Nếu bạn KHÔNG muốn hiện popup nữa, hãy thêm dấu // ở đầu dòng alert bên dưới:
-                    alert(data.message || "Cập nhật dữ liệu thành công!");
-                }
+                if(data.imageUrl) { document.getElementById("previewImg").src = data.imageUrl; document.getElementById("imgWrap").style.display = "block"; document.getElementById("previewMsg").style.display = "none"; } 
+                else { alert(data.message || "Thành công!"); }
                 task.resolve(true);
-            } else if(data.status === 'error') {
-                setStatus("Error: " + data.message, "error");
-                alert("Revit Error: " + data.message);
-                task.resolve(false);
-            }
+            } else { setStatus("Error: " + data.message, "error"); alert("Lỗi: " + data.message); task.resolve(false); }
             pendingCmds.delete(data.id);
         }, 50); 
     });
@@ -190,130 +149,81 @@ function initSocket(pid) {
 function waitForResult(cmdId) {
     return new Promise((resolve) => {
         const t = setTimeout(() => {
-            if(pendingCmds.has(cmdId)) {
-                pendingCmds.delete(cmdId);
-                setStatus("Timeout: Revit did not respond.", "error");
-                alert("Timeout waiting for Revit. Kiểm tra lại kết nối Socket và cửa sổ Add-in.");
-                resolve(false);
-            }
+            if(pendingCmds.has(cmdId)) { pendingCmds.delete(cmdId); alert("Timeout!"); resolve(false); }
         }, CONFIG.RENDER_TIMEOUT);
-        
         pendingCmds.set(cmdId, { resolve: (res) => { clearTimeout(t); resolve(res); } });
     });
 }
 
-// --- HÀM PHÓNG TO ẢNH (MODAL) ---
-function openModal() {
-    const modal = document.getElementById("imageModal");
-    const modalImg = document.getElementById("imgModalExpanded");
-    const originalImg = document.getElementById("previewImg");
-    
-    if(originalImg.src) {
-        modal.style.display = "block";
-        modalImg.src = originalImg.src;
+function openModal() { const o = document.getElementById("previewImg"); if(o.src) { document.getElementById("imageModal").style.display="block"; document.getElementById("imgModalExpanded").src = o.src; } }
+function closeModal() { document.getElementById("imageModal").style.display = "none"; }
+
+// Hàm mở Popup Lịch sử Iframe
+function showHistory() {
+    const pid = document.getElementById("projectId").value;
+    const frame = document.getElementById('historyFrame');
+    frame.src = `/history?projectId=${pid}`;
+    document.getElementById('historyModal').style.display = 'block';
+}
+
+function closeHistoryModal() {
+    document.getElementById('historyModal').style.display = 'none';
+    document.getElementById('historyFrame').src = ""; 
+}
+
+// Lắng nghe phím ESC để đóng popup
+document.addEventListener('keydown', e => { 
+    if (e.key === "Escape") {
+        closeModal(); 
+        closeHistoryModal();
     }
-}
-
-function closeModal() {
-    document.getElementById("imageModal").style.display = "none";
-}
-
-// Escape key để đóng ảnh
-document.addEventListener('keydown', function(event) {
-    if (event.key === "Escape") closeModal();
 });
-
-
-// --- ACTIONS ---
 
 async function loadIndex() {
   const pid = document.getElementById("projectId").value;
-  const q = document.getElementById("q").value.toLowerCase();
-  
-  showLoading(true, "Loading Tree...");
-  initSocket(pid);
-
+  showLoading(true, "Loading..."); initSocket(pid);
   try {
     const res = await fetch(`/api/projects/${pid}/browser-index/latest`, { headers: getHeaders() });
-    
-    if(res.status === 401) throw new Error("Unauthorized. Please check API Key.");
-    if(res.status === 404) throw new Error("No data found. Click 'Publish to Web' in Revit first.");
-    if(!res.ok) throw new Error(res.statusText);
-
-    const data = await res.json();
-    renderTree(data.nodes || [], q);
-    setStatus("Tree loaded successfully.", "success");
-  } catch(e) {
-    setStatus(e.message, "error");
-    alert("Load Failed: " + e.message);
-  } finally {
-    showLoading(false);
-  }
+    if(res.status === 404) throw new Error("Chưa có dữ liệu.");
+    const data = await res.json(); renderTree(data.nodes || [], document.getElementById("q").value.toLowerCase()); setStatus("Tree loaded.", "success");
+  } catch(e) { setStatus(e.message, "error"); } finally { showLoading(false); }
 }
 
 async function openLatest3D() {
     const pid = document.getElementById("projectId").value;
-    showLoading(true, "Checking for 3D model...");
-    
     try {
         const res = await fetch(`/api/projects/${pid}/models/latest-glb`, { headers: getHeaders() });
-        if(res.status === 404) throw new Error("Chưa có mô hình 3D. Hãy nhấn 'Publish to Web' trong Revit để tự động upload.");
-        
-        const data = await res.json();
-        if(!data.latestGlbFile) throw new Error("File GLB null.");
-        
-        window.open(`/viewer_glb?file=${data.latestGlbFile}`, "_blank");
-        setStatus("Opening 3D Viewer...", "success");
-    } catch(e) {
-        setStatus(e.message, "error");
-        alert(e.message);
-    } finally {
-        showLoading(false);
-    }
+        const data = await res.json(); window.open(`/viewer_glb?file=${data.latestGlbFile}`, "_blank");
+    } catch(e) { alert(e.message); }
 }
 
 async function requestRender() {
     if(!selectedNode) return;
-    await sendCommand("render_view_png", {
-        targetUniqueId: selectedNode.revit.uniqueId,
-        pixelSize: 1000
-    });
+    await sendCommand("render_view_png", { targetUniqueId: selectedNode.revit.uniqueId, pixelSize: parseInt(document.getElementById("renderQuality").value) || 1000 });
 }
 
 async function sendUpdate() {
     if(!selectedNode) return;
     const paramName = document.getElementById("p_param_name").value;
     const val = document.getElementById("p_param_val").value;
-    if(!val) return alert("Please enter value");
-    
-    // Gửi lệnh xuống Revit và CHỜ kết quả trả về xem có thành công (true) không
+    const userName = document.getElementById("webUser").value || "Web User"; 
+
     const isSuccess = await sendCommand("update_parameter", {
         targetUniqueId: selectedNode.revit.uniqueId,
-        parameters: { [paramName]: val }
+        parameters: { [paramName]: val },
+        user: userName 
     });
 
-    // --- [THÊM MỚI] TỰ ĐỘNG CẬP NHẬT CHỮ TRÊN WEB NẾU THÀNH CÔNG ---
     if (isSuccess) {
-        if (paramName === "Sheet Name" || paramName === "View Name" || paramName === "Sheet Number") {
+        if (["Sheet Name", "View Name", "Sheet Number"].includes(paramName)) {
             let newTitle = val;
-            
-            // Xử lý riêng cho Sheet (Bản vẽ) vì C# đang ghép theo chuẩn "Số hiệu - Tên bản vẽ"
             if (selectedNode.kind === "sheet") {
                 let parts = selectedNode.title.split(" - ");
-                if (parts.length > 1) {
-                    if (paramName === "Sheet Name") newTitle = parts[0] + " - " + val;
-                    if (paramName === "Sheet Number") newTitle = val + " - " + parts[1];
-                }
+                if (parts.length > 1) newTitle = paramName === "Sheet Name" ? `${parts[0]} - ${val}` : `${val} - ${parts[1]}`;
             }
-
-            // 1. Lưu lại vào bộ nhớ ngầm của trình duyệt
             selectedNode.title = newTitle;
-
-            // 2. Thay đổi chữ trên Cây thư mục (bên trái)
-            const activeLeafTitle = document.querySelector(".leaf.selected .leaf-title");
-            if (activeLeafTitle) activeLeafTitle.textContent = newTitle;
-
-            // 3. Thay đổi chữ ở ô Item Name (bên phải)
+            const activeLeaf = document.querySelector(".leaf.selected .leaf-title");
+            if (activeLeaf) activeLeaf.textContent = newTitle;
             document.getElementById("p_name").value = newTitle;
         }
     }
@@ -321,51 +231,21 @@ async function sendUpdate() {
 
 async function sendCommand(action, payload) {
     const pid = document.getElementById("projectId").value;
-    showLoading(true, "Sending command to Revit...");
-    setStatus("Sending command...");
-
+    showLoading(true, "Sending command..."); setStatus("Sending...");
     try {
-        const res = await fetch(`/api/projects/${pid}/commands`, {
-            method: 'POST',
-            headers: getHeaders(),
-            body: JSON.stringify({ action, ...payload })
-        });
-
-        if(!res.ok) {
-            if(res.status === 401) throw new Error("Unauthorized. Check API Key.");
-            throw new Error("Send failed");
-        }
-
-        const data = await res.json();
-        setStatus("Waiting for Revit response...");
-        return await waitForResult(data.id); 
-        
-    } catch(e) {
-        setStatus(e.message, "error");
-        alert("Command Failed: " + e.message);
-        return false; // [ĐÃ SỬA]
-    } finally {
-        showLoading(false);
-    }
+        const res = await fetch(`/api/projects/${pid}/commands`, { method: 'POST', headers: getHeaders(), body: JSON.stringify({ action, ...payload }) });
+        const data = await res.json(); return await waitForResult(data.id); 
+    } catch(e) { alert("Failed"); return false; } finally { showLoading(false); }
 }
 
-// --- UI RENDERING ---
 function renderTree(nodes, query) {
-  const root = document.getElementById("treeRoot");
-  root.innerHTML = "";
-  
-  const tree = {};
+  const root = document.getElementById("treeRoot"); root.innerHTML = ""; const tree = {};
   nodes.forEach(n => {
     if(query && !n.title.toLowerCase().includes(query)) return;
-    
     let current = tree;
-    (n.path || []).forEach(folder => {
-      if(!current[folder]) current[folder] = { __type: 'folder', children: {} };
-      current = current[folder].children;
-    });
+    (n.path || []).forEach(folder => { if(!current[folder]) current[folder] = { __type: 'folder', children: {} }; current = current[folder].children; });
     current[n.title + n.revit?.uniqueId] = { __type: 'item', data: n };
   });
-
   root.appendChild(createDomTree(tree));
 }
 
@@ -374,65 +254,26 @@ function createDomTree(obj) {
   Object.keys(obj).forEach(key => {
     const node = obj[key];
     if(node.__type === 'folder') {
-      const details = document.createElement("details");
-      details.open = true;
-      const sum = document.createElement("summary");
-      sum.textContent = key;
-      details.appendChild(sum);
-      
-      const children = createDomTree(node.children);
-      children.className = "node";
-      details.appendChild(children);
-      ul.appendChild(details);
+      const details = document.createElement("details"); details.open = true;
+      const sum = document.createElement("summary"); sum.textContent = key; details.appendChild(sum);
+      const children = createDomTree(node.children); children.className = "node"; details.appendChild(children); ul.appendChild(details);
     } else {
-      const row = document.createElement("div");
-      row.className = "leaf";
-      
-      const title = document.createElement("div");
-      title.className = "leaf-title";
-      title.textContent = node.data.title;
-      
-      const tag = document.createElement("span");
-      tag.className = "tag";
-      tag.textContent = node.data.kind;
-      
-      row.appendChild(title);
-      row.appendChild(tag);
-      
-      if(node.data.meta?.viewType === "ThreeD") {
-          const btnEx = document.createElement("button");
-          btnEx.textContent = "Ex 3D";
-          btnEx.title = "Export specific view (Optional)";
-          btnEx.className = "leaf-actions";
-          btnEx.onclick = (e) => {
-              e.stopPropagation();
-              sendCommand("export_view_glb", { targetUniqueId: node.data.revit.uniqueId });
-          };
-          row.appendChild(btnEx);
-      }
-
-      row.onclick = () => selectItem(row, node.data);
-      ul.appendChild(row);
+      const row = document.createElement("div"); row.className = "leaf";
+      const title = document.createElement("div"); title.className = "leaf-title"; title.textContent = node.data.title;
+      const tag = document.createElement("span"); tag.className = "tag"; tag.textContent = node.data.kind;
+      row.appendChild(title); row.appendChild(tag);
+      row.onclick = () => selectItem(row, node.data); ul.appendChild(row);
     }
-  });
-  return ul;
+  }); return ul;
 }
 
 function selectItem(el, data) {
-  document.querySelectorAll(".leaf").forEach(x => x.classList.remove("selected"));
-  el.classList.add("selected");
-  selectedNode = data;
-  
-  document.getElementById("propMsg").style.display = "none";
-  document.getElementById("propForm").style.display = "block";
-  document.getElementById("p_name").value = data.title;
-  document.getElementById("p_uid").value = data.revit?.uniqueId || "";
-  document.getElementById("p_param_val").value = "";
-  
+  document.querySelectorAll(".leaf").forEach(x => x.classList.remove("selected")); el.classList.add("selected"); selectedNode = data;
+  document.getElementById("propMsg").style.display = "none"; document.getElementById("propForm").style.display = "block";
+  document.getElementById("p_name").value = data.title; document.getElementById("p_uid").value = data.revit?.uniqueId || "";
   const isView = ['view','sheet','schedule'].includes(data.kind);
   document.getElementById("previewActions").style.display = isView ? "block" : "none";
   document.getElementById("previewMsg").style.display = isView ? "block" : "none";
-  document.getElementById("imgWrap").style.display = "none";
 }
 
 document.getElementById("q").addEventListener("keyup", e => { if(e.key==="Enter") loadIndex(); });

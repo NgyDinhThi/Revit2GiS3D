@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nhật ký thay đổi dự án - BIM Sync</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <style>
+        body { background-color: #f8f9fa; padding: 20px; overflow-y: auto; height: auto; }
+        .history-container { max-width: 1000px; margin: 0 auto; background: white; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); padding: 30px; }
+        .h-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #eee; padding-bottom: 15px; margin-bottom: 20px; }
+        .h-title { font-size: 24px; font-weight: bold; color: #0078d4; }
+        
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th { background: #f3f2f1; color: #323130; padding: 12px; text-align: left; font-weight: 600; border-bottom: 2px solid #edebe9; }
+        td { padding: 12px; border-bottom: 1px solid #eee; font-size: 14px; color: #444; }
+        tr:hover { background: #f9f9f9; }
+
+        .user-tag { background: #e1f5fe; color: #01579b; padding: 4px 10px; border-radius: 6px; font-weight: 600; font-size: 12px; }
+        .time-col { color: #888; font-family: 'Consolas', monospace; width: 160px; }
+    </style>
+</head>
+<body>
+
+<div class="history-container">
+    <div class="h-header">
+        <div class="h-title">Nhật ký thay đổi: <span id="displayProjectId">...</span></div>
+        <button onclick="loadHistory()" style="background:#0078d4; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; font-weight: bold;">Làm mới</button>
+    </div>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Thời gian</th>
+                <th>Người thay đổi</th>
+                <th>Nội dung thay đổi</th>
+            </tr>
+        </thead>
+        <tbody id="historyBody">
+            </tbody>
+    </table>
+    <div id="noData" style="display:none; text-align:center; padding:40px; color:#888;">Chưa có lịch sử thay đổi nào.</div>
+</div>
+
+<script>
+    const urlParams = new URLSearchParams(window.location.search);
+    const pid = urlParams.get('projectId') || 'P001';
+    document.getElementById('displayProjectId').textContent = pid;
+
+    async function loadHistory() {
+        try {
+            const res = await fetch(`/api/projects/${pid}/history`);
+            const history = await res.json();
+            
+            const tbody = document.getElementById('historyBody');
+            tbody.innerHTML = "";
+            
+            if (history.length === 0) {
+                document.getElementById('noData').style.display = "block";
+                return;
+            }
+            document.getElementById('noData').style.display = "none";
+
+            history.forEach(h => {
+                const tr = document.createElement('tr');
+                
+                tr.innerHTML = `
+                    <td class="time-col">${h.time}</td>
+                    <td><span class="user-tag">${h.user}</span></td>
+                    <td style="font-weight: 500;">${h.details}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        } catch (e) {
+            console.error("Lỗi tải lịch sử:", e);
+        }
+    }
+
+    loadHistory();
+    setInterval(loadHistory, 10000);
+</script>
+
+</body>
+</html>
