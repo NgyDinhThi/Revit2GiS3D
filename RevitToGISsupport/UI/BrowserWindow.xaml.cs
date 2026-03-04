@@ -243,7 +243,10 @@ namespace RevitToGISsupport.UI
                 var urlIndex = $"{server}/api/projects/{Uri.EscapeDataString(inputProjectId)}/browser-index";
                 var reqIndex = new HttpRequestMessage(HttpMethod.Post, urlIndex);
                 reqIndex.Headers.Add("X-API-Key", API_KEY);
-                reqIndex.Headers.Add("X-User-Name", userName); // Gửi tên người dùng lên
+
+                // [ĐÃ SỬA] Mã hóa URL (Ví dụ: Nguyễn Thi -> Nguy%E1%BB%85n%20Thi)
+                reqIndex.Headers.Add("X-User-Name", Uri.EscapeDataString(userName));
+
                 reqIndex.Content = new StringContent(JsonConvert.SerializeObject(index), Encoding.UTF8, "application/json");
 
                 var resIndex = await SharedHttpClient.SendAsync(reqIndex, _publishCts.Token);
@@ -299,7 +302,10 @@ namespace RevitToGISsupport.UI
 
                     var request = new HttpRequestMessage(HttpMethod.Post, url);
                     request.Headers.Add("X-API-Key", API_KEY);
-                    request.Headers.Add("X-User-Name", userName); // Gửi tên người dùng lên
+
+                    // [ĐÃ SỬA] Mã hóa URL
+                    request.Headers.Add("X-User-Name", Uri.EscapeDataString(userName));
+
                     request.Content = content;
 
                     var response = await SharedHttpClient.SendAsync(request, token);

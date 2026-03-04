@@ -34,7 +34,9 @@ namespace RevitToGISsupport.RemoteControl
 
             _http = new HttpClient { Timeout = TimeSpan.FromSeconds(10) };
             _http.DefaultRequestHeaders.Add("X-API-Key", API_KEY);
-            _http.DefaultRequestHeaders.Add("X-User-Name", userName);
+
+            // [ĐÃ SỬA] Mã hóa URL danh tính
+            _http.DefaultRequestHeaders.Add("X-User-Name", Uri.EscapeDataString(userName));
 
             _cts = new CancellationTokenSource();
             _lastActivityTime = DateTime.Now;
@@ -67,16 +69,15 @@ namespace RevitToGISsupport.RemoteControl
                                 RemoteCommandQueue.Items.Enqueue(c);
                                 _executedCmds.Add(c.id);
                                 hasNewCmd = true;
-                                ackIds.Add(c.id);
                             }
+                            if (!string.IsNullOrWhiteSpace(c.id)) ackIds.Add(c.id);
                         }
-                        if (hasNewCmd)
-                        {
-                            _evt?.Raise();
-                            var ackUrl = $"{_baseUrl}/api/projects/{_projectId}/commands/ack";
-                            var content = new StringContent(JsonConvert.SerializeObject(new { ids = ackIds }), System.Text.Encoding.UTF8, "application/json");
-                            await _http.PostAsync(ackUrl, content);
-                        }
+
+                        if (hasNewCmd) _evt?.Raise();
+
+                        var ackUrl = $"{_baseUrl}/api/projects/{_projectId}/commands/ack";
+                        var content = new StringContent(JsonConvert.SerializeObject(new { ids = ackIds }), System.Text.Encoding.UTF8, "application/json");
+                        await _http.PostAsync(ackUrl, content);
                     }
                 }
                 catch { }
