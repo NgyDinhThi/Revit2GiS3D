@@ -137,6 +137,8 @@
                 </Grid>
             </StackPanel>
 
+            <CheckBox x:Name="chkIncludeRvt" Content="Đính kèm file revit" Foreground="#D13438" Margin="0,0,0,15" FontWeight="Bold" FontSize="12"/>
+
             <Grid Margin="0,0,0,10">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>

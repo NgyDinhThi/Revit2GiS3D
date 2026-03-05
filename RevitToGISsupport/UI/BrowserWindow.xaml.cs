@@ -177,9 +177,38 @@ namespace RevitToGISsupport.UI
 
         private async Task<string> DetectPublicUrlAsyncSafe()
         {
-            try { return "http://127.0.0.1:5000"; } catch { return "http://127.0.0.1:5000"; }
+            try
+            {
+                // Gõ cửa API nội bộ của Ngrok (cổng 4040) để hỏi link Public
+                var response = await SharedHttpClient.GetStringAsync("http://127.0.0.1:4040/api/tunnels");
+                var json = JObject.Parse(response);
+                var tunnels = json["tunnels"] as JArray;
+
+                if (tunnels != null && tunnels.Count > 0)
+                {
+                    // Ưu tiên tìm link bảo mật (https)
+                    foreach (var tunnel in tunnels)
+                    {
+                        string publicUrl = tunnel["public_url"]?.ToString();
+                        if (!string.IsNullOrEmpty(publicUrl) && publicUrl.StartsWith("https"))
+                        {
+                            return publicUrl;
+                        }
+                    }
+
+                    // Nếu không có https thì lấy tạm link đầu tiên
+                    string firstUrl = tunnels[0]["public_url"]?.ToString();
+                    if (!string.IsNullOrEmpty(firstUrl)) return firstUrl;
+                }
+            }
+            catch
+            {
+
+            }
+            return "http://127.0.0.1:5000";
         }
 
+        // ĐÂY LÀ HÀM btnPull_Click ĐÃ ĐƯỢC THÊM LẠI
         private void btnPull_Click(object sender, RoutedEventArgs e)
         {
             string inputProjectId = tbProjectId.Text.Trim();
@@ -222,6 +251,7 @@ namespace RevitToGISsupport.UI
                 string inputProjectId = tbProjectId.Text.Trim();
                 string userName = tbUserName.Text.Trim();
                 if (string.IsNullOrWhiteSpace(userName)) userName = "Người dùng Revit";
+                bool includeRvt = chkIncludeRvt.IsChecked == true;
 
                 RemoteSettings.ProjectId = inputProjectId;
                 _publishCts?.Cancel();
@@ -236,23 +266,20 @@ namespace RevitToGISsupport.UI
                 StartOrRestartPoller(force: false);
                 var server = INTERNAL_SERVER_URL;
 
-                lblStatus.Text = "Bước 1/3: Đang thu thập dữ liệu cây thư mục...";
+                lblStatus.Text = "Bước 1/4: Đang thu thập dữ liệu cây thư mục...";
                 BuildRootTree();
                 var index = BuildBrowserIndex(inputProjectId);
 
                 var urlIndex = $"{server}/api/projects/{Uri.EscapeDataString(inputProjectId)}/browser-index";
                 var reqIndex = new HttpRequestMessage(HttpMethod.Post, urlIndex);
                 reqIndex.Headers.Add("X-API-Key", API_KEY);
-
-                // [ĐÃ SỬA] Mã hóa URL (Ví dụ: Nguyễn Thi -> Nguy%E1%BB%85n%20Thi)
                 reqIndex.Headers.Add("X-User-Name", Uri.EscapeDataString(userName));
-
                 reqIndex.Content = new StringContent(JsonConvert.SerializeObject(index), Encoding.UTF8, "application/json");
 
                 var resIndex = await SharedHttpClient.SendAsync(reqIndex, _publishCts.Token);
                 if (!resIndex.IsSuccessStatusCode) throw new Exception("Lỗi gửi Index.");
 
-                lblStatus.Text = "Bước 2/3: Đang trích xuất mô hình 3D (GLB)...";
+                lblStatus.Text = "Bước 2/4: Đang trích xuất mô hình 3D (GLB)...";
                 string tempFolder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "RevitExports", "TempUpload");
                 Directory.CreateDirectory(tempFolder);
                 string glbPath = Path.Combine(tempFolder, $"revit_project_{Guid.NewGuid():N}.glb");
@@ -264,10 +291,25 @@ namespace RevitToGISsupport.UI
 
                 await Task.Run(() => GLBExporter.ExportToGLB(stream, glbPath));
 
-                lblStatus.Text = "Bước 3/3: Đang tải dữ liệu lên Server...";
-                await UploadGlbAsync(server, inputProjectId, glbPath, userName, _publishCts.Token);
-
+                lblStatus.Text = "Bước 3/4: Đang tải dữ liệu GLB lên Server...";
+                await UploadFileAsync(server, inputProjectId, glbPath, userName, _publishCts.Token);
                 try { File.Delete(glbPath); } catch { }
+
+                if (includeRvt)
+                {
+                    lblStatus.Text = "Bước 4/4: Đang tải file Revit (.rvt) lên Server (vài phút)...";
+                    string rvtPath = _doc.PathName;
+
+                    if (string.IsNullOrWhiteSpace(rvtPath))
+                        throw new Exception("File chưa được lưu vào máy tính. Vui lòng bấm 'Save' file Revit trước khi đính kèm!");
+
+                    string tempRvt = Path.Combine(tempFolder, Path.GetFileName(rvtPath));
+
+                    File.Copy(rvtPath, tempRvt, true);
+
+                    await UploadFileAsync(server, inputProjectId, tempRvt, userName, _publishCts.Token);
+                    try { File.Delete(tempRvt); } catch { }
+                }
 
                 _isPublished = true;
                 UpdateShareLink();
@@ -288,7 +330,7 @@ namespace RevitToGISsupport.UI
             }
         }
 
-        private async Task UploadGlbAsync(string serverUrl, string projectId, string filePath, string userName, CancellationToken token)
+        private async Task UploadFileAsync(string serverUrl, string projectId, string filePath, string userName, CancellationToken token)
         {
             var url = $"{serverUrl}/upload";
             using (var content = new MultipartFormDataContent())
@@ -302,10 +344,7 @@ namespace RevitToGISsupport.UI
 
                     var request = new HttpRequestMessage(HttpMethod.Post, url);
                     request.Headers.Add("X-API-Key", API_KEY);
-
-                    // [ĐÃ SỬA] Mã hóa URL
                     request.Headers.Add("X-User-Name", Uri.EscapeDataString(userName));
-
                     request.Content = content;
 
                     var response = await SharedHttpClient.SendAsync(request, token);
