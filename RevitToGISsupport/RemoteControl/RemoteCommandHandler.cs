@@ -10,9 +10,7 @@ using System.Threading.Tasks;
 
 namespace RevitToGISsupport.RemoteControl
 {
-    // =================================================================================
-    // LỚP "ỐNG GIẢM THANH" - CHẶN MỌI BẢNG CẢNH BÁO LỖI (POPUP) CỦA REVIT XUẤT HIỆN
-    // =================================================================================
+
     public class IgnoreFailuresPreprocessor : IFailuresPreprocessor
     {
         public FailureProcessingResult PreprocessFailures(FailuresAccessor failuresAccessor)
@@ -223,10 +221,33 @@ namespace RevitToGISsupport.RemoteControl
                 var folder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "RevitExports", "Snapshots");
                 if (!Directory.Exists(folder)) Directory.CreateDirectory(folder);
 
-                var pngPath = ViewImageExporter.ExportPng(doc, v, folder, cmd.pixelSize > 0 ? cmd.pixelSize : 1000);
+                // --- DÙNG API NATIVE CỦA REVIT ĐỂ XUẤT ẢNH JPEG SIÊU NHẸ ---
+                string baseName = "snap_" + Guid.NewGuid().ToString("N");
+                string basePath = Path.Combine(folder, baseName);
 
-                if (string.IsNullOrWhiteSpace(pngPath) || !File.Exists(pngPath))
-                    throw new Exception($"Không thể lưu ảnh ra máy tính tại:\n{pngPath}");
+                var imgOptions = new ImageExportOptions
+                {
+                    ZoomType = ZoomFitType.FitToPage,
+                    PixelSize = cmd.pixelSize > 0 ? cmd.pixelSize : 800, // Đặt mặc định 800px là đủ nét
+                    FilePath = basePath,
+                    FitDirection = FitDirectionType.Horizontal,
+                    HLRandWFViewsFileType = ImageFileType.JPEGLossless, // Đuôi JPEG
+                    ShadowViewsFileType = ImageFileType.JPEGLossless,   // Đuôi JPEG
+                    ImageResolution = ImageResolution.DPI_72,
+                    ExportRange = ExportRange.SetOfViews
+                };
+                imgOptions.SetViewsAndSheets(new List<ElementId> { v.Id });
+
+                // Lệnh cho Revit xả ảnh ra ổ cứng
+                doc.ExportImage(imgOptions);
+
+                // Vì Revit hay tự thêm tên View vào đuôi file (VD: snap_123 - 3D View - {3D}.jpg) 
+                // nên ta phải tự động quét tên file thực tế vừa được tạo ra
+                string actualFile = Directory.GetFiles(folder, baseName + "*.*").FirstOrDefault();
+
+                if (string.IsNullOrWhiteSpace(actualFile) || !File.Exists(actualFile))
+                    throw new Exception("Không thể tạo ảnh JPEG từ Revit.");
+                // ------------------------------------------------------------------
 
                 var baseUrl = GetBaseUrl();
                 var projectId = RemoteSettings.ProjectId ?? "P001";
@@ -235,9 +256,12 @@ namespace RevitToGISsupport.RemoteControl
                 {
                     try
                     {
-                        byte[] imageBytes = File.ReadAllBytes(pngPath);
+                        // Đọc ảnh JPEG (Lúc này file chỉ còn khoảng 100-300KB)
+                        byte[] imageBytes = File.ReadAllBytes(actualFile);
                         string base64String = Convert.ToBase64String(imageBytes);
-                        string imageUrl = $"data:image/png;base64,{base64String}";
+
+                        // [QUAN TRỌNG] Đổi tiêu đề mã hóa sang dạng JPEG
+                        string imageUrl = $"data:image/jpeg;base64,{base64String}";
 
                         await PostCommandResultAsync(baseUrl, projectId, new
                         {
@@ -253,7 +277,8 @@ namespace RevitToGISsupport.RemoteControl
                     }
                     finally
                     {
-                        try { if (File.Exists(pngPath)) File.Delete(pngPath); } catch { }
+                        // Xóa file JPEG trên ổ cứng để đỡ chật máy
+                        try { if (File.Exists(actualFile)) File.Delete(actualFile); } catch { }
                     }
                 });
             }
