@@ -3,7 +3,7 @@ import uuid
 import logging
 import threading 
 import io
-import urllib.parse  # <--- [MỚI] THÊM THƯ VIỆN DỊCH NGƯỢC URL
+import urllib.parse
 from datetime import datetime
 from functools import wraps
 from flask import Flask, request, jsonify, send_from_directory, send_file
@@ -17,12 +17,14 @@ logger = logging.getLogger(__name__)
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 STATIC_FOLDER = os.path.join(BASE_DIR, "static")
 TEMPLATES_FOLDER = os.path.join(BASE_DIR, "templates")
+UPLOADS_FOLDER = os.path.join(BASE_DIR, "uploads") 
 
-for folder in [STATIC_FOLDER, TEMPLATES_FOLDER]:
+for folder in [STATIC_FOLDER, TEMPLATES_FOLDER, UPLOADS_FOLDER]:
     os.makedirs(folder, exist_ok=True)
 
 app = Flask(__name__, static_folder=STATIC_FOLDER, static_url_path="/static", template_folder=TEMPLATES_FOLDER)
-app.config['MAX_CONTENT_LENGTH'] = 1000 * 1024 * 1024  
+app.config['MAX_CONTENT_LENGTH'] = 2000 * 1024 * 1024  
+
 logging.getLogger('werkzeug').addFilter(lambda r: 'commands/pull' not in r.getMessage())
 
 API_KEY = os.getenv("API_KEY", "CHANGE-ME-IN-PRODUCTION")
@@ -33,10 +35,9 @@ IN_MEMORY_DB = {}
 
 def get_proj(pid):
     if pid not in IN_MEMORY_DB:
-        IN_MEMORY_DB[pid] = { "browser": None, "commands": [], "glb_data": None, "images": {}, "history": [] }
+        IN_MEMORY_DB[pid] = { "browser": None, "commands": [], "rvt_name": "", "images": {}, "history": [] }
     return IN_MEMORY_DB[pid]
 
-# Hàm Ghi sổ Nam Tào
 def log_history(pid, user, action, details):
     proj = get_proj(pid)
     time_str = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
@@ -61,26 +62,60 @@ def add_cors(resp):
 @app.route("/browser")
 def browser_page(): return send_from_directory(STATIC_FOLDER, "browser.html")
 
+# =================================================================
+# [ĐÃ SỬA] Đổi STATIC_FOLDER thành TEMPLATES_FOLDER để tìm đúng file
+# =================================================================
 @app.route("/viewer_glb")
-def viewer_glb(): return send_from_directory(STATIC_FOLDER, "viewer_glb.html")
+def viewer_glb(): return send_from_directory(TEMPLATES_FOLDER, "viewer_glb.html")
+# =================================================================
 
 @app.route("/upload", methods=["POST"])
 @require_api_key
 def upload():
     files = request.files.getlist("file")
     project_id = request.form.get("projectId", "").strip()
+    
+    proj_dir = os.path.join(UPLOADS_FOLDER, project_id)
+    os.makedirs(proj_dir, exist_ok=True)
+
     for f in files:
-        if f and f.filename.endswith('.glb'):
-            with _lock: get_proj(project_id)["glb_data"] = f.read() 
+        if f:
+            if f.filename.endswith('.glb'):
+                file_path = os.path.join(proj_dir, "model.glb")
+                f.save(file_path)
+            elif f.filename.endswith('.rvt'):
+                file_path = os.path.join(proj_dir, f.filename)
+                f.save(file_path)
+                with _lock: 
+                    get_proj(project_id)["rvt_name"] = f.filename
+                    
     return jsonify({"ok": True})
 
 @app.route("/api/projects/<pid>/models/latest-glb")
-def get_latest_glb(pid): return jsonify({"latestGlbFile": f"/api/projects/{pid}/models/model.glb"}) if get_proj(pid).get("glb_data") else ("No model found.", 404)
+def get_latest_glb(pid):
+    glb_path = os.path.join(UPLOADS_FOLDER, pid, "model.glb")
+    if os.path.exists(glb_path):
+        return jsonify({"latestGlbFile": f"/api/projects/{pid}/models/model.glb"})
+    return "No model found.", 404
 
 @app.route("/api/projects/<pid>/models/model.glb")
 def download_glb(pid):
-    data = get_proj(pid).get("glb_data")
-    return send_file(io.BytesIO(data), mimetype="model/gltf-binary", download_name="model.glb", as_attachment=False) if data else ("Not found", 404)
+    glb_path = os.path.join(UPLOADS_FOLDER, pid, "model.glb")
+    if os.path.exists(glb_path):
+        return send_file(glb_path, mimetype="model/gltf-binary", download_name="model.glb", as_attachment=False)
+    return "Not found", 404
+
+@app.route("/api/projects/<pid>/models/rvt")
+def download_rvt(pid):
+    proj = get_proj(pid)
+    rvt_name = proj.get("rvt_name")
+    if not rvt_name:
+        return "Không tìm thấy file Revit. Vui lòng nhờ người cầm file gốc tích chọn 'Đính kèm file Revit' khi Đồng bộ!", 404
+    
+    rvt_path = os.path.join(UPLOADS_FOLDER, pid, rvt_name)
+    if os.path.exists(rvt_path):
+        return send_file(rvt_path, mimetype="application/octet-stream", download_name=rvt_name, as_attachment=True)
+    return "File không còn tồn tại trên Server.", 404
 
 @app.route("/api/projects/<pid>/browser-index", methods=["POST"])
 @require_api_key
@@ -88,7 +123,6 @@ def push_index(pid):
     data = request.get_json(force=True)
     with _lock: get_proj(pid)["browser"] = data
     
-    # --- [ĐÃ SỬA] DỊCH NGƯỢC URL VỀ LẠI TIẾNG VIỆT CHUẨN ---
     raw_user = request.headers.get("X-User-Name", "Ẩn danh")
     user = urllib.parse.unquote(raw_user)
     
@@ -157,5 +191,5 @@ def on_sub(data):
     if data and data.get('projectId'): join_room(_room(data['projectId']))
 
 if __name__ == "__main__":
-    print(f"--- SERVER STARTED on 5000 (RAM-ONLY MODE) ---")
+    print(f"--- SERVER STARTED on 5000 (DISK UPLOAD MODE) ---")
     socketio.run(app, host="0.0.0.0", port=5000, debug=True, use_reloader=False)

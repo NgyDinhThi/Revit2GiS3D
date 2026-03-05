@@ -21,6 +21,9 @@
   <button onclick="showHistory()" style="background:#6c757d; padding: 0 10px;">Lịch sử</button>
   
   <div style="flex:1"></div>
+  
+  <button class="secondary" onclick="downloadRvt()" style="margin-right: 8px; background: #28a745;" title="Tải file .rvt gốc">Tải file Revit</button>
+  
   <button onclick="loadIndex()" title="Load cấu trúc từ Server" style="margin-right: 8px;"> Làm mới</button>
   <button class="secondary" onclick="openLatest3D()"> Xem mô hình 3D</button>
 </div>
@@ -59,8 +62,8 @@
   <div class="col-preview">
     <div id="previewActions" style="display:none; text-align:center; width:100%">
         <select id="renderQuality" style="width:auto; display:inline-block; margin-right:8px; height: 32px;">
-            <option value="500">Xem nhanh (500px)</option>
-            <option value="1000" selected>Tiêu chuẩn (1000px)</option>
+            <option value="500">Xem nhanh</option>
+            <option value="1000" selected>Tiêu chuẩn</option>
         </select>
         <button onclick="requestRender()" style="background:#6c757d; padding: 6px 20px; display:inline-block;"> Render ảnh</button>
     </div>
@@ -158,7 +161,6 @@ function waitForResult(cmdId) {
 function openModal() { const o = document.getElementById("previewImg"); if(o.src) { document.getElementById("imageModal").style.display="block"; document.getElementById("imgModalExpanded").src = o.src; } }
 function closeModal() { document.getElementById("imageModal").style.display = "none"; }
 
-// Hàm mở Popup Lịch sử Iframe
 function showHistory() {
     const pid = document.getElementById("projectId").value;
     const frame = document.getElementById('historyFrame');
@@ -171,13 +173,18 @@ function closeHistoryModal() {
     document.getElementById('historyFrame').src = ""; 
 }
 
-// Lắng nghe phím ESC để đóng popup
 document.addEventListener('keydown', e => { 
     if (e.key === "Escape") {
         closeModal(); 
         closeHistoryModal();
     }
 });
+
+// [ĐÃ BỔ SUNG] HÀM GỌI API ĐỂ TẢI FILE REVIT .RVT 
+function downloadRvt() {
+    const pid = document.getElementById("projectId").value;
+    window.open(`/api/projects/${pid}/models/rvt`, '_blank');
+}
 
 async function loadIndex() {
   const pid = document.getElementById("projectId").value;
