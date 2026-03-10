@@ -30,8 +30,32 @@ namespace RevitToGISsupport.RemoteControl
             Directory.CreateDirectory(folderPath);
             var glbPath = Path.Combine(folderPath, $"revit_project_{Guid.NewGuid():N}.glb");
 
-            var collector = new FilteredElementCollector(doc).WhereElementIsNotElementType();
-            var opt = new Options { DetailLevel = ViewDetailLevel.Fine, ComputeReferences = false, IncludeNonVisibleObjects = false };
+            // Ưu tiên tìm View 3D mặc định để xuất (giúp lọc bỏ các đường nét rác, đối tượng ẩn)
+            View3D view3D = doc.ActiveView as View3D;
+            if (view3D == null || view3D.IsTemplate)
+            {
+                view3D = new FilteredElementCollector(doc)
+                    .OfClass(typeof(View3D))
+                    .Cast<View3D>()
+                    .FirstOrDefault(v => !v.IsTemplate && v.Name.Contains("{3D}"));
+
+                if (view3D == null)
+                    view3D = new FilteredElementCollector(doc).OfClass(typeof(View3D)).Cast<View3D>().FirstOrDefault(v => !v.IsTemplate);
+            }
+
+            FilteredElementCollector collector;
+            Options opt;
+
+            if (view3D != null)
+            {
+                collector = new FilteredElementCollector(doc, view3D.Id).WhereElementIsNotElementType();
+                opt = new Options { View = view3D, ComputeReferences = false, IncludeNonVisibleObjects = false };
+            }
+            else
+            {
+                collector = new FilteredElementCollector(doc).WhereElementIsNotElementType();
+                opt = new Options { DetailLevel = ViewDetailLevel.Fine, ComputeReferences = false, IncludeNonVisibleObjects = false };
+            }
 
             ExportDirectly(doc, collector, opt, glbPath);
             return glbPath;
@@ -160,9 +184,7 @@ namespace RevitToGISsupport.RemoteControl
             colors.Add(color.b);
         }
 
-        // =========================================================
         // BINARY GLB PACKING
-        // =========================================================
 
         private static void BuildGlb(string outputPath, List<float> triVerts, List<float> triNormals, List<float> triColors, List<int> triIndices)
         {

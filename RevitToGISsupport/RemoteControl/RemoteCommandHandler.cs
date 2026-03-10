@@ -23,17 +23,16 @@ namespace RevitToGISsupport.RemoteControl
             {
                 if (failure.GetSeverity() == FailureSeverity.Warning)
                 {
-                    failuresAccessor.DeleteWarning(failure); // Xóa các cảnh báo vàng
+                    failuresAccessor.DeleteWarning(failure);
                 }
                 else
                 {
-                    hasError = true; // Phát hiện lỗi đỏ (ví dụ: Trùng tên View)
+                    hasError = true;
                 }
             }
 
             if (hasError)
             {
-                // Nếu có lỗi đỏ, âm thầm hủy lệnh đó luôn, KHÔNG ĐƯỢC HIỆN BẢNG THÔNG BÁO
                 return FailureProcessingResult.ProceedWithRollBack;
             }
             return FailureProcessingResult.Continue;

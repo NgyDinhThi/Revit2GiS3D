@@ -60,7 +60,6 @@ namespace RevitToGISsupport.Services
             return stream;
         }
 
-        // NEW: collect theo View (Cách 1)
         public static GISStream CollectData(Document doc, View view)
         {
             var stream = new GISStream
@@ -114,15 +113,13 @@ namespace RevitToGISsupport.Services
             return stream;
         }
 
-        public static void ExportJsonAndGlb(GISStream stream, string folderPath)
+        // [ĐÃ SỬA]: Chỉ giữ lại hàm xuất JSON, bỏ qua GLB lỗi thời
+        public static void ExportJson(GISStream stream, string folderPath)
         {
             Directory.CreateDirectory(folderPath);
 
             string jsonPath = Path.Combine(folderPath, "revit_model.json");
             File.WriteAllText(jsonPath, JsonConvert.SerializeObject(stream.ToGeoJson(), Formatting.Indented));
-
-            string glbPath = Path.Combine(folderPath, "revit_model.glb");
-            GLBExporter.ExportToGLB(stream, glbPath);
         }
 
         private static Dictionary<string, object> ExtractProperties(Element element, Document doc)

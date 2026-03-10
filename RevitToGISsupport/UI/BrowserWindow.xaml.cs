@@ -278,18 +278,12 @@ namespace RevitToGISsupport.UI
 
                 var resIndex = await SharedHttpClient.SendAsync(reqIndex, _publishCts.Token);
                 if (!resIndex.IsSuccessStatusCode) throw new Exception("Lỗi gửi Index.");
-
-                lblStatus.Text = "Bước 2/4: Đang trích xuất mô hình 3D (GLB)...";
+                // THAY BẰNG ĐOẠN CODE MỚI NÀY
+                lblStatus.Text = "Bước 2/4: Đang trích xuất mô hình 3D (GLB) chuẩn tỷ lệ...";
                 string tempFolder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "RevitExports", "TempUpload");
                 Directory.CreateDirectory(tempFolder);
-                string glbPath = Path.Combine(tempFolder, $"revit_project_{Guid.NewGuid():N}.glb");
 
-                OpenUI.CollectTcs = new TaskCompletionSource<bool>();
-                OpenUI.CollectEvent?.Raise();
-                await Task.WhenAny(OpenUI.CollectTcs.Task, Task.Delay(TimeSpan.FromMinutes(10)));
-                var stream = OpenUI.LastStream;
-
-                await Task.Run(() => GLBExporter.ExportToGLB(stream, glbPath));
+                string glbPath = RemoteGlbExporter.ExportGlbForProject(_doc, tempFolder);
 
                 lblStatus.Text = "Bước 3/4: Đang tải dữ liệu GLB lên Server...";
                 await UploadFileAsync(server, inputProjectId, glbPath, userName, _publishCts.Token);
