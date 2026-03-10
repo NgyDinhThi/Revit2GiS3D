@@ -3,8 +3,6 @@ using Autodesk.Revit.UI;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using RevitToGISsupport.DataTree;
-using RevitToGISsupport.Models;
-using RevitToGISsupport.Services;
 using RevitToGISsupport.RemoteControl;
 using System;
 using System.Collections.Generic;
