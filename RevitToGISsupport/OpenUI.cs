@@ -8,8 +8,6 @@ namespace RevitToGISsupport
     {
         public static UIApplication UiApp { get; private set; }
         public static Document ActiveDoc { get; private set; }
-
-        // Giữ lại hàm Initialize trống để file cấu hình (App.cs) gọi không bị lỗi
         public static void Initialize()
         {
         }
