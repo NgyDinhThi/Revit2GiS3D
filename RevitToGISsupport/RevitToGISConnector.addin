@@ -1,10 +1,10 @@
 ﻿<?xml version="1.0" encoding="utf-8" standalone="no"?>
 <RevitAddIns>
   <AddIn Type="Command">
-    <Name>BIM Sync Manager</Name>
+    <Name>BIM Sync Manager</Name>  
     <Assembly>RevitToGISsupport.dll</Assembly>
     <AddInId>{C1A7B1D2-7F45-4E86-9A2F-0D5A9F7B1C22}</AddInId>
-    <FullClassName>BIM-REVIT</FullClassName>
+    <FullClassName>RevitToGISsupport.CmdOpenBrowser</FullClassName>    
     <VendorId>REV</VendorId>
     <VendorDescription>BIM Sync - Kết nối Revit và Web trực tiếp</VendorDescription>
   </AddIn>
