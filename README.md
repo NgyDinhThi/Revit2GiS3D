@@ -109,7 +109,7 @@ Hệ thống hoạt động theo mô hình **Client → Server → Client** vớ
 
 ```bash
 # 1. Cài đặt thư viện
-pip install -r requirements.txt
+pip install flask flask-socketio python-dotenv requests
 
 # 2. Khởi động máy chủ
 python app.py
