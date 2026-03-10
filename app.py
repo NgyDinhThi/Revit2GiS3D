@@ -156,6 +156,12 @@ def pull_cmds(pid): return jsonify({"commands": get_proj(pid)["commands"]})
 @app.route("/api/projects/<pid>/commands/ack", methods=["POST"])
 @require_api_key
 def ack_cmds(pid): 
+    data = request.get_json(force=True)
+    ack_ids = data.get("ids", [])
+    if ack_ids:
+        with _lock:
+            proj = get_proj(pid)
+            proj["commands"] = [c for c in proj["commands"] if c.get("id") not in ack_ids]
     return jsonify({"ok": True})
 
 @app.route("/api/projects/<pid>/history")
