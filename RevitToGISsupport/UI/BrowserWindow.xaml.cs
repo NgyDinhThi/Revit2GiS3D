@@ -56,11 +56,24 @@ namespace RevitToGISsupport.UI
             if (_remoteHandler == null)
             {
                 _remoteHandler = new RemoteCommandHandler();
-                _remoteEvent = ExternalEvent.Create(_remoteHandler);
             }
+            _remoteEvent = ExternalEvent.Create(_remoteHandler);
 
+            RemoteCommandHandler.OnExecutionFinished += UpdateStatusFromHandler;
             Loaded += BrowserWindow_Loaded;
             Closed += BrowserWindow_Closed;
+        }
+
+        private void UpdateStatusFromHandler(string message, bool isSuccess)
+        {
+            // Sử dụng Dispatcher để an toàn khi cập nhật giao diện từ luồng khác
+            Dispatcher.Invoke(() =>
+            {
+                lblStatus.Text = message;
+                lblStatus.Foreground = isSuccess
+                    ? new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(40, 167, 69)) // Xanh lá
+                    : new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(209, 52, 56)); // Đỏ
+            });
         }
 
         private void BrowserWindow_Loaded(object sender, RoutedEventArgs e)
@@ -115,6 +128,7 @@ namespace RevitToGISsupport.UI
 
         private void BrowserWindow_Closed(object sender, EventArgs e)
         {
+            RemoteCommandHandler.OnExecutionFinished -= UpdateStatusFromHandler;
             _publishCts?.Cancel();
             _publishCts?.Dispose();
             StopPoller();
@@ -206,8 +220,7 @@ namespace RevitToGISsupport.UI
             return "http://127.0.0.1:5000";
         }
 
-        // ĐÂY LÀ HÀM btnPull_Click ĐÃ ĐƯỢC THÊM LẠI
-        private void btnPull_Click(object sender, RoutedEventArgs e)
+        private async void btnPull_Click(object sender, RoutedEventArgs e)
         {
             string inputProjectId = tbProjectId.Text.Trim();
             if (string.IsNullOrWhiteSpace(inputProjectId))
@@ -222,24 +235,96 @@ namespace RevitToGISsupport.UI
                 if (_doc != null) RemoteSettings.TargetDocumentTitle = _doc.Title;
             }
 
-            if (_doc == null) return;
-
-            lblStatus.Text = $"Đang kéo dữ liệu dự án [{inputProjectId}] về file [{_doc.Title}]...";
-            lblStatus.Foreground = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(0, 120, 212));
-
             RemoteSettings.ProjectId = inputProjectId;
-            RemoteCommandPoller.ClearMemory();
-            StartOrRestartPoller(force: true);
 
-            Task.Run(async () =>
+            btnPull.IsEnabled = false;
+            lblStatus.Text = "Đang kiểm tra lệnh mới và phục hồi dữ liệu cũ...";
+            lblStatus.Foreground = System.Windows.Media.Brushes.Blue;
+
+            try
             {
-                await Task.Delay(2000);
-                Dispatcher.Invoke(() =>
+                using (var http = new HttpClient())
                 {
-                    lblStatus.Text = "Đã quét xong! Các thay đổi (nếu có) đã được cập nhật.";
-                    lblStatus.Foreground = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(40, 167, 69));
-                });
-            });
+                    http.DefaultRequestHeaders.Add("X-API-Key", API_KEY);
+
+                    // 1. TẢI CÁC LỆNH MỚI (Trong hàng đợi)
+                    string pullUrl = $"{INTERNAL_SERVER_URL}/api/projects/{Uri.EscapeDataString(inputProjectId)}/commands/pull?clientId=default";
+                    var pullJson = await http.GetStringAsync(pullUrl);
+                    var pullPayload = JObject.Parse(pullJson);
+                    var cmdsToken = pullPayload["commands"];
+
+                    if (cmdsToken != null && cmdsToken.HasValues)
+                    {
+                        var ackIds = new List<string>();
+                        foreach (var cmdToken in cmdsToken)
+                        {
+                            var c = cmdToken.ToObject<RemoteCommand>();
+                            if (c != null)
+                            {
+                                RemoteCommandQueue.Items.Enqueue(c);
+                                if (!string.IsNullOrWhiteSpace(c.id)) ackIds.Add(c.id);
+                            }
+                        }
+                        if (ackIds.Count > 0)
+                        {
+                            var ackUrl = $"{INTERNAL_SERVER_URL}/api/projects/{Uri.EscapeDataString(inputProjectId)}/commands/ack";
+                            var content = new StringContent(JsonConvert.SerializeObject(new { ids = ackIds }), Encoding.UTF8, "application/json");
+                            await http.PostAsync(ackUrl, content);
+                        }
+                    }
+
+                    // 2. TẢI TRẠNG THÁI CUỐI CÙNG ĐỂ PHỤC HỒI (Dành cho trường hợp quên Save)
+                    string syncUrl = $"{INTERNAL_SERVER_URL}/api/projects/{Uri.EscapeDataString(inputProjectId)}/commands/sync-state";
+                    var syncJson = await http.GetStringAsync(syncUrl);
+                    var syncPayload = JObject.Parse(syncJson);
+                    var finalState = syncPayload["final_state"] as JObject;
+
+                    if (finalState != null && finalState.HasValues)
+                    {
+                        foreach (var property in finalState.Properties())
+                        {
+                            string uniqueId = property.Name;
+                            var paramObj = property.Value as JObject;
+
+                            if (paramObj != null)
+                            {
+                                var paramDict = paramObj.ToObject<Dictionary<string, string>>();
+                                // Tạo lệnh giả lập để ép Revit cập nhật lại các tham số này
+                                var cmd = new RemoteCommand
+                                {
+                                    id = "sync_" + Guid.NewGuid().ToString("N"),
+                                    action = "update_parameter",
+                                    targetUniqueId = uniqueId,
+                                    parameters = paramDict
+                                };
+                                RemoteCommandQueue.Items.Enqueue(cmd);
+                            }
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                lblStatus.Text = "Lỗi kết nối: " + ex.Message;
+                lblStatus.Foreground = System.Windows.Media.Brushes.Red;
+                btnPull.IsEnabled = true;
+                return;
+            }
+
+            // 3. THỰC THI (Kích hoạt External Event)
+            if (RemoteCommandQueue.Items.Count > 0)
+            {
+                _remoteEvent.Raise();
+                lblStatus.Text = "Đang áp dụng thay đổi từ Web...";
+                lblStatus.Foreground = System.Windows.Media.Brushes.Blue;
+            }
+            else
+            {
+                lblStatus.Text = "Hàng đợi trống. Không có lệnh mới nào.";
+                lblStatus.Foreground = System.Windows.Media.Brushes.Gray;
+            }
+
+            btnPull.IsEnabled = true;
         }
 
         private async void btnPublish_Click(object sender, RoutedEventArgs e)

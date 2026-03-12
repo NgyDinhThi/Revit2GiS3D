@@ -12,7 +12,6 @@ namespace RevitToGISsupport.RemoteControl
     public sealed class RemoteCommandPoller : IDisposable
     {
         private const string API_KEY = "CHANGE-ME-IN-PRODUCTION";
-
         private readonly string _baseUrl;
         private readonly string _projectId;
         private readonly string _clientId;
@@ -72,9 +71,7 @@ namespace RevitToGISsupport.RemoteControl
                             }
                             if (!string.IsNullOrWhiteSpace(c.id)) ackIds.Add(c.id);
                         }
-
                         if (hasNewCmd) _evt?.Raise();
-
                         var ackUrl = $"{_baseUrl}/api/projects/{_projectId}/commands/ack";
                         var content = new StringContent(JsonConvert.SerializeObject(new { ids = ackIds }), System.Text.Encoding.UTF8, "application/json");
                         await _http.PostAsync(ackUrl, content);
