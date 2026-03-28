@@ -17,14 +17,14 @@
   <input id="q" placeholder="Search tree..." style="width:120px">
   
   <div style="border-left: 1px solid #ccc; height: 30px; margin: 0 10px;"></div>
-  <input id="webUser" placeholder="Tên hiển thị..." style="width:120px; border-color:#28a745" value="Web User">
+  
+  <input id="webUser" placeholder="Tên hiển thị..." style="width:120px; border-color:#28a745; margin-right: 8px;" value="Web User">
+  <button onclick="loadIndex()" title="Load cấu trúc từ Server" style="margin-right: 8px;"> Làm mới</button>
   <button onclick="showHistory()" style="background:#6c757d; padding: 0 10px;">Lịch sử</button>
   
   <div style="flex:1"></div>
   
   <button class="secondary" onclick="downloadRvt()" style="margin-right: 8px; background: #28a745;" title="Tải file .rvt gốc">Tải file Revit</button>
-  
-  <button onclick="loadIndex()" title="Load cấu trúc từ Server" style="margin-right: 8px;"> Làm mới</button>
   <button class="secondary" onclick="openLatest3D()"> Xem mô hình 3D</button>
 </div>
 
@@ -180,7 +180,6 @@ document.addEventListener('keydown', e => {
     }
 });
 
-// [ĐÃ BỔ SUNG] HÀM GỌI API ĐỂ TẢI FILE REVIT .RVT 
 function downloadRvt() {
     const pid = document.getElementById("projectId").value;
     window.open(`/api/projects/${pid}/models/rvt`, '_blank');
