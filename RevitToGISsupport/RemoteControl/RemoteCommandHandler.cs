@@ -129,18 +129,15 @@ namespace RevitToGISsupport.RemoteControl
                         if (kvp.Key.Contains("Name") && (elem is View || elem is ViewSheet))
                         {
                             if (elem.Name.Normalize().Trim().Equals(newVal, StringComparison.OrdinalIgnoreCase)) continue;
+
+                            elem.Name = newVal;
+                            continue; 
                         }
 
                         switch (param.StorageType)
                         {
                             case StorageType.String:
                                 param.Set(newVal);
-                                break;
-                            case StorageType.Double:
-                                if (double.TryParse(newVal, out double d)) param.Set(d);
-                                break;
-                            case StorageType.Integer:
-                                if (int.TryParse(newVal, out int i)) param.Set(i);
                                 break;
                         }
                     }
