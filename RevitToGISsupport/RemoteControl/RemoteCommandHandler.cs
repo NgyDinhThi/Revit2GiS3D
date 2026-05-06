@@ -79,6 +79,25 @@ namespace RevitToGISsupport.RemoteControl
             {
                 OnExecutionFinished?.Invoke("Áp dụng thành công! Vui lòng kiểm tra lại mô hình.", true);
             }
+            UIDocument uidoc = app.ActiveUIDocument;
+            if (uidoc != null)
+            {
+                // 1. Ép bản vẽ hiện tại (canvas) vẽ lại
+                uidoc.RefreshActiveView();
+
+                // 2. MẸO ÉP BẢNG PROPERTIES TẢI LẠI (Cực kỳ hiệu quả)
+                // Lấy danh sách các đối tượng đang được người dùng bôi đen (chọn)
+                var currentSelection = uidoc.Selection.GetElementIds();
+
+                // Nhả chọn tất cả (Làm bảng Properties nháy trắng 1 mili-giây)
+                uidoc.Selection.SetElementIds(new List<ElementId>());
+
+                // Lập tức chọn lại y như cũ (Bảng Properties buộc phải tải dữ liệu mới nhất từ Core)
+                if (currentSelection.Count > 0)
+                {
+                    uidoc.Selection.SetElementIds(currentSelection);
+                }
+            }
         }
 
         private void TryUpdateParameter(UIDocument uidoc, Document doc, RemoteCommand cmd)
@@ -127,7 +146,6 @@ namespace RevitToGISsupport.RemoteControl
                     }
                     t.Commit();
                 }
-                uidoc?.RefreshActiveView();
                 Task.Run(async () => {
                     await PostCommandResultAsync(GetBaseUrl(), RemoteSettings.ProjectId, new
                     {
@@ -140,7 +158,7 @@ namespace RevitToGISsupport.RemoteControl
             catch (Exception ex) { SendError(cmd, ex.Message); }
         }
 
-        // --- CÁC HÀM HỖ TRỢ (GIỮ NGUYÊN LOGIC CŨ) ---
+ 
         private void TryActivateView(UIDocument uidoc, Document doc, RemoteCommand cmd)
         {
             if (uidoc == null) throw new Exception("Revit window must be active.");

@@ -95,8 +95,7 @@ namespace RevitToGISsupport.RemoteControl
             BuildGlb(outputPath, triVerts, triNormals, triColors, triIndices);
         }
 
-        private static void ProcessGeometry(Document doc, GeometryElement geomElement, (float r, float g, float b) fallbackColor,
-            List<float> verts, List<float> norms, List<float> colors, List<int> indices, ref int vOffset)
+        private static void ProcessGeometry(Document doc, GeometryElement geomElement, (float r, float g, float b) fallbackColor, List<float> verts, List<float> norms, List<float> colors, List<int> indices, ref int vOffset)
         {
             foreach (GeometryObject geomObj in geomElement)
             {
@@ -164,8 +163,7 @@ namespace RevitToGISsupport.RemoteControl
             }
         }
 
-        private static void AddVertex(XYZ pt, float nx, float ny, float nz, (float r, float g, float b) color,
-            List<float> verts, List<float> norms, List<float> colors)
+        private static void AddVertex(XYZ pt, float nx, float ny, float nz, (float r, float g, float b) color,List<float> verts, List<float> norms, List<float> colors)
         {
             float x = (float)UnitUtils.ConvertFromInternalUnits(pt.X, UnitTypeId.Meters);
             float y = (float)UnitUtils.ConvertFromInternalUnits(pt.Y, UnitTypeId.Meters);

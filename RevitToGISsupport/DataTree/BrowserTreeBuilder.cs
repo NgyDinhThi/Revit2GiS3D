@@ -7,12 +7,7 @@ namespace RevitToGISsupport.DataTree
 {
     public static class BrowserTreeBuilder
     {
-        public static BrowserNode BuildTree(
-            Document doc,
-            string rootTitle,
-            IEnumerable<Element> elements,
-            BrowserOrganization org,
-            Func<Element, string> getItemTitle)
+        public static BrowserNode BuildTree(Document doc,string rootTitle, IEnumerable<Element> elements, BrowserOrganization org, Func<Element, string> getItemTitle)
         {
             var root = new BrowserNode
             {
