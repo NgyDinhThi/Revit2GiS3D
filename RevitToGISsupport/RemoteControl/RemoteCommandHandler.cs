@@ -121,8 +121,19 @@ namespace RevitToGISsupport.RemoteControl
                     foreach (var kvp in cmd.parameters)
                     {
                         var param = elem.LookupParameter(kvp.Key);
-                        if (param == null || param.IsReadOnly) continue;
 
+                        // 1. GẶP LỖI: Bắn thông báo lỗi thẳng lên trình duyệt Web
+                        if (param == null)
+                        {
+                            throw new Exception($"Không tìm thấy tham số tên là '{kvp.Key}' trong đối tượng này!");
+                        }
+
+                        if (param.IsReadOnly)
+                        {
+                            throw new Exception($"Tham số '{kvp.Key}' đang bị khóa (Read-Only), không thể ghi đè!");
+                        }
+
+                        // 2. THÀNH CÔNG: Âm thầm xử lý, không hiện bất kỳ bảng thông báo nào trên Revit
                         string newVal = kvp.Value?.Normalize().Trim();
 
                         // Xử lý logic đổi tên đặc biệt cho View/Sheet
@@ -131,7 +142,7 @@ namespace RevitToGISsupport.RemoteControl
                             if (elem.Name.Normalize().Trim().Equals(newVal, StringComparison.OrdinalIgnoreCase)) continue;
 
                             elem.Name = newVal;
-                            continue; 
+                            continue;
                         }
 
                         switch (param.StorageType)
@@ -155,7 +166,6 @@ namespace RevitToGISsupport.RemoteControl
             catch (Exception ex) { SendError(cmd, ex.Message); }
         }
 
- 
         private void TryActivateView(UIDocument uidoc, Document doc, RemoteCommand cmd)
         {
             if (uidoc == null) throw new Exception("Revit window must be active.");
