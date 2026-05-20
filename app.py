@@ -266,6 +266,7 @@ def download_rvt(pid):
         return send_file(path, as_attachment=True)
     else:
         return "File Revit không tồn tại trên Server.", 404
+    
 # --- SOCKETIO ---
 @socketio.on("subscribe")
 def on_sub(data):

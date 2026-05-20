@@ -1,96 +1,99 @@
 <!doctype html>
 <html lang="vi">
 <head>
-  <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width,initial-scale=1"/>
-  <title>BIM Sync Manager</title>
-  <link rel="stylesheet" href="/static/style.css">
-  <style>
-    .img-container {
-        width: 100%;
-        height: calc(100vh - 180px); 
-        padding: 10px;
-        box-sizing: border-box;
-        text-align: center; 
-    }
-    .img-container img {
-        max-width: 100%;
-        max-height: 100%;
-        object-fit: contain; 
-        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-        display: block;
-        margin: 0 auto; 
-    }
-  </style>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width,initial-scale=1"/>
+    <title>BIM Sync Manager</title>
+    <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
 
-<div id="loading"><div class="spinner"></div><div id="loadingText" style="color:#555; font-weight:600">Processing...</div></div>
+<div id="loading">
+    <div class="spinner"></div>
+    <div id="loadingText" style="color:#555; font-weight:600">Processing...</div>
+</div>
 
 <div class="header">
-  <div class="brand-title">BIM Sync</div>
-  <input id="projectId" placeholder="Project ID" value="P001" style="width:60px" title="Project ID">
-  <input id="apiKey" type="password" placeholder="API Key" style="width:100px" value="CHANGE-ME-IN-PRODUCTION" title="API Key">
-  <input id="q" placeholder="Search tree..." style="width:120px">
-  
-  <div style="border-left: 1px solid #ccc; height: 30px; margin: 0 10px;"></div>
-  
-  <input id="webUser" placeholder="Tên hiển thị..." style="width:120px; border-color:#28a745; margin-right: 8px;" value="Web User">
-  <button onclick="loadIndex()" title="Load cấu trúc từ Server" style="margin-right: 8px;"> Làm mới</button>
-  <button onclick="showHistory()" style="background:#6c757d; padding: 0 10px;">Lịch sử</button>
-  
-  <div style="flex:1"></div>
-  
-  <button class="secondary" onclick="downloadRvt()" style="margin-right: 8px; background: #28a745;" title="Tải file .rvt gốc">Tải file Revit</button>
-  <button class="secondary" onclick="openLatest3D()"> Xem mô hình 3D</button>
+    <div class="brand-title">BIM Sync</div>
+    <input id="projectId" placeholder="Project ID" value="P001" style="width:60px" title="Project ID">
+    <input id="apiKey" type="password" placeholder="API Key" style="width:100px" value="CHANGE-ME-IN-PRODUCTION" title="API Key">
+    <input id="q" placeholder="Search tree..." style="width:120px">
+    
+    <div style="border-left: 1px solid #ccc; height: 30px; margin: 0 10px;"></div>
+    
+    <input id="webUser" placeholder="Tên hiển thị..." style="width:120px; border-color:#28a745; margin-right: 8px;" value="Web User">
+    <button onclick="loadIndex()" title="Load cấu trúc từ Server" style="margin-right: 8px;"> Làm mới</button>
+    <button onclick="showHistory()" style="background:#6c757d; padding: 0 10px;">Lịch sử</button>
+    
+    <div style="flex:1"></div>
+    
+    <button class="secondary" onclick="downloadRvt()" style="margin-right: 8px;" title="Tải file .rvt gốc">Tải file Revit</button>
+    <button class="secondary" onclick="openLatest3D()"> Xem mô hình 3D</button>
 </div>
 
 <div class="main">
-  <div class="col-tree" id="treeRoot">
-    <div style="color:var(--text-muted); text-align:center; margin-top:40px">
-      <p>1. Nhấn <b>"Publish to Web"</b> trong Revit.</p>
-      <p>2. Nhấn <b>"Làm mới"</b> ở trên để xem dữ liệu.</p>
+    
+    <div class="col-tree" id="treeRoot">
+        <div style="color:var(--text-muted); text-align:center; margin-top:40px">
+            <p>1. Nhấn <b>"Publish to Web"</b> trong Revit.</p>
+            <p>2. Nhấn <b>"Làm mới"</b> ở trên để xem dữ liệu.</p>
+        </div>
     </div>
-  </div>
 
-  <div class="col-props">
-    <h3>Chỉ số</h3>
-    <div id="propMsg" style="color:var(--text-muted); font-size:13px; font-style:italic">Nơi hiện chỉ số</div>
-    <div id="propForm" style="display:none">
-      <div class="prop-group"><label class="prop-label">Item Name</label><input id="p_name" disabled class="prop-input-disabled"></div>
-      <div class="prop-group"><label class="prop-label">UniqueId</label><input id="p_uid" disabled class="prop-input-disabled prop-input-mono"></div>
-      <hr style="border:0; border-top:1px solid var(--border-color); margin:20px 0">
-      <div class="prop-group">
-        <label class="prop-label" style="color:var(--primary-color)">Update Revit Parameter</label>
+    <div class="col-props">
+        <h3>📋 Thuộc tính chi tiết</h3>
+        <div id="propMsg" style="color:var(--text-muted); font-size:13px; font-style:italic">Chọn một phần tử để xem thông số</div>
         
-        <select id="p_param_name" class="prop-input-active" style="margin-bottom: 8px; cursor: pointer;">
-          <option value="View Name">Tên View / Bản vẽ (Sheet)</option>
-          <option value="Title on Sheet">Tên hiển thị trên bản in</option>
-          <option value="Sheet Number">Số hiệu bản vẽ (Dành cho Sheet)</option>
-          <option value="Drawn By">Người vẽ (Drawn By)</option>
-          <option value="Checked By">Người kiểm duyệt (Checked By)</option>
-          <option value="Approved By">Người phê duyệt (Approved By)</option>
-        </select>
-        
-        <input id="p_param_val" placeholder="Nhập giá trị mới vào đây..." class="prop-input-active">
-      </div>
-      <button onclick="sendUpdate()" style="width:100%; justify-content:center;">Đẩy lên Revit</button>
-    </div>
-  </div>
+        <div id="propertyTableContainer" style="display: none;">
+            <table class="prop-table" id="propertyTable">
+                <thead><tr><th>Tên tham số (Parameter)</th><th>Giá trị (Value)</th></tr></thead>
+                <tbody id="propertyTableBody"><tr><td colspan="2" class="props-loading">Đang tải dữ liệu...</td></tr></tbody>
+            </table>
+        </div>
 
-  <div class="col-preview">
-    <div id="previewActions" style="display:none; text-align:center; width:100%">
-        <select id="renderQuality" style="width:auto; display:inline-block; margin-right:8px; height: 32px;">
-            <option value="500">Xem nhanh</option>
-            <option value="1000" selected>Tiêu chuẩn</option>
-        </select>
-        <button onclick="requestRender()" style="background:#6c757d; padding: 6px 20px; display:inline-block;"> Render ảnh</button>
+        <hr style="border:0; border-top:1px solid var(--border-color); margin:20px 0">
+
+        <div id="propForm" style="display:none">
+            <div class="prop-group">
+                <label class="prop-label">Item Name</label>
+                <input id="p_name" disabled class="prop-input-disabled">
+            </div>
+            <div class="prop-group">
+                <label class="prop-label">UniqueId</label>
+                <input id="p_uid" disabled class="prop-input-disabled prop-input-mono">
+            </div>
+            
+            <hr style="border:0; border-top:1px solid var(--border-color); margin:20px 0">
+            
+            <div class="prop-group">
+                <label class="prop-label" style="color:var(--primary-color)">Update Revit Parameter</label>
+                <select id="p_param_name" class="prop-input-active" style="margin-bottom: 8px; cursor: pointer;">
+                    <option value="View Name">Tên View / Bản vẽ (Sheet)</option>
+                    <option value="Title on Sheet">Tên hiển thị trên bản in</option>
+                    <option value="Sheet Number">Số hiệu bản vẽ (Dành cho Sheet)</option>
+                    <option value="Drawn By">Người vẽ (Drawn By)</option>
+                    <option value="Checked By">Người kiểm duyệt (Checked By)</option>
+                    <option value="Approved By">Người phê duyệt (Approved By)</option>
+                </select>
+                <input id="p_param_val" placeholder="Nhập giá trị mới vào đây..." class="prop-input-active">
+            </div>
+            <button onclick="sendUpdate()" style="width:100%; justify-content:center;">Đẩy lên Revit</button>
+        </div>
     </div>
-    <div id="previewMsg" style="color:var(--text-muted); margin-top:40px; text-align:center">View hiện ảnh ở đây. </div>
-    <div class="img-container" id="imgWrap" style="display:none">
-      <img id="previewImg" alt="View Preview" onclick="openModal()" title="Nhấp để phóng to">
+
+    <div class="col-preview">
+        <div id="previewActions" style="display:none; text-align:center; width:100%">
+            <select id="renderQuality" style="width:auto; display:inline-block; margin-right:8px; height: 32px;">
+                <option value="500">Xem nhanh</option>
+                <option value="1000" selected>Tiêu chuẩn</option>
+            </select>
+            <button onclick="requestRender()" style="background:#6c757d; padding: 6px 20px; display:inline-block;"> Render ảnh</button>
+        </div>
+        <div id="previewMsg" style="color:var(--text-muted); margin-top:40px; text-align:center">View hiện ảnh ở đây. </div>
+        <div class="img-container" id="imgWrap" style="display:none">
+            <img id="previewImg" alt="View Preview" onclick="openModal()" title="Nhấp để phóng to">
+        </div>
     </div>
-  </div>
 </div>
 
 <div id="imageModal" class="modal" onclick="closeModal()">
@@ -100,12 +103,10 @@
 
 <div id="historyModal" class="modal" onclick="closeHistoryModal()">
     <div class="modal-content" style="width: 90%; max-width: 950px; height: 85vh; background: #fff; border-radius: 8px; overflow: hidden; display: flex; flex-direction: column;" onclick="event.stopPropagation()">
-        
         <div style="padding: 12px 20px; background: #f3f2f1; border-bottom: 1px solid #ddd; display: flex; justify-content: space-between; align-items: center;">
             <h3 style="margin: 0; color: #0078d4; font-size: 18px;">BIM Sync - Nhật ký hoạt động</h3>
             <span onclick="closeHistoryModal()" style="font-size: 28px; cursor: pointer; color: #888; line-height: 1; transition: 0.2s;" title="Đóng cửa sổ">&times;</span>
         </div>
-        
         <iframe id="historyFrame" style="flex: 1; width: 100%; border: none;"></iframe>
     </div>
 </div>
@@ -119,50 +120,77 @@
 
 <script>
 const CONFIG = { RENDER_TIMEOUT: 180000 };
-let selectedNode = null; let socket = null; let currentProjectId = null; const pendingCmds = new Map();
+let selectedNode = null; 
+let socket = null; 
+let currentProjectId = null; 
+const pendingCmds = new Map();
 
-if(localStorage.getItem("apiKey")) document.getElementById("apiKey").value = localStorage.getItem("apiKey");
+// --- KHỞI TẠO & HỖ TRỢ ---
+if (localStorage.getItem("apiKey")) {
+    document.getElementById("apiKey").value = localStorage.getItem("apiKey");
+}
 
 function getHeaders() {
-  const key = document.getElementById("apiKey").value;
-  localStorage.setItem("apiKey", key);
-  return { "Content-Type": "application/json", "X-API-Key": key };
+    const key = document.getElementById("apiKey").value;
+    localStorage.setItem("apiKey", key);
+    return { "Content-Type": "application/json", "X-API-Key": key };
 }
 
-function setStatus(msg, type='') {
-  const el = document.getElementById("statusText");
-  el.textContent = msg; el.style.color = ""; el.style.fontWeight = "";
-  el.className = type === 'error' ? 'status error' : (type === 'success' ? 'status success' : '');
+function setStatus(msg, type = '') {
+    const el = document.getElementById("statusText");
+    el.textContent = msg;
+    el.className = type === 'error' ? 'status error' : (type === 'success' ? 'status success' : '');
 }
 
-function showLoading(show, text="Processing...") {
-  document.getElementById("loadingText").textContent = text;
-  document.getElementById("loading").style.display = show ? "flex" : "none";
+function showLoading(show, text = "Processing...") {
+    document.getElementById("loadingText").textContent = text;
+    document.getElementById("loading").style.display = show ? "flex" : "none";
 }
 
+// --- KẾT NỐI SOCKET.IO ---
 function initSocket(pid) {
-    if(socket && currentProjectId === pid) return;
-    if(!window.io) return;
-    socket = io(); currentProjectId = pid;
-    socket.on('connect', () => { document.getElementById("socketStatus").textContent = "Connected"; socket.emit('subscribe', { projectId: pid }); });
+    if (socket && currentProjectId === pid) return;
+    if (!window.io) return;
+    
+    socket = io(); 
+    currentProjectId = pid;
+    
+    socket.on('connect', () => { 
+        document.getElementById("socketStatus").textContent = "Connected"; 
+        socket.emit('subscribe', { projectId: pid }); 
+    });
+    
     socket.on('command', (cmd) => {
         if (cmd.action !== 'update_parameter' || pendingCmds.has(cmd.id)) return;
         let pNames = Object.keys(cmd.parameters || {}).join(", ");
         const el = document.getElementById("statusText");
         el.textContent = `Vừa có người khác (${cmd.user || 'Ai đó'}) sửa [${pNames}]. Nhấn 'Làm mới' để cập nhật!`;
-        el.style.color = "#d75e04"; el.style.fontWeight = "bold";
+        el.style.color = "#d75e04"; 
+        el.style.fontWeight = "bold";
     });
+    
     socket.on('command_result', (data) => {
-        if(!data || !data.id) return;
-        const task = pendingCmds.get(data.id); if(!task) return;
+        if (!data || !data.id) return;
+        const task = pendingCmds.get(data.id); 
+        if (!task) return;
+        
         showLoading(false);
         setTimeout(() => {
-            if(data.status === 'done') {
+            if (data.status === 'done') {
                 setStatus("Command Completed!", "success");
-                if(data.imageUrl) { document.getElementById("previewImg").src = data.imageUrl; document.getElementById("imgWrap").style.display = "block"; document.getElementById("previewMsg").style.display = "none"; } 
-                else { alert(data.message || "Thành công!"); }
+                if (data.imageUrl) { 
+                    document.getElementById("previewImg").src = data.imageUrl; 
+                    document.getElementById("imgWrap").style.display = "block"; 
+                    document.getElementById("previewMsg").style.display = "none"; 
+                } else { 
+                    alert(data.message || "Thành công!"); 
+                }
                 task.resolve(true);
-            } else { setStatus("Error: " + data.message, "error"); alert("Lỗi: " + data.message); task.resolve(false); }
+            } else { 
+                setStatus("Error: " + data.message, "error"); 
+                alert("Lỗi: " + data.message); 
+                task.resolve(false); 
+            }
             pendingCmds.delete(data.id);
         }, 50); 
     });
@@ -171,13 +199,24 @@ function initSocket(pid) {
 function waitForResult(cmdId) {
     return new Promise((resolve) => {
         const t = setTimeout(() => {
-            if(pendingCmds.has(cmdId)) { pendingCmds.delete(cmdId); alert("Timeout!"); resolve(false); }
+            if (pendingCmds.has(cmdId)) { 
+                pendingCmds.delete(cmdId); 
+                alert("Timeout!"); 
+                resolve(false); 
+            }
         }, CONFIG.RENDER_TIMEOUT);
         pendingCmds.set(cmdId, { resolve: (res) => { clearTimeout(t); resolve(res); } });
     });
 }
 
-function openModal() { const o = document.getElementById("previewImg"); if(o.src) { document.getElementById("imageModal").style.display="block"; document.getElementById("imgModalExpanded").src = o.src; } }
+// --- XỬ LÝ GIAO DIỆN MODALS ---
+function openModal() { 
+    const o = document.getElementById("previewImg"); 
+    if (o.src) { 
+        document.getElementById("imageModal").style.display = "block"; 
+        document.getElementById("imgModalExpanded").src = o.src; 
+    } 
+}
 function closeModal() { document.getElementById("imageModal").style.display = "none"; }
 
 function showHistory() {
@@ -199,86 +238,167 @@ document.addEventListener('keydown', e => {
     }
 });
 
+// --- GỌI API (FETCH DATA) ---
 function downloadRvt() {
     const pid = document.getElementById("projectId").value;
     window.open(`/api/projects/${pid}/models/rvt`, '_blank');
-}
-
-async function loadIndex() {
-  const pid = document.getElementById("projectId").value;
-  showLoading(true, "Loading..."); initSocket(pid);
-  try {
-    const res = await fetch(`/api/projects/${pid}/browser-index/latest`, { headers: getHeaders() });
-    if(res.status === 404) throw new Error("Chưa có dữ liệu.");
-    const data = await res.json(); renderTree(data.nodes || [], document.getElementById("q").value.toLowerCase()); setStatus("Tree loaded.", "success");
-  } catch(e) { setStatus(e.message, "error"); } finally { showLoading(false); }
 }
 
 async function openLatest3D() {
     const pid = document.getElementById("projectId").value;
     try {
         const res = await fetch(`/api/projects/${pid}/models/latest-glb`, { headers: getHeaders() });
-        const data = await res.json(); window.open(`/viewer_glb?file=${data.latestGlbFile}`, "_blank");
-    } catch(e) { alert(e.message); }
+        const data = await res.json(); 
+        window.open(`/viewer_glb?file=${data.latestGlbFile}`, "_blank");
+    } catch(e) { 
+        alert(e.message); 
+    }
 }
 
+async function loadIndex() {
+    const pid = document.getElementById("projectId").value;
+    showLoading(true, "Loading..."); 
+    initSocket(pid);
+    try {
+        const res = await fetch(`/api/projects/${pid}/browser-index/latest`, { headers: getHeaders() });
+        if (res.status === 404) throw new Error("Chưa có dữ liệu.");
+        const data = await res.json(); 
+        renderTree(data.nodes || [], document.getElementById("q").value.toLowerCase()); 
+        setStatus("Tree loaded.", "success");
+    } catch(e) { 
+        setStatus(e.message, "error"); 
+    } finally { 
+        showLoading(false); 
+    }
+}
+
+async function loadProperties(uniqueId) {
+    if (!uniqueId) {
+        document.getElementById("propertyTableContainer").style.display = "none";
+        document.getElementById("propMsg").style.display = "block";
+        document.getElementById("propMsg").innerHTML = " Không có UniqueId để tải thuộc tính.";
+        return;
+    }
+    
+    const pid = document.getElementById("projectId").value;
+    const tableContainer = document.getElementById("propertyTableContainer");
+    const tbody = document.getElementById("propertyTableBody");
+    
+    tableContainer.style.display = "block";
+    document.getElementById("propMsg").style.display = "none";
+    tbody.innerHTML = '<tr><td colspan="2" class="props-loading">⏳ Đang tải thuộc tính...</td></tr>';
+    
+    try {
+        const response = await fetch(`/api/projects/${pid}/browser-index/latest`, { headers: getHeaders() });
+        if (!response.ok) throw new Error('Không thể kết nối đến API lấy dữ liệu.');
+        
+        const data = await response.json();
+        const element = data.elements?.[uniqueId];
+        const properties = element?.properties || {};
+        
+        if (Object.keys(properties).length === 0) {
+            tbody.innerHTML = '<tr><td colspan="2" class="props-loading">📭 Không có thuộc tính nào cho phần tử này.</td></tr>';
+            return;
+        }
+        
+        tbody.innerHTML = "";
+        
+        // Tự động kiểm tra xem dữ liệu từ Revit đẩy lên là form CŨ (phẳng) hay MỚI (đã chia nhóm)
+        const isGrouped = Object.values(properties).some(val => typeof val === 'object');
+
+        if (!isGrouped) {
+            // NẾU LÀ DỮ LIỆU CŨ: Gom hết vào một nhóm "General" để code không bị vỡ chữ
+            const groupRow = tbody.insertRow();
+            const groupCell = groupRow.insertCell(0);
+            groupCell.colSpan = 2;
+            groupCell.innerHTML = `&#709; General (Cần Đồng bộ lại từ Revit)`;
+            groupCell.className = "prop-group-header";
+
+            for (const [paramName, paramValue] of Object.entries(properties)) {
+                const row = tbody.insertRow();
+                const cellName = row.insertCell(0);
+                cellName.textContent = paramName;
+                cellName.className = "prop-name-cell";
+                const cellValue = row.insertCell(1);
+                cellValue.textContent = (paramValue === null || paramValue === undefined) ? "—" : String(paramValue);
+                cellValue.className = "prop-value-cell";
+            }
+        } else {
+            // NẾU LÀ DỮ LIỆU MỚI: Hiển thị chuẩn xác từng Group (Graphics, Identity Data,...)
+            for (const [groupName, groupProps] of Object.entries(properties)) {
+                const groupRow = tbody.insertRow();
+                const groupCell = groupRow.insertCell(0);
+                groupCell.colSpan = 2;
+                groupCell.innerHTML = `&#709; ${groupName}`; 
+                groupCell.className = "prop-group-header";
+                
+                for (const [paramName, paramValue] of Object.entries(groupProps)) {
+                    const row = tbody.insertRow();
+                    const cellName = row.insertCell(0);
+                    cellName.textContent = paramName;
+                    cellName.className = "prop-name-cell";
+                    const cellValue = row.insertCell(1);
+                    cellValue.textContent = (paramValue === null || paramValue === undefined) ? "—" : String(paramValue);
+                    cellValue.className = "prop-value-cell";
+                }
+            }
+        }
+        setStatus(`Đã tải thuộc tính thành công.`, "success");
+    } catch (error) {
+        console.error(error);
+        tbody.innerHTML = `<tr><td colspan="2" class="props-loading" style="color:#d13438;">❌ Lỗi: ${error.message}</td></tr>`;
+        setStatus(`Lỗi tải properties: ${error.message}`, "error");
+    }
+}
+
+// --- GỬI LỆNH XUỐNG REVIT ---
 async function requestRender() {
-    if(!selectedNode) return;
-    await sendCommand("render_view_png", { targetUniqueId: selectedNode.revit.uniqueId, pixelSize: parseInt(document.getElementById("renderQuality").value) || 1000 });
+    if (!selectedNode) return;
+    await sendCommand("render_view_png", { 
+        targetUniqueId: selectedNode.revit.uniqueId, 
+        pixelSize: parseInt(document.getElementById("renderQuality").value) || 1000 
+    });
 }
 
 async function sendUpdate() {
-    if(!selectedNode) return;
-    
-    // Lấy tên Parameter từ danh sách thả xuống (Dropdown)
+    if (!selectedNode) return;
     const paramName = document.getElementById("p_param_name").value;
-    
-    // Lấy giá trị mới gõ vào
     const val = document.getElementById("p_param_val").value;
     
-    // Bắt lỗi nếu người dùng chưa gõ gì
     if (!val || val.trim() === "") {
         alert("Vui lòng nhập giá trị mới vào ô trống trước khi cập nhật!");
         document.getElementById("p_param_val").focus();
         return;
     }
-
+    
     const userName = document.getElementById("webUser").value || "Web User"; 
-
     const isSuccess = await sendCommand("update_parameter", {
         targetUniqueId: selectedNode.revit.uniqueId,
         parameters: { [paramName]: val },
         user: userName 
     });
-
+    
     if (isSuccess) {
         let newTitle = val;
-
-        // Xử lý đổi tên UI cho Sheet
         if (selectedNode.kind === "sheet") {
             let parts = selectedNode.title.split(" - ");
             if (parts.length > 1) {
                 if (paramName === "View Name") newTitle = `${parts[0]} - ${val}`;
                 else if (paramName === "Sheet Number") newTitle = `${val} - ${parts[1]}`;
             }
-            if (["View Name", "Sheet Number"].includes(paramName)) {
-                selectedNode.title = newTitle;
-                const activeLeaf = document.querySelector(".leaf.selected .leaf-title");
-                if (activeLeaf) activeLeaf.textContent = newTitle;
-                document.getElementById("p_name").value = newTitle;
-            }
-        } 
-        // Xử lý đổi tên UI cho View
-        else {
-            if (paramName === "View Name") {
-                selectedNode.title = newTitle;
-                const activeLeaf = document.querySelector(".leaf.selected .leaf-title");
-                if (activeLeaf) activeLeaf.textContent = newTitle;
-                document.getElementById("p_name").value = newTitle;
-            }
+        }
+        
+        if (["View Name", "Sheet Number"].includes(paramName)) {
+            selectedNode.title = newTitle;
+            const activeLeaf = document.querySelector(".leaf.selected .leaf-title");
+            if (activeLeaf) activeLeaf.textContent = newTitle;
+            document.getElementById("p_name").value = newTitle;
         }
         
         document.getElementById("p_param_val").value = "";
+        if (selectedNode && selectedNode.revit && selectedNode.revit.uniqueId) {
+            loadProperties(selectedNode.revit.uniqueId);
+        }
     }
 }
 
@@ -286,7 +406,6 @@ async function sendCommand(action, payload) {
     const pid = document.getElementById("projectId").value;
     showLoading(true, "Sending command..."); 
     setStatus("Sending...");
-    
     try {
         const res = await fetch(`/api/projects/${pid}/commands`, { 
             method: 'POST', 
@@ -294,19 +413,13 @@ async function sendCommand(action, payload) {
             body: JSON.stringify({ action, ...payload }) 
         });
         const data = await res.json(); 
-
         if (action === "update_parameter") {
-            
-            // THÊM DÒNG NÀY: Ép hệ thống đợi đúng 0.5 giây (500ms) trước khi tắt loading
             await new Promise(resolve => setTimeout(resolve, 500));
- 
             setStatus("Đã lưu thay đổi vào Cloud!", "success");
             showLoading(false);
             return true; 
         }
-
         return await waitForResult(data.id); 
-        
     } catch(e) { 
         alert("Failed"); 
         return false; 
@@ -315,45 +428,87 @@ async function sendCommand(action, payload) {
     }
 }
 
+// --- VẼ CÂY THƯ MỤC ---
 function renderTree(nodes, query) {
-  const root = document.getElementById("treeRoot"); root.innerHTML = ""; const tree = {};
-  nodes.forEach(n => {
-    if(query && !n.title.toLowerCase().includes(query)) return;
-    let current = tree;
-    (n.path || []).forEach(folder => { if(!current[folder]) current[folder] = { __type: 'folder', children: {} }; current = current[folder].children; });
-    current[n.title + n.revit?.uniqueId] = { __type: 'item', data: n };
-  });
-  root.appendChild(createDomTree(tree));
+    const root = document.getElementById("treeRoot"); 
+    root.innerHTML = ""; 
+    const tree = {};
+    
+    nodes.forEach(n => {
+        if (query && !n.title.toLowerCase().includes(query)) return;
+        let current = tree;
+        (n.path || []).forEach(folder => { 
+            if (!current[folder]) current[folder] = { __type: 'folder', children: {} }; 
+            current = current[folder].children; 
+        });
+        current[n.title + n.revit?.uniqueId] = { __type: 'item', data: n };
+    });
+    
+    root.appendChild(createDomTree(tree));
 }
 
 function createDomTree(obj) {
-  const ul = document.createElement("div");
-  Object.keys(obj).forEach(key => {
-    const node = obj[key];
-    if(node.__type === 'folder') {
-      const details = document.createElement("details"); details.open = true;
-      const sum = document.createElement("summary"); sum.textContent = key; details.appendChild(sum);
-      const children = createDomTree(node.children); children.className = "node"; details.appendChild(children); ul.appendChild(details);
-    } else {
-      const row = document.createElement("div"); row.className = "leaf";
-      const title = document.createElement("div"); title.className = "leaf-title"; title.textContent = node.data.title;
-      const tag = document.createElement("span"); tag.className = "tag"; tag.textContent = node.data.kind;
-      row.appendChild(title); row.appendChild(tag);
-      row.onclick = () => selectItem(row, node.data); ul.appendChild(row);
-    }
-  }); return ul;
+    const ul = document.createElement("div");
+    Object.keys(obj).forEach(key => {
+        const node = obj[key];
+        if (node.__type === 'folder') {
+            const details = document.createElement("details"); 
+            details.open = true;
+            
+            const sum = document.createElement("summary"); 
+            sum.textContent = key; 
+            details.appendChild(sum);
+            
+            const children = createDomTree(node.children); 
+            children.className = "node"; 
+            details.appendChild(children); 
+            ul.appendChild(details);
+        } else {
+            const row = document.createElement("div"); 
+            row.className = "leaf";
+            
+            const title = document.createElement("div"); 
+            title.className = "leaf-title"; 
+            title.textContent = node.data.title;
+            
+            const tag = document.createElement("span"); 
+            tag.className = "tag"; 
+            tag.textContent = node.data.kind;
+            
+            row.appendChild(title); 
+            row.appendChild(tag);
+            row.onclick = () => selectItem(row, node.data); 
+            ul.appendChild(row);
+        }
+    }); 
+    return ul;
 }
 
 function selectItem(el, data) {
-  document.querySelectorAll(".leaf").forEach(x => x.classList.remove("selected")); el.classList.add("selected"); selectedNode = data;
-  document.getElementById("propMsg").style.display = "none"; document.getElementById("propForm").style.display = "block";
-  document.getElementById("p_name").value = data.title; document.getElementById("p_uid").value = data.revit?.uniqueId || "";
-  const isView = ['view','sheet','schedule'].includes(data.kind);
-  document.getElementById("previewActions").style.display = isView ? "block" : "none";
-  document.getElementById("previewMsg").style.display = isView ? "block" : "none";
+    document.querySelectorAll(".leaf").forEach(x => x.classList.remove("selected")); 
+    el.classList.add("selected"); 
+    selectedNode = data;
+    
+    document.getElementById("propMsg").style.display = "none";
+    document.getElementById("propForm").style.display = "block";
+    document.getElementById("p_name").value = data.title;
+    document.getElementById("p_uid").value = data.revit?.uniqueId || "";
+    
+    const isView = ['view','sheet','schedule'].includes(data.kind);
+    document.getElementById("previewActions").style.display = isView ? "block" : "none";
+    document.getElementById("previewMsg").style.display = isView ? "block" : "none";
+    
+    if (data.revit && data.revit.uniqueId) {
+        loadProperties(data.revit.uniqueId);
+    } else {
+        document.getElementById("propertyTableContainer").style.display = "none";
+        document.getElementById("propMsg").style.display = "block";
+        document.getElementById("propMsg").innerHTML = "Phần tử này không có UniqueId (có thể là thư mục).";
+    }
 }
-
-document.getElementById("q").addEventListener("keyup", e => { if(e.key==="Enter") loadIndex(); });
+document.getElementById("q").addEventListener("keyup", e => { 
+    if (e.key === "Enter") loadIndex(); 
+});
 </script>
 </body>
 </html>
