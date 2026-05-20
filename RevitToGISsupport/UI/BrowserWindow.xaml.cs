@@ -39,8 +39,6 @@ namespace RevitToGISsupport.UI
 
         private string _pollerServer;
         private string _pollerProjectId;
-        private string _pollerClientId;
-
         private const string INTERNAL_SERVER_URL = "http://127.0.0.1:5000";
         private string _baseShareUrl = "http://127.0.0.1:5000";
         private bool _isPublished = false;
@@ -471,11 +469,104 @@ namespace RevitToGISsupport.UI
         private BrowserNode BuildGroupsTree(Document doc) { var root = new BrowserNode { Title = "Groups", Type = BrowserNodeType.Folder }; return root; }
         private BrowserNode BuildRevitLinksTree(Document doc) { var root = new BrowserNode { Title = "Revit Links", Type = BrowserNodeType.Folder }; return root; }
 
+        private Dictionary<string, Dictionary<string, string>> ExtractElementProperties(Element elem)
+        {
+            var groupedProps = new Dictionary<string, Dictionary<string, string>>();
+
+            // Tuyệt chiêu 1: Lấy danh sách tham số theo ĐÚNG THỨ TỰ hiển thị trên giao diện Revit
+            IList<Parameter> orderedParams = elem.GetOrderedParameters();
+
+            foreach (Parameter param in orderedParams)
+            {
+                // Bỏ qua các tham số rỗng
+                if (param == null || !param.HasValue) continue;
+
+                // Tuyệt chiêu 2: Tự động lấy tên Nhóm (Group) chuẩn xác của Revit (Graphics, Identity Data...)
+                string groupName = "Other";
+                try
+                {
+                    groupName = LabelUtils.GetLabelFor(param.Definition.ParameterGroup);
+                }
+                catch { }
+
+                string paramName = param.Definition.Name;
+                string paramValue = "";
+
+                switch (param.StorageType)
+                {
+                    case StorageType.String: paramValue = param.AsString(); break;
+                    case StorageType.Double: paramValue = param.AsValueString() ?? param.AsDouble().ToString(); break;
+                    case StorageType.Integer: paramValue = param.AsValueString() ?? param.AsInteger().ToString(); break;
+                    case StorageType.ElementId: paramValue = param.AsValueString() ?? param.AsElementId().ToString(); break;
+                }
+
+                if (!string.IsNullOrWhiteSpace(paramValue))
+                {
+                    if (!groupedProps.ContainsKey(groupName))
+                    {
+                        groupedProps[groupName] = new Dictionary<string, string>();
+                    }
+                    if (!groupedProps[groupName].ContainsKey(paramName))
+                    {
+                        groupedProps[groupName].Add(paramName, paramValue);
+                    }
+                }
+            }
+
+            return groupedProps;
+        }
         private object BuildBrowserIndex(string projectId)
         {
             var nodes = new List<object>();
-            foreach (var branch in _root.Children) TraverseLeaf(branch, new List<string>(), nodes);
-            return new Dictionary<string, object> { ["projectId"] = projectId, ["nodes"] = nodes };
+            var elements = new Dictionary<string, object>(); 
+
+            foreach (var branch in _root.Children)
+            {
+                TraverseLeaf(branch, new List<string>(), nodes, elements);
+            }
+
+            return new Dictionary<string, object>
+            {
+                ["projectId"] = projectId,
+                ["nodes"] = nodes,
+                ["elements"] = elements
+            };
+        }
+
+        private void TraverseLeaf(BrowserNode node, List<string> path, List<object> outputNodes, Dictionary<string, object> outputElements)
+        {
+            if (node == null) return;
+            if (node.Type == BrowserNodeType.Folder)
+            {
+                path.Add(node.Title);
+                foreach (var c in node.Children) TraverseLeaf(c, path, outputNodes, outputElements);
+                path.RemoveAt(path.Count - 1);
+                return;
+            }
+
+            var id = node.ElementId;
+            if (id == ElementId.InvalidElementId) return;
+
+            var elem = _doc.GetElement(id);
+            if (elem == null) return;
+
+            string kind = "item";
+            if (elem is View v) kind = v is ViewSheet ? "sheet" : (v is ViewSchedule ? "schedule" : "view");
+
+            string uniqueId = elem.UniqueId;
+
+            // Dữ liệu 1: Đẩy vào Node (Phục vụ vẽ cây thư mục bên trái Web)
+            outputNodes.Add(new Dictionary<string, object>
+            {
+                ["title"] = node.Title,
+                ["kind"] = kind,
+                ["path"] = path.ToArray(),
+                ["revit"] = new Dictionary<string, object> { ["uniqueId"] = uniqueId }
+            });
+
+            // Dữ liệu 2: Đẩy vào Elements (Phục vụ bảng Properties bên phải Web)
+            var props = ExtractElementProperties(elem);
+            outputElements[uniqueId] = new { properties = props };
         }
 
         private void TraverseLeaf(BrowserNode node, List<string> path, List<object> output)
