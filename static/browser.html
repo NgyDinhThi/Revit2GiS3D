@@ -15,13 +15,12 @@
 
 <div class="header">
     <div class="brand-title">BIM Sync</div>
-    <input id="projectId" placeholder="Project ID" value="P001" style="width:60px" title="Project ID">
-    <input id="apiKey" type="password" placeholder="API Key" style="width:100px" value="CHANGE-ME-IN-PRODUCTION" title="API Key">
-    <input id="q" placeholder="Search tree..." style="width:120px">
+    <input id="projectId" placeholder="Project ID" value="P001" style="width:70px" title="Project ID">
+    <input id="q" placeholder="Search tree..." style="width:140px">
     
     <div style="border-left: 1px solid #ccc; height: 30px; margin: 0 10px;"></div>
     
-    <input id="webUser" placeholder="Tên hiển thị..." style="width:120px; border-color:#28a745; margin-right: 8px;" value="Web User">
+    <input id="webUser" placeholder="Tên hiển thị..." style="width:130px; border-color:#28a745; margin-right: 8px;" value="Web User">
     <button onclick="loadIndex()" title="Load cấu trúc từ Server" style="margin-right: 8px;"> Làm mới</button>
     <button onclick="showHistory()" style="background:#6c757d; padding: 0 10px;">Lịch sử</button>
     
@@ -32,7 +31,6 @@
 </div>
 
 <div class="main">
-    
     <div class="col-tree" id="treeRoot">
         <div style="color:var(--text-muted); text-align:center; margin-top:40px">
             <p>1. Nhấn <b>"Publish to Web"</b> trong Revit.</p>
@@ -41,13 +39,13 @@
     </div>
 
     <div class="col-props">
-        <h3>📋 Thuộc tính chi tiết</h3>
+        <h3>Thuộc tính chi tiết</h3>
         <div id="propMsg" style="color:var(--text-muted); font-size:13px; font-style:italic">Chọn một phần tử để xem thông số</div>
         
         <div id="propertyTableContainer" style="display: none;">
             <table class="prop-table" id="propertyTable">
                 <thead><tr><th>Tên tham số (Parameter)</th><th>Giá trị (Value)</th></tr></thead>
-                <tbody id="propertyTableBody"><tr><td colspan="2" class="props-loading">Đang tải dữ liệu...</td></tr></tbody>
+                <tbody id="propertyTableBody"><tr><td colspan="2" class="props-loading">Đang tải dữ liệu......</td></tr></tbody>
             </table>
         </div>
 
@@ -125,15 +123,13 @@ let socket = null;
 let currentProjectId = null; 
 const pendingCmds = new Map();
 
-// --- KHỞI TẠO & HỖ TRỢ ---
-if (localStorage.getItem("apiKey")) {
-    document.getElementById("apiKey").value = localStorage.getItem("apiKey");
-}
+const DEFAULT_API_KEY = "CHANGE-ME-IN-PRODUCTION";
 
 function getHeaders() {
-    const key = document.getElementById("apiKey").value;
-    localStorage.setItem("apiKey", key);
-    return { "Content-Type": "application/json", "X-API-Key": key };
+    return { 
+        "Content-Type": "application/json", 
+        "X-API-Key": DEFAULT_API_KEY 
+    };
 }
 
 function setStatus(msg, type = '') {
@@ -147,7 +143,6 @@ function showLoading(show, text = "Processing...") {
     document.getElementById("loading").style.display = show ? "flex" : "none";
 }
 
-// --- KẾT NỐI SOCKET.IO ---
 function initSocket(pid) {
     if (socket && currentProjectId === pid) return;
     if (!window.io) return;
@@ -209,7 +204,6 @@ function waitForResult(cmdId) {
     });
 }
 
-// --- XỬ LÝ GIAO DIỆN MODALS ---
 function openModal() { 
     const o = document.getElementById("previewImg"); 
     if (o.src) { 
@@ -238,7 +232,6 @@ document.addEventListener('keydown', e => {
     }
 });
 
-// --- GỌI API (FETCH DATA) ---
 function downloadRvt() {
     const pid = document.getElementById("projectId").value;
     window.open(`/api/projects/${pid}/models/rvt`, '_blank');
@@ -276,7 +269,7 @@ async function loadProperties(uniqueId) {
     if (!uniqueId) {
         document.getElementById("propertyTableContainer").style.display = "none";
         document.getElementById("propMsg").style.display = "block";
-        document.getElementById("propMsg").innerHTML = " Không có UniqueId để tải thuộc tính.";
+        document.getElementById("propMsg").innerHTML = "Không có UniqueId để tải thuộc tính.";
         return;
     }
     
@@ -286,72 +279,66 @@ async function loadProperties(uniqueId) {
     
     tableContainer.style.display = "block";
     document.getElementById("propMsg").style.display = "none";
-    tbody.innerHTML = '<tr><td colspan="2" class="props-loading">⏳ Đang tải thuộc tính...</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="2" class="props-loading">Đang tải thuộc tính...</td></tr>';
     
     try {
         const response = await fetch(`/api/projects/${pid}/browser-index/latest`, { headers: getHeaders() });
-        if (!response.ok) throw new Error('Không thể kết nối đến API lấy dữ liệu.');
+        if (!response.ok) throw new Error(`HTTP ${response.status}: Không tìm thấy dữ liệu trên Server`);
         
         const data = await response.json();
         const element = data.elements?.[uniqueId];
         const properties = element?.properties || {};
         
         if (Object.keys(properties).length === 0) {
-            tbody.innerHTML = '<tr><td colspan="2" class="props-loading">📭 Không có thuộc tính nào cho phần tử này.</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="2" class="props-loading">Không có thuộc tính nào cho phần tử này.</td></tr>';
             return;
         }
         
+        const isGrouped = Object.values(properties).some(val => typeof val === 'object');
         tbody.innerHTML = "";
         
-        // Tự động kiểm tra xem dữ liệu từ Revit đẩy lên là form CŨ (phẳng) hay MỚI (đã chia nhóm)
-        const isGrouped = Object.values(properties).some(val => typeof val === 'object');
-
         if (!isGrouped) {
-            // NẾU LÀ DỮ LIỆU CŨ: Gom hết vào một nhóm "General" để code không bị vỡ chữ
             const groupRow = tbody.insertRow();
             const groupCell = groupRow.insertCell(0);
             groupCell.colSpan = 2;
-            groupCell.innerHTML = `&#709; General (Cần Đồng bộ lại từ Revit)`;
+            // Xóa icon và các ký tự đầu
+            groupCell.innerHTML = `General (Cần đồng bộ lại dữ liệu)`;
             groupCell.className = "prop-group-header";
-
+            
             for (const [paramName, paramValue] of Object.entries(properties)) {
                 const row = tbody.insertRow();
-                const cellName = row.insertCell(0);
-                cellName.textContent = paramName;
-                cellName.className = "prop-name-cell";
-                const cellValue = row.insertCell(1);
-                cellValue.textContent = (paramValue === null || paramValue === undefined) ? "—" : String(paramValue);
-                cellValue.className = "prop-value-cell";
+                row.insertCell(0).textContent = paramName;
+                row.insertCell(1).textContent = (paramValue === null || paramValue === undefined) ? "—" : String(paramValue);
+                row.cells[0].className = "prop-name-cell";
+                row.cells[1].className = "prop-value-cell";
             }
         } else {
-            // NẾU LÀ DỮ LIỆU MỚI: Hiển thị chuẩn xác từng Group (Graphics, Identity Data,...)
             for (const [groupName, groupProps] of Object.entries(properties)) {
                 const groupRow = tbody.insertRow();
                 const groupCell = groupRow.insertCell(0);
                 groupCell.colSpan = 2;
-                groupCell.innerHTML = `&#709; ${groupName}`; 
+                // Loại bỏ "v " và bất kỳ ký tự đặc biệt nào ở đầu, chỉ giữ tên nhóm
+                let cleanGroupName = groupName.replace(/^[^\w\s]*v?\s*/i, '').trim();
+                groupCell.innerHTML = cleanGroupName;
                 groupCell.className = "prop-group-header";
                 
                 for (const [paramName, paramValue] of Object.entries(groupProps)) {
                     const row = tbody.insertRow();
-                    const cellName = row.insertCell(0);
-                    cellName.textContent = paramName;
-                    cellName.className = "prop-name-cell";
-                    const cellValue = row.insertCell(1);
-                    cellValue.textContent = (paramValue === null || paramValue === undefined) ? "—" : String(paramValue);
-                    cellValue.className = "prop-value-cell";
+                    row.insertCell(0).textContent = paramName;
+                    row.insertCell(1).textContent = (paramValue === null || paramValue === undefined) ? "—" : String(paramValue);
+                    row.cells[0].className = "prop-name-cell";
+                    row.cells[1].className = "prop-value-cell";
                 }
             }
         }
         setStatus(`Đã tải thuộc tính thành công.`, "success");
     } catch (error) {
         console.error(error);
-        tbody.innerHTML = `<tr><td colspan="2" class="props-loading" style="color:#d13438;">❌ Lỗi: ${error.message}</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="2" class="props-loading" style="color:#d13438;"> Lỗi: ${error.message}</td></tr>`;
         setStatus(`Lỗi tải properties: ${error.message}`, "error");
     }
 }
 
-// --- GỬI LỆNH XUỐNG REVIT ---
 async function requestRender() {
     if (!selectedNode) return;
     await sendCommand("render_view_png", { 
@@ -428,7 +415,6 @@ async function sendCommand(action, payload) {
     }
 }
 
-// --- VẼ CÂY THƯ MỤC ---
 function renderTree(nodes, query) {
     const root = document.getElementById("treeRoot"); 
     root.innerHTML = ""; 
@@ -454,11 +440,9 @@ function createDomTree(obj) {
         if (node.__type === 'folder') {
             const details = document.createElement("details"); 
             details.open = true;
-            
             const sum = document.createElement("summary"); 
             sum.textContent = key; 
             details.appendChild(sum);
-            
             const children = createDomTree(node.children); 
             children.className = "node"; 
             details.appendChild(children); 
@@ -466,15 +450,12 @@ function createDomTree(obj) {
         } else {
             const row = document.createElement("div"); 
             row.className = "leaf";
-            
             const title = document.createElement("div"); 
             title.className = "leaf-title"; 
             title.textContent = node.data.title;
-            
             const tag = document.createElement("span"); 
             tag.className = "tag"; 
             tag.textContent = node.data.kind;
-            
             row.appendChild(title); 
             row.appendChild(tag);
             row.onclick = () => selectItem(row, node.data); 
@@ -506,6 +487,7 @@ function selectItem(el, data) {
         document.getElementById("propMsg").innerHTML = "Phần tử này không có UniqueId (có thể là thư mục).";
     }
 }
+
 document.getElementById("q").addEventListener("keyup", e => { 
     if (e.key === "Enter") loadIndex(); 
 });
