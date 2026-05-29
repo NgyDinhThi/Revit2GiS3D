@@ -358,7 +358,12 @@ namespace RevitToGISsupport.UI
                 reqIndex.Content = new StringContent(JsonConvert.SerializeObject(index), Encoding.UTF8, "application/json");
 
                 var resIndex = await SharedHttpClient.SendAsync(reqIndex, _publishCts.Token);
-                if (!resIndex.IsSuccessStatusCode) throw new Exception("Lỗi gửi Index.");
+                if (!resIndex.IsSuccessStatusCode)
+                {
+                    // Bắt C# đọc chi tiết lỗi mà Server Python trả về
+                    string serverError = await resIndex.Content.ReadAsStringAsync();
+                    throw new Exception($"Lỗi gửi Index (Mã HTTP: {(int)resIndex.StatusCode}).\nChi tiết từ Server: {serverError}");
+                }
                 // THAY BẰNG ĐOẠN CODE MỚI NÀY
                 lblStatus.Text = "Bước 2/4: Đang trích xuất mô hình 3D (GLB) chuẩn tỷ lệ...";
                 string tempFolder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "RevitExports", "TempUpload");
