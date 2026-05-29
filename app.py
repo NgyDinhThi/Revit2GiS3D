@@ -51,8 +51,10 @@ def load_db():
 def save_db():
     try:
         with _lock:
-            with open(DB_FILE, "w", encoding="utf-8") as f:
+            temp_file = DB_FILE + ".tmp"
+            with open(temp_file, "w", encoding="utf-8") as f:
                 json.dump(IN_MEMORY_DB, f, ensure_ascii=False, indent=4)
+            os.replace(temp_file, DB_FILE)
     except Exception as e:
         logger.error(f"Lỗi lưu DB: {e}")
 
@@ -70,6 +72,8 @@ def get_proj(pid):
 
 def log_history(pid, user, action, details):
     proj = get_proj(pid)
+    if "history" not in proj:
+        proj["history"] = []
     time_str = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
     proj["history"].insert(0, {"time": time_str, "user": user, "action": action, "details": details})
     save_db()
@@ -165,16 +169,42 @@ def get_index(pid):
     browser_data = proj.get("browser")  
     if not browser_data:
         return ("Not found", 404)
+        
     final_state = proj.get("final_state", {})    
-    if final_state and "nodes" in browser_data:
-        for node in browser_data["nodes"]:
-            uid = node.get("revit", {}).get("uniqueId")       
-            # Nếu Element này đã bị đổi tên trên Web
-            if uid and uid in final_state:
-                params = final_state[uid]
-                new_name = params.get("View Name") or params.get("Sheet Name") or params.get("Name")
-                if new_name:
-                    node["title"] = new_name  # Ghi đè tên hiển thị
+    if final_state:
+        # Cập nhật tên hiển thị trong Tree Nodes
+        if "nodes" in browser_data:
+            for node in browser_data["nodes"]:
+                uid = node.get("revit", {}).get("uniqueId")       
+                if uid and uid in final_state:
+                    params = final_state[uid]
+                    new_name = params.get("View Name") or params.get("Sheet Name") or params.get("Name")
+                    if new_name:
+                        node["title"] = new_name  # Ghi đè tên hiển thị
+                        
+        # Cập nhật giá trị hiển thị trong bảng Properties
+        if "elements" in browser_data:
+            for uid, updated_params in final_state.items():
+                if uid in browser_data["elements"]:
+                    props = browser_data["elements"][uid].get("properties", {})
+                    for p_name, p_val in updated_params.items():
+                        updated = False
+                        # Tìm và ghi đè giá trị nếu tham số nằm trong một nhóm
+                        for group_name, group_props in props.items():
+                            if isinstance(group_props, dict):
+                                if p_name in group_props:
+                                    group_props[p_name] = p_val
+                                    updated = True
+                                    break
+                        # Nếu ko tìm thấy trong nhóm nào, thêm vào mặc định
+                        if not updated:
+                            if all(not isinstance(v, dict) for v in props.values()):
+                                props[p_name] = p_val
+                            else:
+                                if "Identity Data" not in props:
+                                    props["Identity Data"] = {}
+                                props["Identity Data"][p_name] = p_val
+                                
     return jsonify(browser_data)
 
 # --- QUẢN LÝ LỆNH & TRẠNG THÁI (CORE LOGIC) ---
@@ -234,7 +264,32 @@ def post_res(pid):
             cmd_id = data["id"]
             header, encoded = data["imageUrl"].split(",", 1)
             raw_bytes = base64.b64decode(encoded)
-            get_proj(pid)["images"][cmd_id] = { "mime": "image/jpeg", "bytes": raw_bytes }
+            
+            # Trích xuất mime type từ header
+            mime = "image/jpeg"
+            if "image/" in header:
+                mime = header.split(";")[0].split(":")[1]
+            
+            # Map MIME type sang phần mở rộng file
+            ext = "jpg"
+            if "png" in mime:
+                ext = "png"
+            elif "gif" in mime:
+                ext = "gif"
+                
+            # Lưu file ảnh vào thư mục uploads/<pid>/images/
+            img_dir = os.path.join(UPLOADS_FOLDER, pid, "images")
+            os.makedirs(img_dir, exist_ok=True)
+            filename = f"{cmd_id}.{ext}"
+            img_path = os.path.join(img_dir, filename)
+            with open(img_path, "wb") as img_file:
+                img_file.write(raw_bytes)
+                
+            # Lưu metadata vào database
+            with _lock:
+                get_proj(pid)["images"][cmd_id] = { "mime": mime, "filename": filename }
+            save_db()
+            
             data["imageUrl"] = f"/api/projects/{pid}/images/{cmd_id}"
         socketio.emit("command_result", data, room=_room(pid))
     return jsonify({"ok": True})
@@ -242,7 +297,15 @@ def post_res(pid):
 @app.route("/api/projects/<pid>/images/<cmd_id>")
 def get_image(pid, cmd_id):
     img = get_proj(pid).get("images", {}).get(cmd_id)
-    return send_file(io.BytesIO(img["bytes"]), mimetype=img["mime"]) if img else ("404", 404)
+    if not img:
+        return "404", 404
+    if "filename" in img:
+        path = os.path.join(UPLOADS_FOLDER, pid, "images", img["filename"])
+        if os.path.exists(path):
+            return send_file(path, mimetype=img["mime"])
+    elif "bytes" in img:
+        return send_file(io.BytesIO(img["bytes"]), mimetype=img["mime"])
+    return "404", 404
 @app.route("/api/projects/<pid>/history")
 def get_history(pid):
     """API trả về danh sách lịch sử để hiển thị lên bảng nhật ký"""

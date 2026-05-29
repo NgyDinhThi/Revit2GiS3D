@@ -386,6 +386,9 @@ async function sendUpdate() {
         if (selectedNode && selectedNode.revit && selectedNode.revit.uniqueId) {
             loadProperties(selectedNode.revit.uniqueId);
         }
+        setTimeout(() => {
+            alert(`Đã cập nhật thành công thông số [${paramName}] lên Revit!`);
+        }, 100);
     }
 }
 
