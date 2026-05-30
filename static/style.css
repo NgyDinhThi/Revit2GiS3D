@@ -159,7 +159,8 @@ details[open] > summary::before { content: '▾'; }
 /* properties form*/
 .prop-group { margin-bottom: 16px; }
 .prop-label { display: block; margin-bottom: 6px; font-weight: 600; font-size: 12px; color: var(--text-muted); }
-.prop-input-disabled { width: 100%; background: #edebe9; border: 1px solid transparent; padding: 8px; border-radius: 4px; color: var(--text-muted); }
+.prop-input-disabled { width: 100%; background: #edebe9; border: 1px solid transparent; padding: 8px; border-radius: 4px; color: var(--text-muted); box-sizing: border-box; }
+.prop-input-active { width: 100%; box-sizing: border-box; }
 .prop-input-mono { font-family: 'Consolas', monospace; font-size: 11px; }
 
 #propertyTableContainer { flex: 1; overflow-y: auto; }

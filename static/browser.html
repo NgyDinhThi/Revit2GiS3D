@@ -239,10 +239,14 @@ function downloadRvt() {
 
 async function openLatest3D() {
     const pid = document.getElementById("projectId").value;
+    let uidParam = "";
+    if (selectedNode && selectedNode.revit && selectedNode.revit.uniqueId) {
+        uidParam = `&uid=${selectedNode.revit.uniqueId}`;
+    }
     try {
         const res = await fetch(`/api/projects/${pid}/models/latest-glb`, { headers: getHeaders() });
         const data = await res.json(); 
-        window.open(`/viewer_glb?file=${data.latestGlbFile}`, "_blank");
+        window.open(`/viewer_glb?file=${data.latestGlbFile}${uidParam}`, "_blank");
     } catch(e) { 
         alert(e.message); 
     }
@@ -301,7 +305,6 @@ async function loadProperties(uniqueId) {
             const groupRow = tbody.insertRow();
             const groupCell = groupRow.insertCell(0);
             groupCell.colSpan = 2;
-            // Xóa icon và các ký tự đầu
             groupCell.innerHTML = `General (Cần đồng bộ lại dữ liệu)`;
             groupCell.className = "prop-group-header";
             
@@ -313,16 +316,51 @@ async function loadProperties(uniqueId) {
                 row.cells[1].className = "prop-value-cell";
             }
         } else {
-            for (const [groupName, groupProps] of Object.entries(properties)) {
+            const GROUP_ORDER = ["Graphics", "Extents", "Camera", "Identity Data", "Phasing"];
+            const PARAM_ORDER = {
+                "Graphics": ["View Scale", "Scale Value 1:", "Detail Level", "Parts Visibility", "Visibility/Graphics Overrides", "Graphic Display Options", "Discipline", "Show Hidden Lines", "Default Analysis Display Style", "Show Grids", "Sun Path"],
+                "Extents": ["Crop View", "Crop Region Visible", "Annotation Crop", "Far Clip Active", "Far Clip Offset", "Scope Box", "Section Box"],
+                "Camera": ["Rendering Settings", "Locked Orientation", "Projection Mode", "Eye Elevation", "Target Elevation", "Camera Position"],
+                "Identity Data": ["View Template", "View Name", "Dependency", "Title on Sheet"],
+                "Phasing": ["Phase Filter", "Phase"]
+            };
+
+            const groupEntries = Object.entries(properties);
+            groupEntries.sort((a, b) => {
+                let aName = a[0].replace(/^[^\w\s]*v?\s*/i, '').trim();
+                let bName = b[0].replace(/^[^\w\s]*v?\s*/i, '').trim();
+                let aIdx = GROUP_ORDER.indexOf(aName);
+                let bIdx = GROUP_ORDER.indexOf(bName);
+                if (aIdx === -1) aIdx = 999;
+                if (bIdx === -1) bIdx = 999;
+                if (aIdx !== bIdx) return aIdx - bIdx;
+                return aName.localeCompare(bName);
+            });
+
+            for (const [groupName, groupProps] of groupEntries) {
                 const groupRow = tbody.insertRow();
                 const groupCell = groupRow.insertCell(0);
                 groupCell.colSpan = 2;
-                // Loại bỏ "v " và bất kỳ ký tự đặc biệt nào ở đầu, chỉ giữ tên nhóm
                 let cleanGroupName = groupName.replace(/^[^\w\s]*v?\s*/i, '').trim();
                 groupCell.innerHTML = cleanGroupName;
                 groupCell.className = "prop-group-header";
                 
-                for (const [paramName, paramValue] of Object.entries(groupProps)) {
+                const paramEntries = Object.entries(groupProps);
+                const pOrder = PARAM_ORDER[cleanGroupName] || [];
+                paramEntries.sort((a, b) => {
+                    let aIdx = pOrder.indexOf(a[0]);
+                    let bIdx = pOrder.indexOf(b[0]);
+                    // Xử lý các trường hợp tên gần giống nếu cần
+                    if (aIdx === -1) aIdx = pOrder.findIndex(p => a[0].includes(p));
+                    if (bIdx === -1) bIdx = pOrder.findIndex(p => b[0].includes(p));
+                    
+                    if (aIdx === -1) aIdx = 999;
+                    if (bIdx === -1) bIdx = 999;
+                    if (aIdx !== bIdx) return aIdx - bIdx;
+                    return a[0].localeCompare(b[0]);
+                });
+
+                for (const [paramName, paramValue] of paramEntries) {
                     const row = tbody.insertRow();
                     row.insertCell(0).textContent = paramName;
                     row.insertCell(1).textContent = (paramValue === null || paramValue === undefined) ? "—" : String(paramValue);
@@ -358,10 +396,13 @@ async function sendUpdate() {
         return;
     }
     
-    const userName = document.getElementById("webUser").value || "Web User"; 
+     const userName = document.getElementById("webUser").value || "Web User"; 
     const isSuccess = await sendCommand("update_parameter", {
         targetUniqueId: selectedNode.revit.uniqueId,
-        parameters: { [paramName]: val },
+        parameters: { 
+            [paramName]: val,
+            "_notify": "true"
+        },
         user: userName 
     });
     
@@ -425,6 +466,8 @@ function renderTree(nodes, query) {
     
     nodes.forEach(n => {
         if (query && !n.title.toLowerCase().includes(query)) return;
+        if (n.path && n.path.includes("???")) return; // Bỏ qua dữ liệu thuộc lớp "???"
+        if (n.kind && n.kind.toLowerCase() === "schedule") return; // Bỏ qua dữ liệu schedule
         let current = tree;
         (n.path || []).forEach(folder => { 
             if (!current[folder]) current[folder] = { __type: 'folder', children: {} }; 
@@ -493,6 +536,11 @@ function selectItem(el, data) {
 
 document.getElementById("q").addEventListener("keyup", e => { 
     if (e.key === "Enter") loadIndex(); 
+});
+
+// Tự động tải dữ liệu khi trang web được mở
+window.addEventListener('DOMContentLoaded', () => {
+    loadIndex();
 });
 </script>
 </body>

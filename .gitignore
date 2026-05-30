@@ -22,3 +22,9 @@ Thumbs.db
 
 # --- Cấu hình VS Code (Nếu bạn không muốn chia sẻ cài đặt cá nhân) ---
 .vscode/
+
+# --- Ignore Markdown files ---
+*.md
+
+# --- Node modules ---
+node_modules/
