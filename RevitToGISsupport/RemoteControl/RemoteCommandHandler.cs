@@ -1,4 +1,4 @@
-﻿using Autodesk.Revit.DB;
+using Autodesk.Revit.DB;
 using Autodesk.Revit.UI;
 using Newtonsoft.Json;
 using System;
@@ -20,7 +20,6 @@ namespace RevitToGISsupport.RemoteControl
             bool hasError = false;
             foreach (FailureMessageAccessor failure in failures)
             {
-                // Xóa bỏ các cảnh báo (Warnings) gây treo lệnh đổi tên View
                 if (failure.GetSeverity() == FailureSeverity.Warning)
                 {
                     failuresAccessor.DeleteWarning(failure);
@@ -51,12 +50,11 @@ namespace RevitToGISsupport.RemoteControl
 
             UIDocument targetUiDoc = app.ActiveUIDocument;
             bool hasProcessed = false;
+            bool hasUpdateCommand = false;
 
             while (RemoteCommandQueue.Items.TryDequeue(out var cmd))
             {
                 if (cmd == null) continue;
-
-                // BẮT BUỘC PHẢI CÓ DÒNG NÀY ĐỂ XÁC NHẬN LÀ CÓ LỆNH ĐƯỢC CHẠY
                 hasProcessed = true;
 
                 try
@@ -66,7 +64,10 @@ namespace RevitToGISsupport.RemoteControl
                         case "activate_view": TryActivateView(targetUiDoc, targetDoc, cmd); break;
                         case "render_view_png": TryRenderViewPng(targetDoc, cmd); break;
                         case "export_view_glb": TryExportViewGlb(targetDoc, cmd); break;
-                        case "update_parameter": TryUpdateParameter(targetUiDoc, targetDoc, cmd); break;
+                        case "update_parameter": 
+                            TryUpdateParameter(targetUiDoc, targetDoc, cmd); 
+                            hasUpdateCommand = true;
+                            break;
                     }
                 }
                 catch (Exception ex)
@@ -74,25 +75,17 @@ namespace RevitToGISsupport.RemoteControl
                     SendError(cmd, ex.Message);
                 }
             }
-            // SAU KHI KẾT THÚC VÒNG LẶP WHILE
-            if (hasProcessed)
+            if (hasUpdateCommand)
             {
                 OnExecutionFinished?.Invoke("Áp dụng thành công! Vui lòng kiểm tra lại mô hình.", true);
             }
+
             UIDocument uidoc = app.ActiveUIDocument;
             if (uidoc != null)
             {
-                // 1. Ép bản vẽ hiện tại (canvas) vẽ lại
                 uidoc.RefreshActiveView();
-
-                // 2. MẸO ÉP BẢNG PROPERTIES TẢI LẠI (Cực kỳ hiệu quả)
-                // Lấy danh sách các đối tượng đang được người dùng bôi đen (chọn)
                 var currentSelection = uidoc.Selection.GetElementIds();
-
-                // Nhả chọn tất cả (Làm bảng Properties nháy trắng 1 mili-giây)
                 uidoc.Selection.SetElementIds(new List<ElementId>());
-
-                // Lập tức chọn lại y như cũ (Bảng Properties buộc phải tải dữ liệu mới nhất từ Core)
                 if (currentSelection.Count > 0)
                 {
                     uidoc.Selection.SetElementIds(currentSelection);
@@ -118,11 +111,14 @@ namespace RevitToGISsupport.RemoteControl
                     var elem = doc.GetElement(cmd.targetUniqueId);
                     if (elem == null) throw new Exception("Không tìm thấy đối tượng trong file Revit hiện tại.");
 
+                    bool shouldNotify = cmd.parameters.ContainsKey("_notify");
+
                     foreach (var kvp in cmd.parameters)
                     {
+                        if (kvp.Key == "_notify") continue;
+
                         var param = elem.LookupParameter(kvp.Key);
 
-                        // 1. GẶP LỖI: Bắn thông báo lỗi thẳng lên trình duyệt Web
                         if (param == null)
                         {
                             throw new Exception($"Không tìm thấy tham số tên là '{kvp.Key}' trong đối tượng này!");
@@ -133,14 +129,10 @@ namespace RevitToGISsupport.RemoteControl
                             throw new Exception($"Tham số '{kvp.Key}' đang bị khóa (Read-Only), không thể ghi đè!");
                         }
 
-                        // 2. THÀNH CÔNG: Âm thầm xử lý, không hiện bất kỳ bảng thông báo nào trên Revit
                         string newVal = kvp.Value?.Normalize().Trim();
-
-                        // Xử lý logic đổi tên đặc biệt cho View/Sheet
                         if (kvp.Key.Contains("Name") && (elem is View || elem is ViewSheet))
                         {
                             if (elem.Name.Normalize().Trim().Equals(newVal, StringComparison.OrdinalIgnoreCase)) continue;
-
                             elem.Name = newVal;
                             continue;
                         }
@@ -153,7 +145,18 @@ namespace RevitToGISsupport.RemoteControl
                         }
                     }
                     t.Commit();
-                }
+
+                    // --- BẬT THÔNG BÁO NẾU CÓ CỜ TỪ NÚT BẤM ---
+                    if (shouldNotify)
+                    {
+                        // Lọc bỏ cái cờ "_notify" ra khỏi danh sách để chữ hiện lên cho đẹp
+                        var realParams = cmd.parameters.Where(p => p.Key != "_notify");
+                        string changedData = string.Join(", ", realParams.Select(p => $"{p.Key} = {p.Value}"));
+
+                        string msg = $"[UPDATE] Web vừa đổi: {changedData}";
+                        OnExecutionFinished?.Invoke(msg, true);
+                    }
+                } 
                 Task.Run(async () => {
                     await PostCommandResultAsync(GetBaseUrl(), RemoteSettings.ProjectId, new
                     {
@@ -165,6 +168,7 @@ namespace RevitToGISsupport.RemoteControl
             }
             catch (Exception ex) { SendError(cmd, ex.Message); }
         }
+
 
         private void TryActivateView(UIDocument uidoc, Document doc, RemoteCommand cmd)
         {
@@ -185,12 +189,15 @@ namespace RevitToGISsupport.RemoteControl
 
             var imgOptions = new ImageExportOptions
             {
-                ZoomType = ZoomFitType.FitToPage,
-                PixelSize = cmd.pixelSize > 0 ? cmd.pixelSize : 1000,
+                ZoomType = ZoomFitType.Zoom,
+                Zoom = 100,
+
                 FilePath = basePath,
-                FitDirection = FitDirectionType.Horizontal,
-                HLRandWFViewsFileType = ImageFileType.JPEGLossless,
-                ImageResolution = ImageResolution.DPI_72,
+
+                HLRandWFViewsFileType = ImageFileType.PNG,
+
+                ImageResolution = ImageResolution.DPI_150,
+
                 ExportRange = ExportRange.SetOfViews
             };
             imgOptions.SetViewsAndSheets(new List<ElementId> { v.Id });

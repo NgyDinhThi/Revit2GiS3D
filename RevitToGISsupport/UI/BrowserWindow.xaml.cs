@@ -14,11 +14,23 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
+using System.Runtime.InteropServices;
+using System.Windows.Interop;
 
 namespace RevitToGISsupport.UI
 {
     public partial class BrowserWindow : Window
     {
+        [DllImport("user32.dll")]
+        private static extern bool RegisterHotKey(IntPtr hWnd, int id, uint fsModifiers, uint vk);
+
+        [DllImport("user32.dll")]
+        private static extern bool UnregisterHotKey(IntPtr hWnd, int id);
+
+        private const int HOTKEY_ID = 9000;
+        private const uint MOD_CTRL = 0x0002; // Phím Ctrl
+        private const uint VK_SPACE = 0x20;   // Phím Space
+
         private readonly UIApplication _uiapp;
         private Document _doc;
         private readonly ExternalEvent _activateEvent;
@@ -64,7 +76,84 @@ namespace RevitToGISsupport.UI
 
         private void UpdateStatusFromHandler(string message, bool isSuccess)
         {
-            // Cố tình để trống để ẩn thông báo dưới góc màn hình cho chuyên nghiệp
+            // Bắt buộc phải chạy trên luồng giao diện (UI Thread)
+            Dispatcher.Invoke(() =>
+            {
+                // Gọi hàm hiển thị Toast
+                ShowToastNotification(message, isSuccess);
+            });
+        }
+
+        private void ShowToastNotification(string message, bool isSuccess)
+        {
+
+            var toast = new Window
+            {
+                WindowStyle = WindowStyle.None,
+                AllowsTransparency = true,
+                Background = System.Windows.Media.Brushes.Transparent,
+                Topmost = true,
+                ShowActivated = false,
+                ShowInTaskbar = false,
+                SizeToContent = SizeToContent.WidthAndHeight,
+                ResizeMode = ResizeMode.NoResize
+            };
+
+            var border = new System.Windows.Controls.Border
+            {
+                // Màu xanh nếu thành công, Màu đỏ nếu báo lỗi
+                Background = new System.Windows.Media.SolidColorBrush(
+                    isSuccess ? System.Windows.Media.Color.FromRgb(40, 167, 69) : System.Windows.Media.Color.FromRgb(220, 53, 69)),
+                CornerRadius = new CornerRadius(8),
+                Padding = new Thickness(20, 12, 20, 12),
+                Margin = new Thickness(15),
+                // Tạo bóng 
+                Effect = new System.Windows.Media.Effects.DropShadowEffect
+                {
+                    Color = System.Windows.Media.Colors.Black,
+                    Opacity = 0.3,
+                    ShadowDepth = 3,
+                    BlurRadius = 10
+                }
+            };
+
+            var textBlock = new System.Windows.Controls.TextBlock
+            {
+                Text = message,
+                Foreground = System.Windows.Media.Brushes.White,
+                FontSize = 14,
+                FontWeight = FontWeights.SemiBold,
+                TextWrapping = TextWrapping.Wrap,
+                MaxWidth = 350
+            };
+
+            border.Child = textBlock;
+            toast.Content = border;
+
+            //Góc dưới cùng bên phải màn hình làm việc
+            toast.Loaded += (s, e) =>
+            {
+                var workArea = SystemParameters.WorkArea;
+                toast.Left = workArea.Right - toast.ActualWidth - 10;
+                toast.Top = workArea.Bottom - toast.ActualHeight - 10;
+            };
+
+            //(Fade In / Fade Out)
+            var fadeIn = new System.Windows.Media.Animation.DoubleAnimation(0, 1, TimeSpan.FromSeconds(0.3));
+            var fadeOut = new System.Windows.Media.Animation.DoubleAnimation(1, 0, TimeSpan.FromSeconds(0.5));
+
+            toast.Show();
+            toast.BeginAnimation(UIElement.OpacityProperty, fadeIn);
+
+            // Tự động lặn mất sau 3.5 giây
+            var timer = new System.Windows.Threading.DispatcherTimer { Interval = TimeSpan.FromSeconds(3.5) };
+            timer.Tick += (s, e) =>
+            {
+                timer.Stop();
+                fadeOut.Completed += (s2, e2) => toast.Close(); // Chờ mờ hẳn rồi mới đóng cửa sổ
+                toast.BeginAnimation(UIElement.OpacityProperty, fadeOut);
+            };
+            timer.Start();
         }
 
         private void BrowserWindow_Loaded(object sender, RoutedEventArgs e)
@@ -113,12 +202,43 @@ namespace RevitToGISsupport.UI
             });
         }
 
+        protected override void OnSourceInitialized(EventArgs e)
+        {
+            base.OnSourceInitialized(e);
+            var helper = new WindowInteropHelper(this);
+            var source = HwndSource.FromHwnd(helper.Handle);
+            source.AddHook(HwndHook); 
+
+            RegisterHotKey(helper.Handle, HOTKEY_ID, MOD_CTRL, VK_SPACE);
+        }
+
         private void BrowserWindow_Closed(object sender, EventArgs e)
         {
+            var helper = new WindowInteropHelper(this);
+            UnregisterHotKey(helper.Handle, HOTKEY_ID);
             RemoteCommandHandler.OnExecutionFinished -= UpdateStatusFromHandler;
             _publishCts?.Cancel();
             _publishCts?.Dispose();
             StopPoller();
+        }
+
+        private IntPtr HwndHook(IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled)
+        {
+            const int WM_HOTKEY = 0x0312;
+            if (msg == WM_HOTKEY && wParam.ToInt32() == HOTKEY_ID)
+            {
+
+                if (this.WindowState == WindowState.Minimized)
+                    this.WindowState = WindowState.Normal;
+                this.Activate();
+
+                // Ép cửa sổ phải nhảy lên trên cùng, đè lên Revit
+                this.Topmost = true;
+                this.Topmost = false; 
+
+                handled = true; 
+            }
+            return IntPtr.Zero;
         }
 
         private void cbDocuments_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
