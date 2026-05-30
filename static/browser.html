@@ -11,17 +11,17 @@
 <div id="loading">
     <div class="spinner"></div>
     <div id="loadingText" style="color:#555; font-weight:600">Processing...</div>
+    <button onclick="cancelLoading()" style="margin-top: 15px; padding: 6px 16px; border: 1px solid #ccc; background: white; border-radius: 4px; cursor: pointer; color: #555;">Hủy bỏ</button>
 </div>
 
 <div class="header">
     <div class="brand-title">BIM Sync</div>
-    <input id="projectId" placeholder="Project ID" value="P001" style="width:70px" title="Project ID">
+    <input id="projectId" placeholder="Project ID" value="P001" style="width:70px; background:#edebe9; color:#605e5c; cursor:not-allowed;" title="Mã dự án (Cố định)" readonly>
     <input id="q" placeholder="Search tree..." style="width:140px">
     
     <div style="border-left: 1px solid #ccc; height: 30px; margin: 0 10px;"></div>
     
     <input id="webUser" placeholder="Tên hiển thị..." style="width:130px; border-color:#28a745; margin-right: 8px;" value="Web User">
-    <button onclick="loadIndex()" title="Load cấu trúc từ Server" style="margin-right: 8px;"> Làm mới</button>
     <button onclick="showHistory()" style="background:#6c757d; padding: 0 10px;">Lịch sử</button>
     
     <div style="flex:1"></div>
@@ -34,7 +34,7 @@
     <div class="col-tree" id="treeRoot">
         <div style="color:var(--text-muted); text-align:center; margin-top:40px">
             <p>1. Nhấn <b>"Publish to Web"</b> trong Revit.</p>
-            <p>2. Nhấn <b>"Làm mới"</b> ở trên để xem dữ liệu.</p>
+            <p>2. Dữ liệu sẽ được tải tự động.</p>
         </div>
     </div>
 
@@ -143,6 +143,15 @@ function showLoading(show, text = "Processing...") {
     document.getElementById("loading").style.display = show ? "flex" : "none";
 }
 
+function cancelLoading() {
+    showLoading(false);
+    setStatus("Đã hủy thao tác.", "error");
+    pendingCmds.forEach((cmd) => {
+        if (cmd.resolve) cmd.resolve(false);
+    });
+    pendingCmds.clear();
+}
+
 function initSocket(pid) {
     if (socket && currentProjectId === pid) return;
     if (!window.io) return;
@@ -159,7 +168,7 @@ function initSocket(pid) {
         if (cmd.action !== 'update_parameter' || pendingCmds.has(cmd.id)) return;
         let pNames = Object.keys(cmd.parameters || {}).join(", ");
         const el = document.getElementById("statusText");
-        el.textContent = `Vừa có người khác (${cmd.user || 'Ai đó'}) sửa [${pNames}]. Nhấn 'Làm mới' để cập nhật!`;
+        el.textContent = `Vừa có người khác (${cmd.user || 'Ai đó'}) sửa [${pNames}]. Tải lại trang (F5) để cập nhật!`;
         el.style.color = "#d75e04"; 
         el.style.fontWeight = "bold";
     });
@@ -534,8 +543,25 @@ function selectItem(el, data) {
     }
 }
 
-document.getElementById("q").addEventListener("keyup", e => { 
-    if (e.key === "Enter") loadIndex(); 
+document.getElementById("q").addEventListener("input", e => { 
+    const query = e.target.value.toLowerCase();
+    const leaves = document.querySelectorAll('.leaf');
+    
+    leaves.forEach(leaf => {
+        const title = leaf.querySelector('.leaf-title').textContent.toLowerCase();
+        leaf.style.display = title.includes(query) ? 'flex' : 'none';
+    });
+
+    const detailsList = document.querySelectorAll('details');
+    for (let i = detailsList.length - 1; i >= 0; i--) {
+        const detail = detailsList[i];
+        const visibleLeaves = Array.from(detail.querySelectorAll('.leaf')).some(l => l.style.display !== 'none');
+        detail.style.display = visibleLeaves ? 'block' : 'none';
+        
+        if (query !== '' && visibleLeaves) {
+            detail.open = true;
+        }
+    }
 });
 
 // Tự động tải dữ liệu khi trang web được mở
