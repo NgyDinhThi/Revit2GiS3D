@@ -410,7 +410,7 @@ namespace RevitToGISsupport.UI
             {
                 btnPull.IsEnabled = true;
                 return;
-            }
+            }  
 
             btnPull.IsEnabled = true;
         }
@@ -475,6 +475,15 @@ namespace RevitToGISsupport.UI
 
                 _isPublished = true;
                 UpdateShareLink();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(
+                    $"Có lỗi xảy ra !\n\nChi tiết lỗi: {ex.Message}",
+                    "Lỗi Đồng Bộ",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Error
+                );
             }
             finally
             {
