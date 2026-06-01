@@ -80,13 +80,6 @@
     </div>
 
     <div class="col-preview">
-        <div id="previewActions" style="display:none; text-align:center; width:100%">
-            <select id="renderQuality" style="width:auto; display:inline-block; margin-right:8px; height: 32px;">
-                <option value="500">Xem nhanh</option>
-                <option value="1000" selected>Tiêu chuẩn</option>
-            </select>
-            <button onclick="requestRender()" style="background:#6c757d; padding: 6px 20px; display:inline-block;"> Render ảnh</button>
-        </div>
         <div id="previewMsg" style="color:var(--text-muted); margin-top:40px; text-align:center">View hiện ảnh ở đây. </div>
         <div class="img-container" id="imgWrap" style="display:none">
             <img id="previewImg" alt="View Preview" onclick="openModal()" title="Nhấp để phóng to">
@@ -183,9 +176,11 @@ function initSocket(pid) {
             if (data.status === 'done') {
                 setStatus("Command Completed!", "success");
                 if (data.imageUrl) { 
-                    document.getElementById("previewImg").src = data.imageUrl; 
-                    document.getElementById("imgWrap").style.display = "block"; 
-                    document.getElementById("previewMsg").style.display = "none"; 
+                    if (!task.targetUid || (selectedNode && selectedNode.revit && selectedNode.revit.uniqueId === task.targetUid)) {
+                        document.getElementById("previewImg").src = data.imageUrl; 
+                        document.getElementById("imgWrap").style.display = "block"; 
+                        document.getElementById("previewMsg").style.display = "none"; 
+                    }
                 } else { 
                     alert(data.message || "Thành công!"); 
                 }
@@ -200,16 +195,16 @@ function initSocket(pid) {
     });
 }
 
-function waitForResult(cmdId) {
+function waitForResult(cmdId, targetUid) {
     return new Promise((resolve) => {
         const t = setTimeout(() => {
             if (pendingCmds.has(cmdId)) { 
                 pendingCmds.delete(cmdId); 
-                alert("Timeout!"); 
+                console.warn("Command timeout: " + cmdId); 
                 resolve(false); 
             }
         }, CONFIG.RENDER_TIMEOUT);
-        pendingCmds.set(cmdId, { resolve: (res) => { clearTimeout(t); resolve(res); } });
+        pendingCmds.set(cmdId, { resolve: (res) => { clearTimeout(t); resolve(res); }, targetUid });
     });
 }
 
@@ -241,9 +236,18 @@ document.addEventListener('keydown', e => {
     }
 });
 
-function downloadRvt() {
+async function downloadRvt() {
     const pid = document.getElementById("projectId").value;
-    window.open(`/api/projects/${pid}/models/rvt`, '_blank');
+    try {
+        const res = await fetch(`/api/projects/${pid}/models/rvt`, { method: 'HEAD' });
+        if (res.ok) {
+            window.location.href = `/api/projects/${pid}/models/rvt`;
+        } else {
+            alert("Dự án chưa được đính kèm file Revit.");
+        }
+    } catch(e) {
+        alert("Lỗi kết nối máy chủ!");
+    }
 }
 
 async function openLatest3D() {
@@ -390,7 +394,7 @@ async function requestRender() {
     if (!selectedNode) return;
     await sendCommand("render_view_png", { 
         targetUniqueId: selectedNode.revit.uniqueId, 
-        pixelSize: parseInt(document.getElementById("renderQuality").value) || 1000 
+        pixelSize: 500 
     });
 }
 
@@ -409,8 +413,7 @@ async function sendUpdate() {
     const isSuccess = await sendCommand("update_parameter", {
         targetUniqueId: selectedNode.revit.uniqueId,
         parameters: { 
-            [paramName]: val,
-            "_notify": "true"
+            [paramName]: val
         },
         user: userName 
     });
@@ -444,7 +447,9 @@ async function sendUpdate() {
 
 async function sendCommand(action, payload) {
     const pid = document.getElementById("projectId").value;
-    showLoading(true, "Sending command..."); 
+    if (action !== "render_view_png") {
+        showLoading(true, "Sending command..."); 
+    }
     setStatus("Sending...");
     try {
         const res = await fetch(`/api/projects/${pid}/commands`, { 
@@ -459,12 +464,12 @@ async function sendCommand(action, payload) {
             showLoading(false);
             return true; 
         }
-        return await waitForResult(data.id); 
+        return await waitForResult(data.id, payload.targetUniqueId); 
     } catch(e) { 
         alert("Failed"); 
         return false; 
     } finally { 
-        if (action !== "update_parameter") showLoading(false); 
+        if (action !== "update_parameter" && action !== "render_view_png") showLoading(false); 
     }
 }
 
@@ -531,8 +536,12 @@ function selectItem(el, data) {
     document.getElementById("p_uid").value = data.revit?.uniqueId || "";
     
     const isView = ['view','sheet','schedule'].includes(data.kind);
-    document.getElementById("previewActions").style.display = isView ? "block" : "none";
     document.getElementById("previewMsg").style.display = isView ? "block" : "none";
+    
+    if (isView) {
+        // Tự động render ngay khi click chọn
+        requestRender();
+    }
     
     if (data.revit && data.revit.uniqueId) {
         loadProperties(data.revit.uniqueId);

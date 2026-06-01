@@ -40,21 +40,46 @@ IN_MEMORY_DB = {}
 
 def load_db():
     global IN_MEMORY_DB
+    IN_MEMORY_DB = {}
+    
+    # Bước 1: Migrate từ file cũ (nếu có)
     if os.path.exists(DB_FILE):
         try:
             with open(DB_FILE, "r", encoding="utf-8") as f:
                 IN_MEMORY_DB = json.load(f)
-            logger.info("Đã tải dữ liệu từ database.json")
+            logger.info("Đã tải dữ liệu từ database_v2.json để migrate")
+            # Đổi tên file cũ để không đọc lại lần sau
+            os.rename(DB_FILE, DB_FILE + ".bak")
+            # Lưu ngay ra các file dự án
+            save_db()
         except Exception as e:
-            logger.error(f"Lỗi tải DB: {e}")
+            logger.error(f"Lỗi migrate DB cũ: {e}")
+            return
+            
+    # Bước 2: Đọc từ các tệp dự án riêng lẻ
+    for pid in os.listdir(UPLOADS_FOLDER):
+        pid_folder = os.path.join(UPLOADS_FOLDER, pid)
+        if os.path.isdir(pid_folder):
+            db_path = os.path.join(pid_folder, "database.json")
+            if os.path.exists(db_path):
+                try:
+                    with open(db_path, "r", encoding="utf-8") as f:
+                        IN_MEMORY_DB[pid] = json.load(f)
+                except Exception as e:
+                    logger.error(f"Lỗi tải DB cho dự án {pid}: {e}")
 
 def save_db():
     try:
         with _lock:
-            temp_file = DB_FILE + ".tmp"
-            with open(temp_file, "w", encoding="utf-8") as f:
-                json.dump(IN_MEMORY_DB, f, ensure_ascii=False, indent=4)
-            os.replace(temp_file, DB_FILE)
+            for pid, data in IN_MEMORY_DB.items():
+                pid_folder = os.path.join(UPLOADS_FOLDER, pid)
+                os.makedirs(pid_folder, exist_ok=True)
+                
+                db_path = os.path.join(pid_folder, "database.json")
+                temp_file = db_path + ".tmp"
+                with open(temp_file, "w", encoding="utf-8") as f:
+                    json.dump(data, f, ensure_ascii=False, indent=4)
+                os.replace(temp_file, db_path)
     except Exception as e:
         logger.error(f"Lỗi lưu DB: {e}")
 
